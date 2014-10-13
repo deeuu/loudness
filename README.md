@@ -10,7 +10,7 @@ To build the C++ library you will need:
   - libsndfile1-dev >= 1.0.25
   - libfftw3-dev >= 3.3.3
 
-To build the the Python bindings you will need:
+To build the Python bindings you will need:
   - swig >= 3.0.2
   - python-numpy-dev
 
