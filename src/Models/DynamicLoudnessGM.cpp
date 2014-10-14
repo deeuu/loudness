@@ -116,9 +116,11 @@ namespace loudness{
                 break;
             case FASTER1:
                 setFastBank(true);
-                setFilterSpacing(0.25);
                 setCompressionCriterion(0.3);
                 break;
+            default:
+                setFastBank(true);
+                setCompressionCriterion(0.3);
         }
     }
 
