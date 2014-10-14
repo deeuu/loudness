@@ -24,12 +24,13 @@
 
 namespace loudness{
 
+    //Need to run tests with this class
     class DoubleRoexBank : public Module
     {
 
     public:
 
-        DoubleRoexBank(Real freqLo=40, Real freqHi=16e3, Real camStep=0.25);
+        DoubleRoexBank(Real camLo = 1.5, Real camHi = 40.1, Real camStep = 0.1);
 
         virtual ~DoubleRoexBank();
 
@@ -42,7 +43,7 @@ namespace loudness{
         virtual void resetInternal();
 
         int nFilters_;
-        Real freqLo_, freqHi_, camStep_;
+        Real camLo_, camHi_, camStep_;
         RealVec maxGdB_, thirdGainTerm_;
         RealVecVec wPassive_, wActive_;
     };
