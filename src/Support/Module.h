@@ -149,7 +149,7 @@ namespace loudness{
          *
          * @return String corresponding to the module name.
          */
-        string getName() const;
+        const string& getName() const;
 
     protected:
         //Pure virtual functions

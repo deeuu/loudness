@@ -78,6 +78,26 @@ namespace loudness{
             return 0;
     }
 
+    /*
+     * Decided not to return const ref because of bounds checking.
+     * Just return copy instead.
+     */
+    string Model::getModuleName(int module) const
+    {
+        if(module < (int)modules_.size())
+            return modules_[module] -> getName();
+        else
+        {
+            LOUDNESS_ERROR(name_ << ": index out of bounds.");
+            return "";
+        }
+    }
+
+    const string& Model::getName() const
+    {
+        return name_;
+    }
+
     bool Model::isInitialized() const
     {
         return initialized_;

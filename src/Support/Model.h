@@ -115,6 +115,9 @@ namespace loudness{
          */
         int getNModules() const;
 
+        string getModuleName(int module) const;
+        const string& getName() const;
+
     protected:
         virtual bool initializeInternal(const SignalBank &input) = 0;
 
