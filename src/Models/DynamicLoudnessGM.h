@@ -32,14 +32,44 @@ namespace loudness{
      * At present, there are two parameter sets available:
      *
      * 1. GM02 - The specification used by Glasberg and Moore (2002).
-     * 2. FASTER1 - Uses a compressed spectrum with hybrid outer and middle ear
-     * filter.
+     * 2. FASTER1 - Uses a compressed spectrum with a fast roex filterbank.
      *
-     * If you want to use a time-domain filter for the outer and middle ear,
-     * such as the 4096 order free-field FIR filter used by Glasberg and Moore,
-     * then use call setPathToFilterCoefs(). The coefficients must be a '.npy'
-     * file. If no coefficients are provided, the hybrid filter scheme will be
-     * used.
+     * The default is FASTER1.
+     *
+     * Use loadParameterSet() to select the model parameters.
+     *
+     * If you want to use a time-domain filter for simulating the transmission
+     * response of the outer and middle ear, such as the 4096 order FIR filter
+     * used by Glasberg and Moore, then specify the path (string) to the filter
+     * coefficients when constructing the object. The coefficients must be a
+     * Numpy array stored as a binary file in the '.npy' format. If a file path
+     * is not provided, pre-cochlear filtering is performed using the hybrid
+     * filter which combines a 3rd order high-pass filter with a frequency
+     * domain weighting function.
+     *
+     * When using filter spacings greater than 0.1 Cams, the sampled excitation
+     * pattern can be interpolated to approximate the high resolution pattern.
+     * If you want this, use setInterpRoexBank(true).
+     *
+     * REFERENCES:
+     *
+     * Glasberg, B. R., & Moore, B. C. J. (1990). Derivation of Auditory Filter
+     * Shapes From Notched-Noise Data. Hearing Research, 47, 103–138.
+     *
+     * Moore, B. C. J., Glasberg, B. R., & Baer, T. (1997). A Model for the
+     * Prediction of Thresholds, Loudness, and Partial Loudness. Journal of the
+     * Audio Engineering Society, 45(4), 224–240.
+     *
+     * Glasberg, B. R., & Moore, B. C. J. (2002). A Model of Loudness Applicable
+     * to Time-Varying Sounds. Journal of the Audio Engineering Society, 50(5),
+     * 331–342.
+     *
+     * Glasberg, B. R., & Moore, B. C. J. (2006). Prediction of Absolute
+     * Thresholds and Equal-Loudness Contours Using a Modified Loudness Model.
+     * The Journal of the Acoustical Society of America, 120(2), 585–588.
+     *
+     * ANSI S3.4-2007. Procedure for the Computation of Loudness of Steady
+     * Sounds.
      */
     class DynamicLoudnessGM : public Model
     {
@@ -47,22 +77,23 @@ namespace loudness{
 
             enum ParameterSet{
                 GM02 = 0 /**< Glasberg and Moore 2002. */,
-                FASTER1 = 1 /**< Compressed spectrum with HPF and spectral weighting. */
+                FASTER1 = 1 /**< Compressed spectrum and fast roex filterbank. */
             };
 
             /**
-             * @brief Constructs a model with a path to the outer and middle ear
-             * filter coefficients.
+             * @brief Constructs a model with a path to the '.npy' file holding
+             * the pre-cochlear filter coefficients.
              *
-             * If no path is given (empty string), then the hybrid filter will
-             * peform the outer and middle ear filtering.
-             *
-             * The default parameter set is FASTER1.
+             * If no path is given, the hybrid filter will
+             * perform the outer and middle ear filtering.
              */
             DynamicLoudnessGM(string pathToFilterCoefs = "");
 
             virtual ~DynamicLoudnessGM();
 
+            /**
+             * @brief Loads a parameter set.
+             */
             void loadParameterSet(ParameterSet set);
 
             void setTimeStep(Real timeStep);

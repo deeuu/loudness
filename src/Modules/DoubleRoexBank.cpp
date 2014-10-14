@@ -22,10 +22,10 @@
 
 namespace loudness{
 
-    DoubleRoexBank::DoubleRoexBank(Real freqLo, Real freqHi, Real camStep) : 
+    DoubleRoexBank::DoubleRoexBank(Real camLo, Real camHi, Real camStep) : 
         Module("DoubleRoexBank"),
-        freqLo_(freqLo),
-        freqHi_(freqHi),
+        camLo_(camLo), 
+        camHi_(camHi),
         camStep_(camStep)
     {}
 
@@ -33,14 +33,10 @@ namespace loudness{
 
     bool DoubleRoexBank::initializeInternal(const SignalBank &input)
     {
-        //lowest and highest fc of ERB filters
-        const Real camHi = FreqToCam(freqHi_);
-        const Real camLo = FreqToCam(freqLo_);
-        LOUDNESS_DEBUG("DoubleRoexBank: ERB lo: " << camHi << " ERB hi: " << camHi);
 
         //number of roex filters to use
-        nFilters_ = round((camHi-camLo)/camStep_)+1; //+1 inclusive
-        LOUDNESS_DEBUG("DoubleRoexBank: Total number of filters: " << nFilters_);
+        nFilters_ = round((camHi_-camLo_)/camStep_)+1; //+1 inclusive
+        LOUDNESS_DEBUG(name_ << ": Total number of filters: " << nFilters_);
 
         //initialize output SignalBank
         output_.initialize(nFilters_, 1, input.getFs());
@@ -57,7 +53,7 @@ namespace loudness{
         for(int i=0; i<nFilters_; i++)
         {
             //erb to frequency
-            cam = camLo+(i*camStep_);
+            cam = camLo_+(i*camStep_);
             fc = CamToFreq(cam);
             output_.setCentreFreq(i,fc);
 
@@ -100,7 +96,7 @@ namespace loudness{
                 j++;
             }
         }
-        LOUDNESS_DEBUG("DoubleRoexBank: Passive and active filters configured.");
+        LOUDNESS_DEBUG(name_ << ": Passive and active filters configured.");
         
         return 1;
     }
@@ -111,18 +107,20 @@ namespace loudness{
         /*
          * Perform the excitation transformation
          */
-        Real excitationLin, excitationLog, gain, excitationLogMinus30;
+        Real excitationLinP, excitationLinA, excitationLog, gain,
+             excitationLogMinus30;
 
         for(int i=0; i<nFilters_; i++)
         {
-            excitationLin = 0;
+            excitationLinP = 0.0;
+            excitationLinA = 0.0;
 
             //passive filter output
             for(unsigned int j=0; j<wPassive_[i].size(); j++)
-                excitationLin += wPassive_[i][j]*input.getSample(j,0);
+                excitationLinP += wPassive_[i][j]*input.getSample(j,0);
 
             //convert to dB
-            excitationLog = 10*log10(excitationLin+LOW_LIMIT_POWER);
+            excitationLog = 10*log10(excitationLinP+LOW_LIMIT_POWER);
 
             //compute gain
             gain = maxGdB_[i] - (maxGdB_[i] / (1 + exp(-0.05*(excitationLog-(100-maxGdB_[i]))))) + 
@@ -140,10 +138,11 @@ namespace loudness{
 
             //active filter output
             for(unsigned int j=0; j<wActive_[i].size(); j++)
-                excitationLin += gain*wActive_[i][j]*input.getSample(j,0);
+                excitationLinA += wActive_[i][j]*input.getSample(j,0);
+            excitationLinA *= gain;
 
             //excitation pattern
-            output_.setSample(i, 0, excitationLin);
+            output_.setSample(i, 0, excitationLinP + excitationLinA);
         }
     }
 
