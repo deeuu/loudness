@@ -11,8 +11,7 @@ audioBank = audio.getOutput()
 nFrames = audio.getNFrames()
 
 #Create the loudness model
-model = ln.DynamicLoudnessGM()
-model.setPathToFilterCoefs("../filterCoefs/32000_IIR_23_freemid.npy")
+model = ln.DynamicLoudnessGM("../filterCoefs/32000_IIR_23_freemid.npy")
 model.initialize(audioBank)
 loudnessBank = model.getModuleOutput(model.getNModules()-1)
 nChannels = loudnessBank.getNChannels()
@@ -30,7 +29,7 @@ for frame in range(nFrames):
         out[frame, chn] = loudnessBank.getSample(chn,0)
 
 #time points as centre of window
-T = hopSize/float(fs)
+T = model.getTimeStep()
 t = np.arange(1, nFrames+1)*T - 0.032
 plt.figure(1)
 plt.plot(t, out)
