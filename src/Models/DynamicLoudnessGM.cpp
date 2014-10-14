@@ -109,7 +109,7 @@ namespace loudness{
         setInterpRoexBank(false);
         setFilterSpacing(0.25);
         setCompressionCriterion(0.0);
-        setAnsiBank(true);
+        setFastBank(false);
 
         switch(set){
             case GM02:
@@ -223,19 +223,15 @@ namespace loudness{
         /*
          * Roex filters
          */
-        if(ansiBank_)
+        if(fastBank_)
         {
-            modules_.push_back(unique_ptr<Module> 
-                    (new RoexBankANSIS3407(1.8, 38.9, filterSpacing_)));
+            modules_.push_back(unique_ptr<Module>
+                    (new FastRoexBank(filterSpacing_, interpRoexBank_)));
         }
         else
         {
-            if(fastBank_)
-                modules_.push_back(unique_ptr<Module>
-                        (new FastRoexBank(filterSpacing_, interpRoexBank_)));
-            else
-                modules_.push_back(unique_ptr<Module>
-                        (new RoexBankGM(1.8, 38.9, filterSpacing_, interpRoexBank_)));
+            modules_.push_back(unique_ptr<Module> 
+                    (new RoexBankANSIS3407(1.8, 38.9, filterSpacing_)));
         }
         
         /*
