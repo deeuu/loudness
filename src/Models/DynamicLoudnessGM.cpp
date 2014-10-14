@@ -135,20 +135,20 @@ namespace loudness{
          * Outer-Middle ear filter 
          */  
 
-        //if filter coefficients have been not been provided
-        //use spectral weighting to approximate outer and middle ear
+        //if filter coefficients have not been provided
+        //use spectral weighting to approximate outer and middle ear response
         bool weightSpectrum = false;
         if(pathToFilterCoefs_.empty())
         {
-            LOUDNESS_WARNING("DynamicLoudnessGM: " 
-                    << "No filter coefficients, opting to weight power spectrum.");
+            LOUDNESS_WARNING(name_ 
+                    << ": No filter coefficients, opting to weight power spectrum.");
 
             weightSpectrum = true; 
 
-            //if weighting spectrum, should we use middleEarHPF for low freq?
+            //should we use for HPF for low freqs? default is true
             if(hpf_)
             {
-                LOUDNESS_DEBUG(name_ << ": Using Butter.");
+                LOUDNESS_DEBUG(name_ << ": Using HPF.");
                 modules_.push_back(unique_ptr<Module> (new Butter(3, 0, 50.0))); 
             }
         }
