@@ -77,6 +77,8 @@ namespace loudness{
             void setAnsiBank(bool ansiBank);
             void setPathToFilterCoefs(string pathToFilterCoefs);
             void setFastBank(bool fastBank);
+
+            Real getTimeStep() const;
             
         private:
             virtual bool initializeInternal(const SignalBank &input);

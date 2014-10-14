@@ -97,6 +97,11 @@ namespace loudness{
         fastBank_ = fastBank;
     }
 
+    Real DynamicLoudnessGM::getTimeStep() const
+    {
+        return timeStep_;
+    }
+
     void DynamicLoudnessGM::loadParameterSet(ParameterSet set)
     {
         //common to all
