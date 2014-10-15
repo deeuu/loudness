@@ -58,14 +58,19 @@ namespace loudness{
 
     /**
      * @class PowerSpectrum
-     * @brief Computes the power spectrum (PS) of an input SignalBank.  A
-     * mulit-resolution PowerSpectrum can be obtained by specifying different
-     * frequency bands along with the corresponding window lengths.  When the
-     * FFT size is greater than the window size, casual zero padding is used.
-     * All windows are aligned at their temporal centered.
+     * @brief Computes the power spectrum of an input SignalBank.  
      *
-     * It is advised that the input SignalBank has the correct frameRate when
-     * initialising this object.
+     * A multi-resolution power spectrum can be obtained by specifying a vector
+     * of non-overlapping frequency bands and a vector of window lengths
+     * corresponding to each band.
+     *
+     * When the internally calculated FFT size is greater than the window size,
+     * casual zero padding is used.  All windows are aligned at their temporal
+     * centered.
+     *
+     * If uniform is false, the per band spectrum is sampled non-uniformly at
+     * intervals corresponding to fs/windowSize. It is advised that the input
+     * SignalBank has the correct frameRate when initialising this object.
      */
     class PowerSpectrum: public Module
     {
