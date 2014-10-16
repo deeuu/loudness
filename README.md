@@ -9,9 +9,10 @@ The library consists of processing modules which can be cascaded to form a loudn
 To build the C++ library you will need:
   - libsndfile1-dev >= 1.0.25
   - libfftw3-dev >= 3.3.3
+  - zlib1g-dev >= 1.2.8
 
 To build the Python bindings you will need:
-  - swig >= 3.0.2
+  - swig >= 3.0.0
   - python-numpy-dev
 
 ## Acknowledgments 
