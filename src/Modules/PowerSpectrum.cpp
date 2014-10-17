@@ -37,11 +37,11 @@ namespace loudness{
         {
             fftw_free(fftInputBuf_);
             fftw_free(fftOutputBuf_);
-            LOUDNESS_DEBUG("PowerSpectrum: Buffers destroyed.");
+            LOUDNESS_DEBUG(name_ << ": Buffers destroyed.");
 
             for(vector<fftw_plan>::iterator i = fftPlans_.begin(); i != fftPlans_.end(); i++)
                 fftw_destroy_plan(*i);
-            LOUDNESS_DEBUG("PowerSpectrum: Plan(s) destroyed.");
+            LOUDNESS_DEBUG(name_ << ": Plan(s) destroyed.");
         }
     }
 
@@ -176,12 +176,12 @@ namespace loudness{
             //exclude DC and Nyquist if found
             if(bandBinIndices_[i][0]==0)
             {
-                LOUDNESS_WARNING("PowerSpectrum: DC found...excluding.");
+                LOUDNESS_WARNING(name_ << ": DC found...excluding.");
                 bandBinIndices_[i][0] = 1;
             }
             if(bandBinIndices_[i][1] >= (fftSize_[i]/2.0))
             {
-                LOUDNESS_WARNING("PowerSpectrum: Bin is >= nyquist...excluding.");
+                LOUDNESS_WARNING(name_ ": Bin is >= nyquist...excluding.");
                 bandBinIndices_[i][1] = (ceil(fftSize_[i]/2.0)-1);
             }
         }

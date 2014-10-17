@@ -23,59 +23,56 @@
 #include <fftw3.h>
 #include "../Support/Module.h"
 
-/*
- * =====================================================================================
- *                Notes:
- *
- *                - The power spectrum is computed following:
- *                http://www.dadisp.com/webhelp/dsphelp.htm#mergedprojects/refman2/SPLGROUP/POWSPEC.htm
- *                such that:
- *                sum(power_spec(x)) = mean(x*x)
- *                Thus the area under the curve represents the average power of x, rather than the total power of x.
- *
- *                - In the current implementation, DC and nyquist are not computed.
- *
- *                - The windows should be centred at the same sample point ((window_size-1)/2).
- *                Only if the window size is odd will this will be an integer.
- *                Note that with the multi-resolution specification of Glasberg and Moore,
- *                at fs=44100, we have a mixture of windows odd and even length windows, so technically
- *                they are not perfectly alined. To remedy this, one could force all window lengths to be
- *                odd, but I have not implemented this - it should not be a major issue.
- *
- *                - only bin frequencies (f_k) in the interval f_lo <= f_k < f_hi are included, where
- *                f_lo and f_hi denote the frequencies of the band edges.
- *                - when different fft sizes are used, the band configuration can be automatically adjusted 
- *                to maintain proximity between bins where possible by commenting out code in the cpp source.
- *                This does mean however that the [f_lo, f_hi) criterion is not satisfied.
- *
- *                TODO(dominic.ward@bcu.ac.uk):  
- *                - Develop Window class to allow windows other than hann.
- *  
- * =====================================================================================
- */
-
 namespace loudness{
 
     /**
      * @class PowerSpectrum
      * @brief Computes the power spectrum of an input SignalBank.  
      *
-     * A multi-resolution power spectrum can be obtained by specifying a vector
-     * of non-overlapping frequency bands and a vector of window lengths
-     * corresponding to each band.
+     * A multi-resolution power spectrum can be obtained by constructing the
+     * object with a vector of non-overlapping frequency bands and a vector of
+     * window lengths corresponding to each band. The band edges should be
+     * specified in Hz and the window sizes in in seconds.
      *
-     * When the internally calculated FFT size is greater than the window size,
-     * casual zero padding is used.  All windows are aligned at their temporal
-     * centered.
+     * For example:
+     *  RealVec bandFreqs{20, 100, 500};
+     *  RealVec windowSpec{0.064, 0.032};
+     *  PowerSpectrum object(bandFreqs, windowSpec, true)
      *
-     * If uniform is false, the per band spectrum is sampled non-uniformly at
-     * intervals corresponding to fs/windowSize. It is advised that the input
-     * SignalBank has the correct frameRate when initialising this object.
+     * Will construct a PowerSpectrum object which uses a 64ms window for all
+     * frequency bins in the interval [20, 100) and a 32ms window for all bins
+     * in the interval [100, 500). Thus the input SignalBank should hold a 64ms
+     * frames worth of input samples. The windows are all time-aligned at their
+     * centre points. The booleon argument corresponds to whether uniform
+     * spectral sampling is used (default is true). If uniform is false, the per
+     * band spectrum is sampled non-uniformly at intervals corresponding to
+     * fs/windowSize. Casual zero padding is applied when the internally
+     * calculated FFT size is greater than the window size (powers of two).
+     *
+     * In the current implementation, a Hann window is applied to all segments
+     * and both DC and Nyquist are not computed.
+     *
+     * Each spectrum is scaled such that the sum of component powers in a given
+     * band equals the average power in that band (see
+     * http://www.dadisp.com/webhelp/dsphelp.htm#mergedprojects/refman2/SPLGROUP/POWSPEC.htm).
+     *
+     * @todo Develop window class to allow for more functions.
+     *
+     * @author Dominic Ward
+     *
+     * @sa FrameGenerator
      */
     class PowerSpectrum: public Module
     {
     public:
 
+        /**
+         * @brief Constructs a PowerSpectrum object.
+         *
+         * @param bandFreqsHz A vector of consecutive band edges in Hz.
+         * @param windowSizeSecs A vector of window lengths for each band in ms.
+         * @param uniform true for uniform spectral sampling, false otherwise.
+         */
         PowerSpectrum(const RealVec& bandFreqsHz, const RealVec& windowSizeSecs, bool uniform);
 
         virtual ~PowerSpectrum();
@@ -88,7 +85,7 @@ namespace loudness{
 
         virtual void resetInternal();
 
-        void hannWindow(RealVec &w, int fft_size);
+        void hannWindow(RealVec &w, int fftSize);
 
         RealVec bandFreqsHz_, windowSizeSecs_;
         bool uniform_;

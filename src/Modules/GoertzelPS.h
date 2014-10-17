@@ -28,7 +28,7 @@ namespace loudness{
      * For example:
      *  RealVec bandFreqs{20, 100, 500};
      *  RealVec windowSpec{0.064, 0.032};
-     *  GoertzelPS object(bandFreq, windowSpec, 0.001)
+     *  GoertzelPS object(bandFreqs, windowSpec, 0.001)
      *
      * Will construct a GoertzelPS object which uses a 64ms window for all
      * frequency bins in the interval [20, 100) and a 32ms window for all bins
@@ -47,6 +47,7 @@ namespace loudness{
      *
      * In the current implementation, DC and nyquist are not computed.
      *
+     * @author Dominic Ward
      */
 
     /*
