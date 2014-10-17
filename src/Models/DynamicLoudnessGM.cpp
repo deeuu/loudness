@@ -24,6 +24,7 @@
 #include "../Modules/FIR.h"
 #include "../Modules/IIR.h"
 #include "../Modules/PowerSpectrum.h"
+#include "../Modules/GoertzelPS.h"
 #include "../Modules/CompressSpectrum.h"
 #include "../Modules/WeightSpectrum.h"
 #include "../Modules/FastRoexBank.h"
@@ -187,10 +188,13 @@ namespace loudness{
         /*
          * Frame generator for spectrogram
          */
-        int windowSize = round(0.064*input.getFs());
-        int hopSize = round(timeStep_*input.getFs());
-        modules_.push_back(unique_ptr<Module> 
-                (new FrameGenerator(windowSize, hopSize)));
+        if(!goertzel_)
+        {
+            int windowSize = round(0.064*input.getFs());
+            int hopSize = round(timeStep_*input.getFs());
+            modules_.push_back(unique_ptr<Module> 
+                    (new FrameGenerator(windowSize, hopSize)));
+        }
 
         /*
          * Multi-resolution spectrogram
@@ -201,8 +205,15 @@ namespace loudness{
         RealVec windowSizeSecs {0.064, 0.032, 0.016, 0.008, 0.004, 0.002};
         
         //create module
-        modules_.push_back(unique_ptr<Module> 
-                (new PowerSpectrum(bandFreqsHz, windowSizeSecs, uniform_))); 
+        if(goertzel_)
+        {
+            modules_.push_back(unique_ptr<Module> 
+                    (new GoertzelPS(bandFreqsHz, windowSizeSecs, timeStep_))); 
+        }
+        else{
+            modules_.push_back(unique_ptr<Module> 
+                    (new PowerSpectrum(bandFreqsHz, windowSizeSecs, uniform_))); 
+        }
 
         /*
          * Compression
