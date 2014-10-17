@@ -39,6 +39,7 @@ SOURCES=../src/cnpy/cnpy.cpp \
 ../src/Modules/SpecificLoudnessGM.cpp \
 ../src/Modules/IntegratedLoudnessGM.cpp \
 ../src/Modules/PowerSpectrum.cpp \
+../src/Modules/GoertzelPS.cpp \
 ../src/Modules/WeightSpectrum.cpp \
 ../src/Modules/CompressSpectrum.cpp \
 ../src/Models/DynamicLoudnessGM.cpp \

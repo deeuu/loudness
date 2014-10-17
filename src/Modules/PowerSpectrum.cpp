@@ -167,9 +167,11 @@ namespace loudness{
             //These are NOT the nearest components but satisfies f_k in [f_lo, f_hi)
             bandBinIndices_[i][0] = ceil(bandFreqsHz_[i]*fftSize_[i]/fs);
             bandBinIndices_[i][1] = ceil(bandFreqsHz_[i+1]*fftSize_[i]/fs)-1;
-
-            //for (f_lo, f_hi] use this line:
-            //bandBinIndices_[i][1] = floor(bandFreqsHz_[i+1]*fftSize_[i]/fs);
+            if(bandBinIndices[i][1]==0)
+            {
+                LOUDNESS_ERROR(name_ << ": No components found in band number " << i);
+                return 0;
+            }
 
             //exclude DC and Nyquist if found
             if(bandBinIndices_[i][0]==0)
@@ -208,10 +210,10 @@ namespace loudness{
         #if defined(DEBUG)
         for(int i=0; i<nWindows_; i++)
         {
-            Real edgeLo = bandBinIndices_[i][0]*fs/(float)fftSize_[i];
-            Real edgehi = bandBinIndices_[i][1]*fs/(float)fftSize_[i];
+            Real edgeLo = bandBinIndices_[i][0]*fs/(Real)fftSize_[i];
+            Real edgehi = bandBinIndices_[i][1]*fs/(Real)fftSize_[i];
             LOUDNESS_DEBUG(name_ 
-                    << ": Band edges (Hz) for window of size: " 
+                    << ": Band interval (Hz) for window of size: " 
                     << windowSizeSamps_[i] << " = [ " 
                     << std::setprecision (7) 
                     << edgeLo << ", " 

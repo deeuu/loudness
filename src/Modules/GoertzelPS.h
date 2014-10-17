@@ -75,7 +75,8 @@ namespace loudness{
         RealVecVec sine_, cosineTimes2_, vPrev_, vPrev2_;
         RealVec delayLine_, norm_;
         vector<int> windowSizeSamps_, startIdx_, endIdx_;
-        int nWindows_, hop_, delayLineSize_, delayWriteIdx_, ready_, blockSize_, largestWindowSize_;
+        int nWindows_, hopSize_, delayLineSize_, delayWriteIdx_;
+        int count_, initFrameReady_, frameReady_, largestWindowSize_;
     };
 }
 

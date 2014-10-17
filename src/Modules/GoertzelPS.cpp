@@ -31,7 +31,7 @@ namespace loudness{
 
         //window size in samples
         windowSizeSamps_.resize(nWindows_);
-        int largestWindowSize_=0;
+        largestWindowSize_=0;
         for(int i=0; i<nWindows_; i++)
         {
             windowSizeSamps_[i] = round(fs*windowSizeSecs_[i]);
@@ -57,35 +57,32 @@ namespace loudness{
         }
 
         //hop size must be integer multiple of audio block size
-        hop_ = round(fs*hopSizeSecs_);
-        blockSize_ = input.getNSamples();
-        if(hop_<blockSize_)
+        hopSize_ = round(fs*hopSizeSecs_);
+        int blockSize = input.getNSamples();
+        if(hopSize_<blockSize)
         {
             LOUDNESS_DEBUG(name_
                     << ": Hop size is less than "
                     << "input buffer size, automatically correcting...");
 
         }
-        else if(0!=(hop_%blockSize_))
+        else if(0!=(hopSize_%blockSize))
         {
             LOUDNESS_DEBUG(name_
                     << ": Hop size is not a multiple of input "
                     << "buffer size, automatically correcting...");
         }
-        hop_ = blockSize_*ceil(hop_/(Real)blockSize_);
+        hopSize_ = blockSize*ceil(hopSize_/(Real)blockSize);
         LOUDNESS_DEBUG(name_
-                << ": Hop size in samples: " << hop_);
+                << ": Hop size in samples: " << hopSize_);
 
-        //initialize the delay line make integer multiple of blockSize_
-        delayLineSize_ = blockSize_*ceil(largestWindowSize_/(Real)blockSize_) + hop_;
+        //initialize the delay line make integer multiple of blockSize
+        delayLineSize_ = blockSize*ceil(largestWindowSize_/(Real)blockSize) + hopSize_;
         LOUDNESS_DEBUG(name_
                 << ": Delay line size: "
                 << delayLineSize_);
         
         delayLine_.assign(delayLineSize_, 0.0);
-
-        //delay line read position per frame
-        delayWriteIdx_ = 0;
 
         //binLimits contains the desired bins indices (lo and hi) per band
         vector<vector<int> > bandBinIndices(nWindows_);
@@ -97,39 +94,22 @@ namespace loudness{
                 << ": Temporal centre of largest window: " 
                 << temporalCentre_);
 
-        startIdx_.resize(nWindows_);
-        endIdx_.resize(nWindows_);
-        norm_.resize(nWindows_);
-    
-        
-         
-
-
+        //delays for windows
         configureDelays();
+
+        norm_.resize(nWindows_);
         for(int i=0; i<nWindows_; i++)
         {
-            //SignalBank offset for temporal alignment
-            int tc2 = (windowSizeSamps_[i]-1)/2.0;
-            if(windowSizeSamps_[i] == largestWindowSize_)
-                startIdx_[i] = 0;
-            else
-                startIdx_[i] = delayLineSize_ - (int)round(temporalCentre_ - tc2);
-            endIdx_[i] = (startIdx_[i] + windowSizeSamps_[i]) % largestWindowSize_;
-
-            LOUDNESS_DEBUG(name_ 
-                    << ": Window size: " windowSizeSamps_[i]
-                    << " temporal centre: "
-                    << tc2
-                    << " start idx: " 
-                    << startIdx_[i] 
-                    << " end idx: " 
-                    << endIdx_[i]);
-            
             //bin indices to use for compiled spectrum
             bandBinIndices[i].resize(2);
             //These are NOT the nearest components but satisfies f_k in [f_lo, f_hi)
             bandBinIndices[i][0] = ceil(bandFreqsHz_[i]*windowSizeSamps_[i]/fs);
             bandBinIndices[i][1] = ceil(bandFreqsHz_[i+1]*windowSizeSamps_[i]/fs)-1;
+            if(bandBinIndices[i][1]==0)
+            {
+                LOUDNESS_ERROR(name_ << ": No components found in band number " << i);
+                return 0;
+            }
 
             //exclude DC and Nyquist if found
             if(bandBinIndices[i][0]==0)
@@ -139,7 +119,7 @@ namespace loudness{
             }
             if(bandBinIndices[i][1] >= (windowSizeSamps_[i]/2.0))
             {
-                LOUDNESS_WARNING(name_ ": Bin is >= nyquist...excluding.");
+                LOUDNESS_WARNING(name_ << ": Bin is >= nyquist...excluding.");
                 bandBinIndices[i][1] = (ceil(windowSizeSamps_[i]/2.0)-1);
             }
 
@@ -181,10 +161,10 @@ namespace loudness{
         #if defined(DEBUG)
         for(int i=0; i<nWindows_; i++)
         {
-            Real edgeLo = bandBinIndices[i][0]*fs/(float)windowSizeSamps_[i];
-            Real edgeHi = bandBinIndices[i][1]*fs/(float)windowSizeSamps_[i];
+            Real edgeLo = bandBinIndices[i][0]*fs/(Real)windowSizeSamps_[i];
+            Real edgeHi = bandBinIndices[i][1]*fs/(Real)windowSizeSamps_[i];
             LOUDNESS_DEBUG(name_ 
-                    << ": Band edges (Hz) for Window of size: " 
+                    << ": Band interval (Hz) for Window of size: " 
                     << windowSizeSamps_[i]
                     << " = [ " << edgeLo << ", " 
                     << edgeHi << " ].");
@@ -199,7 +179,7 @@ namespace loudness{
 
         //output bank
         output_.initialize(nBins, 1, fs);
-        output_.setFrameRate(fs/(Real)hop_);
+        output_.setFrameRate(fs/(Real)hopSize_);
 
         //fill in variables and compute centre frequencies
         int k=0;
@@ -217,22 +197,33 @@ namespace loudness{
             //filter coefficients
             for(int j=bandBinIndices[i][0]; j<=bandBinIndices[i][1]; j++)
             {
-		sine_[i].push_back(sin(2*PI*j/(Real)windowSizeSamps_[i]));
-                cosineTimes2_[i].push_back(2*cos(2*PI*j/(Real)windowSizeSamps_[i])); 
+                Real phi = 2*PI*j/(Real)windowSizeSamps_[i];
+                Real sinPhi = sin(phi);
+                Real cosPhi = cos(phi);
+		sine_[i].push_back(sinPhi);
+                cosineTimes2_[i].push_back(2*cosPhi); 
                 vPrev_[i].push_back(0.0);
                 vPrev2_[i].push_back(0.0);
 
                 LOUDNESS_DEBUG(name_ 
                         << ": Freq: " << j*fs/(Real)windowSizeSamps_[i] 
-                        << " Re{z_coef}: " << 0.5*cosineTimes2_[i][k] 
-                        << " Im{z_coef}: " << sine_[i][k]);
+                        << " Re{z_coef}: " << cosPhi
+                        << " Im{z_coef}: " << sinPhi);
             }
         }
 
-        //frame timing variables...first frame ready at end of block
-        ready_ = blockSize_*ceil(largestWindowSize_/(Real)blockSize_);
+        //timing
+        initFrameReady_ = (delayLineSize_ - hopSize_) / blockSize;
+        frameReady_ = hopSize_ / blockSize;
+
         LOUDNESS_DEBUG(name_
-                << ": First frame ready after receiving " << ready_ << " samples.");
+                << ": Number of process calls until first frame: " 
+                << initFrameReady_
+                << "\n Number of process calls until subsequent frames: " 
+                << frameReady_);
+
+        delayWriteIdx_ = 0;
+        count_ = 0;
 
         return 1;
     }
@@ -246,18 +237,16 @@ namespace loudness{
         int nSamples = input.getNSamples();
         for(int i=0; i<nSamples; i++)
             delayLine_[delayWriteIdx_++] = input.getSample(0, i);
-              
+        delayWriteIdx_ = delayWriteIdx_ % delayLineSize_;
+        count_++;
+        
         //the Goertzels
-        int tempIdx1, tempIdx2;
         Real comb, v;
         for(int i=0; i<nWindows_; i++)
         {
-            tempIdx1 = startIdx_[i];
-            tempIdx2 = endIdx_[i];
-
             for(int k=0; k<nSamples; k++)
             {
-                comb = delayLine_[tempIdx1++] - delayLine_[tempIdx2++];
+                comb = delayLine_[startIdx_[i]++] - delayLine_[endIdx_[i]++];
 
                 for(unsigned int j=0; j<vPrev_[i].size(); j++)
                 {
@@ -266,26 +255,31 @@ namespace loudness{
                     vPrev_[i][j] = v;
                 }
 
-                tempIdx1 = tempIdx1 % delayLineSize_;
-                tempIdx2 = tempIdx2 % delayLineSize_;
+                startIdx_[i] = startIdx_[i] % delayLineSize_;
+                endIdx_[i] = endIdx_[i] % delayLineSize_;
             }
-
-            startIdx_[i] = tempIdx1;
-            endIdx_[i] = tempIdx2;
         }
 
-        if (delayWriteIdx_ == ready_)
+        if(count_ == initFrameReady_)
         {
-            delayWriteIdx_  = delayWriteIdx_ % delayLineSize_;
-            ready_ = delayWriteIdx_+hop_;
+            
+            #if defined(DEBUG)
+            for(int i=0; i<nWindows_; i++)
+            {
+                for(unsigned int j=0; j<vPrev_[i].size(); j++)
+                    LOUDNESS_DEBUG(name_ << ", v[n]: " << vPrev_[i][j]);
+            }
+            #endif
 
             //window the spectrum and compute PS
             windowedPS();
 
             //output ready
             output_.setTrig(1);
-        }
 
+            count_ = 0;
+            initFrameReady_ = frameReady_;
+        }
     }
 
     void GoertzelPS::windowedPS()
@@ -296,9 +290,10 @@ namespace loudness{
         for(int i=0; i<nWindows_; i++)
         {
             for(unsigned int j=0; j<vPrev_[i].size(); j++)
-            {
+            { 
+                // r*cos(phi)*v[n]-v[n-1]
 		re = (0.5*cosineTimes2_[i][j]
-                        * vPrev_[i][j]) - vPrev2_[i][j]; // cos(phi)*v[n]-v[n-1]
+                        * vPrev_[i][j]) - vPrev2_[i][j];
 		im = sine_[i][j]*vPrev_[i][j];	
 
                 //checked out:17.7.14
@@ -329,39 +324,38 @@ namespace loudness{
         }
     }
 
-    void configureDelays()
+    void GoertzelPS::configureDelays()
     {
+        startIdx_.resize(nWindows_);
+        endIdx_.resize(nWindows_);
+        delayLine_.assign(delayLineSize_, 0.0);
+
         for(int i=0; i<nWindows_; i++)
         {
             //SignalBank offset for temporal alignment
-            int tc2 = (windowSizeSamps_[i]-1)/2.0;
+            Real tc2 = (windowSizeSamps_[i]-1)/2.0;
             if(windowSizeSamps_[i] == largestWindowSize_)
                 startIdx_[i] = 0;
             else
                 startIdx_[i] = delayLineSize_ - (int)round(temporalCentre_ - tc2);
-            endIdx_[i] = (startIdx_[i] + windowSizeSamps_[i]) % largestWindowSize_;
+
+            endIdx_[i] = (delayLineSize_ + startIdx_[i] + windowSizeSamps_[i]) % largestWindowSize_;
 
             LOUDNESS_DEBUG(name_ 
-                    << ": Window size: " windowSizeSamps_[i]
-                    << " temporal centre: "
-                    << tc2
-                    << " start idx: " 
-                    << startIdx_[i] 
-                    << " end idx: " 
-                    << endIdx_[i]);
+                    << ": Window size: " << windowSizeSamps_[i]
+                    << " temporal centre: " << tc2
+                    << " start idx: " << startIdx_[i] 
+                    << " end idx: " << endIdx_[i]);
         }
     }
 
     void GoertzelPS::resetInternal()
     {
         delayWriteIdx_ = 0;
-        ready_ = blockSize_*ceil(windowSizeSamps_[0]/(Real)blockSize_);
-
+        count_ = 0;
+        initFrameReady_ = delayLineSize_ - hopSize_;
         delayLine_.assign(delayLineSize_, 0.0);
-
         configureDelays();
-
-        ready_ = blockSize_*ceil(largestWindowSize_/(Real)blockSize_);
 
         for(int i=0; i<nWindows_; i++)
         {
