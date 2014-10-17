@@ -167,7 +167,8 @@ namespace loudness{
             //These are NOT the nearest components but satisfies f_k in [f_lo, f_hi)
             bandBinIndices_[i][0] = ceil(bandFreqsHz_[i]*fftSize_[i]/fs);
             bandBinIndices_[i][1] = ceil(bandFreqsHz_[i+1]*fftSize_[i]/fs)-1;
-            if(bandBinIndices[i][1]==0)
+
+            if(bandBinIndices_[i][1]==0)
             {
                 LOUDNESS_ERROR(name_ << ": No components found in band number " << i);
                 return 0;
@@ -181,7 +182,8 @@ namespace loudness{
             }
             if(bandBinIndices_[i][1] >= (fftSize_[i]/2.0))
             {
-                LOUDNESS_WARNING(name_ ": Bin is >= nyquist...excluding.");
+                LOUDNESS_WARNING(name_ << 
+                        ": Bin is >= nyquist...excluding.");
                 bandBinIndices_[i][1] = (ceil(fftSize_[i]/2.0)-1);
             }
         }
