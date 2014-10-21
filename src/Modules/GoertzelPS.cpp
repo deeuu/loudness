@@ -8,10 +8,16 @@ namespace loudness{
             Module("GoertzelPS"),
             bandFreqsHz_(bandFreqsHz),
             windowSizeSecs_(windowSizeSecs),
-            hopSizeSecs_(hopSizeSecs)
+            hopSizeSecs_(hopSizeSecs),
+            windowSpectrum_(true)
     {}
 
     GoertzelPS::~GoertzelPS() {}
+
+    void GoertzelPS::setWindowSpectrum(bool windowSpectrum)
+    {
+        windowSpectrum_ = windowSpectrum;
+    }
 
     bool GoertzelPS::initializeInternal(const SignalBank &input)
     {   
@@ -82,8 +88,6 @@ namespace loudness{
                 << ": Delay line size: "
                 << delayLineSize_);
         
-        delayLine_.assign(delayLineSize_, 0.0);
-
         //binLimits contains the desired bins indices (lo and hi) per band
         vector<vector<int> > bandBinIndices(nWindows_);
 
@@ -263,6 +267,14 @@ namespace loudness{
         if(count_ == initFrameReady_)
         {
             
+            LOUDNESS_DEBUG(name_ << ": Computing new frame");
+            LOUDNESS_DEBUG(name_ << ": write index: " << delayWriteIdx_);
+            for(int i=0; i<nWindows_; i++)
+                LOUDNESS_DEBUG(name_
+                        << ": start index: " << startIdx_[i]
+                        << ": end index: " << endIdx_[i]);
+
+            /*
             #if defined(DEBUG)
             for(int i=0; i<nWindows_; i++)
             {
@@ -270,9 +282,13 @@ namespace loudness{
                     LOUDNESS_DEBUG(name_ << ", v[n]: " << vPrev_[i][j]);
             }
             #endif
+            */
 
             //window the spectrum and compute PS
-            windowedPS();
+            if(windowSpectrum_)
+                windowedPS();
+            else
+                computePS();
 
             //output ready
             output_.setTrig(1);
@@ -281,6 +297,25 @@ namespace loudness{
             initFrameReady_ = frameReady_;
         }
     }
+
+    void GoertzelPS::computePS()
+    {
+        Real re, im;
+        int binWriteIdx=0;
+        for(int i=0; i<nWindows_; i++)
+        {
+            for(unsigned int j=1; j<(vPrev_[i].size()-1); j++)
+            { 
+                // r*cos(phi)*v[n]-v[n-1]
+		re = (0.5*cosineTimes2_[i][j]
+                        * vPrev_[i][j]) - vPrev2_[i][j];
+		im = sine_[i][j]*vPrev_[i][j];	
+
+                output_.setSample(binWriteIdx++, 0, norm_[i]*(re*re + im*im));
+            }
+        }
+    }
+
 
     void GoertzelPS::windowedPS()
     {
@@ -339,11 +374,13 @@ namespace loudness{
             else
                 startIdx_[i] = delayLineSize_ - (int)round(temporalCentre_ - tc2);
 
-            endIdx_[i] = (delayLineSize_ + startIdx_[i] + windowSizeSamps_[i]) % largestWindowSize_;
+            //check this line
+            endIdx_[i] = (delayLineSize_ + startIdx_[i] - windowSizeSamps_[i]) % delayLineSize_;
 
             LOUDNESS_DEBUG(name_ 
                     << ": Window size: " << windowSizeSamps_[i]
-                    << " temporal centre: " << tc2
+                    << " centre point: " 
+                    << ((startIdx_[i] + largestWindowSize_ ) % delayLineSize_) - tc2 - 1
                     << " start idx: " << startIdx_[i] 
                     << " end idx: " << endIdx_[i]);
         }

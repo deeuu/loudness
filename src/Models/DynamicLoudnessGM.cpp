@@ -219,8 +219,17 @@ namespace loudness{
          * Compression
          */
         if(compressionCriterion_ > 0)
-            modules_.push_back(unique_ptr<Module>
-                    (new CompressSpectrum(compressionCriterion_))); 
+        {
+            if(goertzel_)
+            {
+                LOUDNESS_WARNING(name_ << ": Compression cannot be used with bank of Goertzels");
+            }
+            else
+            {
+                modules_.push_back(unique_ptr<Module>
+                        (new CompressSpectrum(compressionCriterion_))); 
+            }
+        }
 
         /*
          * Spectral weighting if necessary

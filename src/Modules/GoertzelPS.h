@@ -1,5 +1,5 @@
-#ifndef GoertzelPS_H_ 
-#define GoertzelPS_H
+#ifndef GOERTZELPS_H
+#define GOERTZELPS_H
 
 #include "../Support/Module.h"
 
@@ -63,12 +63,14 @@ namespace loudness{
     public:
         GoertzelPS(const RealVec& bandFreqsHz, const RealVec& windowSizeSecs, Real hopSizeSecs);
         virtual ~GoertzelPS();
+        void setWindowSpectrum(bool windowSpectrum);
 
     private:
         virtual bool initializeInternal(const SignalBank &input);
         virtual void processInternal(const SignalBank &input);
         virtual void resetInternal();
         void windowedPS();
+        void computePS();
         void configureDelays();
 
         RealVec bandFreqsHz_, windowSizeSecs_;
@@ -78,6 +80,7 @@ namespace loudness{
         vector<int> windowSizeSamps_, startIdx_, endIdx_;
         int nWindows_, hopSize_, delayLineSize_, delayWriteIdx_;
         int count_, initFrameReady_, frameReady_, largestWindowSize_;
+        bool windowSpectrum_;
     };
 }
 

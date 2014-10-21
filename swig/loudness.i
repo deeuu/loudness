@@ -86,7 +86,7 @@ using std::string;
 %include "../src/Modules/IIR.h"
 %include "../src/Modules/Butter.h"
 %include "../src/Modules/PowerSpectrum.h"
-#include "../src/Modules/GoertzelPS.h"
+%include "../src/Modules/GoertzelPS.h"
 %include "../src/Modules/CompressSpectrum.h"
 %include "../src/Modules/WeightSpectrum.h"
 %include "../src/Modules/IntegratedLoudnessGM.h"
