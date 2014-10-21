@@ -219,6 +219,7 @@ namespace loudness{
         //timing
         initFrameReady_ = (delayLineSize_ - hopSize_) / blockSize;
         frameReady_ = hopSize_ / blockSize;
+        maxCount_ = initFrameReady_;
 
         LOUDNESS_DEBUG(name_
                 << ": Number of process calls until first frame: " 
@@ -264,7 +265,7 @@ namespace loudness{
             }
         }
 
-        if(count_ == initFrameReady_)
+        if(count_ == maxCount_)
         {
             
             LOUDNESS_DEBUG(name_ << ": Computing new frame");
@@ -294,7 +295,7 @@ namespace loudness{
             output_.setTrig(1);
 
             count_ = 0;
-            initFrameReady_ = frameReady_;
+            maxCount_ = frameReady_;
         }
     }
 
@@ -364,6 +365,7 @@ namespace loudness{
         startIdx_.resize(nWindows_);
         endIdx_.resize(nWindows_);
         delayLine_.assign(delayLineSize_, 0.0);
+        delayWriteIdx_ = 0;
 
         for(int i=0; i<nWindows_; i++)
         {
@@ -388,10 +390,8 @@ namespace loudness{
 
     void GoertzelPS::resetInternal()
     {
-        delayWriteIdx_ = 0;
         count_ = 0;
-        initFrameReady_ = delayLineSize_ - hopSize_;
-        delayLine_.assign(delayLineSize_, 0.0);
+        maxCount_ = initFrameReady_;
         configureDelays();
 
         for(int i=0; i<nWindows_; i++)
