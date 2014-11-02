@@ -99,7 +99,7 @@ namespace loudness{
      * This is a fourth order polynomial fit to data points obtained from visual
      * inspection of the Figure 9 in Moore et al (1997).
      */
-    Real kdB(freq);
+    Real kdB(Real freq);
     /**
      * @brief Returns loudness level in phons given loudness in sones.  
      *

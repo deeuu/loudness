@@ -77,7 +77,7 @@ namespace loudness{
     {
         if (freq>=1000)
         {
-            return -3.0
+            return -3.0;
         }
         else
         {
