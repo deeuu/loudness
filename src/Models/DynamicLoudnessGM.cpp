@@ -122,6 +122,7 @@ namespace loudness{
                 break;
             case FASTER1:
                 setFastBank(true);
+                setInterpRoexBank(true);
                 setCompressionCriterion(0.3);
                 break;
             default:

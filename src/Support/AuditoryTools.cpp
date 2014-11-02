@@ -73,6 +73,27 @@ namespace loudness{
         }
     }
 
+    Real kdB(Real freq)
+    {
+        if (freq>=1000)
+        {
+            return -3.0
+        }
+        else
+        {
+            Real logFreq;
+            if(freq<=50)
+                logFreq = log10(50);
+            else
+                logFreq = log10(freq);
+
+            return 4.4683421395470813 * pow(logFreq,4) 
+                - 49.680265975480935 * pow(logFreq,3) 
+                + 212.89091871289099 * pow(logFreq,2) 
+                - 418.88552055717832 * logFreq + 317.07466358701885;
+        }
+    };
+
     Real SoneToPhon(Real sone, bool ansiS3407)
     {
 	Real s = log(sone);

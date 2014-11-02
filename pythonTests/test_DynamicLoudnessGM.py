@@ -12,6 +12,7 @@ nFrames = audio.getNFrames()
 
 #Create the loudness model
 model = ln.DynamicLoudnessGM("../filterCoefs/32000_IIR_23_freemid.npy")
+#model.setGoertzel(True)
 model.initialize(audioBank)
 loudnessBank = model.getModuleOutput(model.getNModules()-1)
 nChannels = loudnessBank.getNChannels()

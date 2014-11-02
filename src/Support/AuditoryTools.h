@@ -93,6 +93,14 @@ namespace loudness{
     Real GdBToAlpha(Real gdB);
 
     /**
+     * @brief Returns the detection efficiency parameter K (in decibels) corresponding
+     * to the input frequency @freq in Hz.
+     *
+     * This is a fourth order polynomial fit to data points obtained from visual
+     * inspection of the Figure 9 in Moore et al (1997).
+     */
+    Real kdB(freq);
+    /**
      * @brief Returns loudness level in phons given loudness in sones.  
      *
      * Values were calculating by inputting a 1kHz tone at
