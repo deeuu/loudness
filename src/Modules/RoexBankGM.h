@@ -39,6 +39,8 @@ namespace loudness{
 
         virtual ~RoexBankGM();
 
+        void setApproxRoex(bool approxRoex);
+
     private:
         /*
          *--------------------------------------------------------------------------------------

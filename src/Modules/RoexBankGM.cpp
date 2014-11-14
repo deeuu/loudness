@@ -17,6 +17,11 @@ namespace loudness{
     {
     }
 
+    void RoexBankGM::setApproxRoex(bool approxRoex)
+    {
+        approxRoex_ = approxRoex;
+    }
+
     bool RoexBankGM::initializeInternal(const SignalBank &input)
     {
 
