@@ -30,7 +30,7 @@ namespace loudness{
 
     public:
 
-        DoubleRoexBank(Real camLo = 1.5, Real camHi = 40.1, Real camStep = 0.1);
+        DoubleRoexBank(Real camLo = 1.5, Real camHi = 40.2, Real camStep = 0.1);
 
         virtual ~DoubleRoexBank();
 
