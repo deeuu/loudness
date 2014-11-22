@@ -31,6 +31,7 @@ setup(name="loudness",
             "../src/Modules/CompressSpectrum.cpp",
             "../src/Modules/WeightSpectrum.cpp",
             "../src/Models/DynamicLoudnessGM.cpp",
+            "../src/Models/DynamicLoudnessCH.cpp",
             "../src/Models/SteadyLoudnessANSIS3407.cpp"
             ],
         #include_dirs = [numpy_include, "/usr/include"],

@@ -43,26 +43,33 @@ namespace loudness{
     class IntegratedLoudnessGM : public Module
     {
     public:
-
-        IntegratedLoudnessGM(bool diotic=true, bool uniform=true, Real cParam=1);
+        enum SMOOTHTIMES{
+            GM02 = 0,
+            GM03 = 1,
+            CH12 = 2
+        };
+ 
+        IntegratedLoudnessGM(SMOOTHTIMES=GM02, bool diotic=true, Real cParam=1);
 
         virtual ~IntegratedLoudnessGM();
 
-        void setAttackSTLCoef(Real tau);
-        void setReleaseSTLCoef(Real tau);
-        void setAttackLTLCoef(Real tau);
-        void setReleaseLTLCoef(Real tau);
+        void loadSmoothingTimes(SMOOTHTIMES author);
+        void setAttackTimeSTL(Real attackTimeSTL);
+        void setReleaseTimeSTL(Real releaseTimeSTL);
+        void setAttackTimeLTL(Real attackTimeLTL);
+        void setReleaseTimeLTL(Real releaseTimeLTL);
 
     private:
         virtual bool initializeInternal(const SignalBank &input);
         virtual void processInternal(const SignalBank &input);
         virtual void resetInternal();
 
-        bool diotic_, uniform_;
+        bool diotic_;
         Real cParam_;
-        Real attackSTLCoef_, releaseSTLCoef_;
-        Real attackLTLCoef_, releaseLTLCoef_;
+        Real attackTimeSTL_, releaseTimeSTL_, attackTimeLTL_, releaseTimeLTL_;
+        Real attackSTLCoef_, releaseSTLCoef_, attackLTLCoef_, releaseLTLCoef_;
         Real camStep_, timeStep_;
+        bool uniform_;
         RealVec camDif_;
     };
 }

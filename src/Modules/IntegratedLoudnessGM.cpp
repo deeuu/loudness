@@ -22,54 +22,76 @@
 
 namespace loudness{
 
-    IntegratedLoudnessGM::IntegratedLoudnessGM(bool diotic, bool uniform, Real cParam) :
+    IntegratedLoudnessGM::IntegratedLoudnessGM(SMOOTHTIMES author, bool diotic, Real cParam) :
         diotic_(diotic),
-        uniform_(uniform),
-        cParam_(cParam)
+        cParam_(cParam),
+        uniform_(false)
     {
         LOUDNESS_DEBUG("IntegratedLoudness: Constructed.");
         name_ = "IntegratedLoudness";
+
+        loadSmoothingTimes(author);
+    }
+
+    void IntegratedLoudnessGM::loadSmoothingTimes(SMOOTHTIMES author)
+    {
+        switch(author)
+        {
+            case(GM02):
+                setAttackTimeSTL(-0.001/log(1-0.045));    
+                setReleaseTimeSTL(-0.001/log(1-0.02));
+                setAttackTimeLTL(-0.001/log(1-0.01));
+                setReleaseTimeLTL(-0.001/log(1-0.0005));
+                break;
+            case(GM03):
+                setAttackTimeSTL(-0.001/log(1-0.045));    
+                setReleaseTimeSTL(-0.001/log(1-0.02));
+                setAttackTimeLTL(-0.001/log(1-0.01));
+                setReleaseTimeLTL(-0.001/log(1-0.005));
+                break;
+            case(CH12):
+                setAttackTimeSTL(0.016);    
+                setReleaseTimeSTL(0.032);
+                setAttackTimeLTL(0.1);
+                setReleaseTimeLTL(2.0);
+        }
     }
 
     IntegratedLoudnessGM::~IntegratedLoudnessGM()
     {
     };
 
-    void IntegratedLoudnessGM::setAttackSTLCoef(Real tau)
+    void IntegratedLoudnessGM::setAttackTimeSTL(Real attackTimeSTL)
     {
-        LOUDNESS_DEBUG("IntegratedLoudnessGM: STL attack time: " << tau);
-        attackSTLCoef_ = 1-exp(-timeStep_/tau);
+        attackTimeSTL_ = attackTimeSTL;
     }
 
-    void IntegratedLoudnessGM::setReleaseSTLCoef(Real tau)
+    void IntegratedLoudnessGM::setReleaseTimeSTL(Real releaseTimeSTL)
     {
-        LOUDNESS_DEBUG("IntegratedLoudnessGM: STL release time: " << tau);
-        releaseSTLCoef_ = 1-exp(-timeStep_/tau);
+        releaseTimeSTL_ = releaseTimeSTL;
     }
 
-    void IntegratedLoudnessGM::setAttackLTLCoef(Real tau)
+    void IntegratedLoudnessGM::setAttackTimeLTL(Real attackTimeLTL)
     {
-        LOUDNESS_DEBUG("IntegratedLoudnessGM: LTL attack time: " << tau);
-        attackLTLCoef_ = 1-exp(-timeStep_/tau);
+        attackTimeLTL_ = attackTimeLTL;
     }
 
-    void IntegratedLoudnessGM::setReleaseLTLCoef(Real tau)
+    void IntegratedLoudnessGM::setReleaseTimeLTL(Real releaseTimeLTL)
     {
-        LOUDNESS_DEBUG("IntegratedLoudnessGM: LTL release time: " << tau);
-        releaseLTLCoef_ = 1-exp(-timeStep_/tau);
+        releaseTimeLTL_ = releaseTimeLTL;
     }
 
     bool IntegratedLoudnessGM::initializeInternal(const SignalBank &input)
     {
         if(input.getNChannels()<1)
         {
-            LOUDNESS_ERROR("IntegratedLoudnessGM: Insufficient channels.");
+            LOUDNESS_ERROR(name_ << ": Insufficient channels.");
             return 0;
         }
 
         //assumes uniformly spaced ERB filters
         camStep_ = FreqToCam(input.getCentreFreq(1))-FreqToCam(input.getCentreFreq(0));
-        LOUDNESS_DEBUG("IntegratedLoudnessGM: Filter spacing (Cams): " << camStep_);
+        LOUDNESS_DEBUG(name_ << ": Filter spacing (Cams): " << camStep_);
 
         //if excitation pattern is sampled non-uniformly, approximate integral
         if(!uniform_)
@@ -91,7 +113,7 @@ namespace loudness{
         if(diotic_)
         {
             cParam_ *= 2;
-            LOUDNESS_DEBUG("IntegratedLoudnessGM: Diotic presentation, loudness will be multiplied by 2.");
+            LOUDNESS_DEBUG(name_ << ": Diotic presentation, loudness will be multiplied by 2.");
         }
 
         //update scaling factor
@@ -99,15 +121,13 @@ namespace loudness{
 
         //coefficient configuration
         timeStep_ = 1.0/input.getFrameRate();
-        LOUDNESS_DEBUG("IntegratedLoudnessGM: Time step: " << timeStep_);
+        LOUDNESS_DEBUG(name_ << ": IntegratedLoudnessGM: Time step: " << timeStep_);
         
         //short-term loudness time-constants (alpha from paper)
-        setAttackSTLCoef(-0.001/log(1-0.045));    
-        setReleaseSTLCoef(-0.001/log(1-0.02));
-
-        //long-term loudness time-constants
-        setAttackLTLCoef(-0.001/log(1-0.01));
-        setReleaseLTLCoef(-0.001/log(1-0.0005));
+        attackSTLCoef_ = 1-exp(-timeStep_/attackTimeSTL_);
+        releaseSTLCoef_ = 1-exp(-timeStep_/releaseTimeSTL_);
+        attackLTLCoef_ = 1-exp(-timeStep_/attackTimeLTL_);
+        releaseLTLCoef_ = 1-exp(-timeStep_/releaseTimeLTL_);
 
         //output SignalBank
         output_.initialize(3, 1, input.getFs());

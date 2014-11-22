@@ -83,7 +83,7 @@ namespace loudness{
         * Loudness integration 
         */   
         modules_.push_back(unique_ptr<Module>
-                (new IntegratedLoudnessGM(diotic_)));
+                (new IntegratedLoudnessGM));
 
         return 1;
     }

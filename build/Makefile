@@ -42,8 +42,9 @@ SOURCES=../src/cnpy/cnpy.cpp \
 ../src/Modules/GoertzelPS.cpp \
 ../src/Modules/WeightSpectrum.cpp \
 ../src/Modules/CompressSpectrum.cpp \
+../src/Models/SteadyLoudnessANSIS3407.cpp \
 ../src/Models/DynamicLoudnessGM.cpp \
-../src/Models/SteadyLoudnessANSIS3407.cpp 
+../src/Models/DynamicLoudnessCH.cpp \
 
 OBJECTS=$(SOURCES:.cpp=.o)
 
