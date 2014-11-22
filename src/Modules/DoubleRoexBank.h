@@ -24,7 +24,23 @@
 
 namespace loudness{
 
-    //Need to run tests with this class
+    /**
+     * @class DoubleRoexBank
+     * @brief Applies a bank of double roex filters to an input power spectrum.
+     *
+     * This is an implementation of the double roex filter model proposed by
+     * Chen et al (2011). The model makes use of a passive wideband filter and
+     * an active narrowband filter.  The output of the passive filter controls
+     * the active gain of the narrowband filter.
+     *
+     * REFERENCES:
+     *
+     * Chen, Z., Hu, G., Glasberg, B. R., & Moore, B. C. J. (2011). A new method
+     * of calculating auditory excitation patterns and loudness for steady
+     * sounds.  Hearing Research, 282(1-2), 204–15.
+     *
+     */
+ 
     class DoubleRoexBank : public Module
     {
 
