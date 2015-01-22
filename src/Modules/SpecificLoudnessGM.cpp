@@ -37,7 +37,7 @@ namespace loudness{
         //Number of filters below 500Hz
         nFiltersLT500_ = 0;
 
-        Real eThrqdB500Hz = IntExc(500);
+        Real eThrqdB500Hz = internalExcitation(500);
         //fill loudness parameter vectors
         Real fcPrev = input.getCentreFreq(0);
         for(int i=0; i<input.getNChannels(); i++)
@@ -50,12 +50,12 @@ namespace loudness{
 
             if(fc<500)
             {
-                Real eThrqdB = IntExc(fc);
+                Real eThrqdB = internalExcitation(fc);
                 eThrqParam_.push_back(pow(10,eThrqdB/10.0));
                 Real gdB = eThrqdB500Hz-eThrqdB;
                 gParam_.push_back(pow(10, gdB/10.0));
-                aParam_.push_back(GdBToA(gdB));
-                alphaParam_.push_back(GdBToAlpha(gdB));
+                aParam_.push_back(gdBToA(gdB));
+                alphaParam_.push_back(gdBToAlpha(gdB));
                 /* 
                 LOUDNESS_DEBUG("SpecificLoudnessGM: eThrq: " <<
                         eThrqParam_[nFiltersLT500_] << ", gdB: " << gdB << ", A: "

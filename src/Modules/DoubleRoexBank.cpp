@@ -54,7 +54,7 @@ namespace loudness{
         {
             //erb to frequency
             cam = camLo_+(i*camStep_);
-            fc = CamToFreq(cam);
+            fc = camToFreq(cam);
             output_.setCentreFreq(i,fc);
 
             //slopes

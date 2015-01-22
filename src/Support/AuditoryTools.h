@@ -34,7 +34,7 @@ namespace loudness{
      *
      * @return ERB.
      */
-    inline Real FreqToERB(Real freq)
+    inline Real freqToERB(Real freq)
     {
         return 24.673*(4368e-6*freq+1);
     }
@@ -48,7 +48,7 @@ namespace loudness{
      *
      * @return ERB number in Cams.
      */
-    inline Real FreqToCam(Real freq)
+    inline Real freqToCam(Real freq)
     {
         return 21.366*log10(4368e-6*freq+1);
     }
@@ -62,7 +62,7 @@ namespace loudness{
      *
      * @return Frequency in Hz.
      */
-    inline Real CamToFreq(Real cam)
+    inline Real camToFreq(Real cam)
     {
         return (pow(10, (cam/21.366))-1)/4368e-6;
     }
@@ -74,7 +74,7 @@ namespace loudness{
      * This is a third order polynomial fit to the data given in Table 4 ANSI
      * S3.04-2007.
      */
-    Real IntExc(Real freq);
+    Real internalExcitation(Real freq);
 
     /**
      * @brief Returns the value of parameter A given G in dB.
@@ -82,7 +82,7 @@ namespace loudness{
      * This is a fifth order polynomial fit to the data given in Table 6 ANSI
      * S3.04-2007.
      */
-    Real GdBToA(Real gdB);
+    Real gdBToA(Real gdB);
 
     /**
      * @brief Returns the value of parameter alpha given G in dB.
@@ -90,7 +90,7 @@ namespace loudness{
      * This is a second order polynomial fit to the data given in Table 5 ANSI
      * S3.04-2007.
      */
-    Real GdBToAlpha(Real gdB);
+    Real gdBToAlpha(Real gdB);
 
     /**
      * @brief Returns the detection efficiency parameter K (in decibels) corresponding
@@ -115,7 +115,7 @@ namespace loudness{
      *
      * @return Loudness in phons.
      */
-    Real SoneToPhon(Real sone, bool ansiS3407);
+    Real soneToPhon(Real sone, bool ansiS3407);
 
     /**
      * @class OME

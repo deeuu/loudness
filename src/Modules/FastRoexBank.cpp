@@ -45,11 +45,11 @@ namespace loudness{
         for(int i=0; i<input.getNChannels(); i++)
         {
             //ERB number of Centre frequency
-            Real cam = FreqToCam(input.getCentreFreq(i));
+            Real cam = freqToCam(input.getCentreFreq(i));
 
             //rectangular ERB band edges in Hz
-            Real freqLo = CamToFreq(cam-0.5);
-            Real freqHi = CamToFreq(cam+0.5);
+            Real freqLo = camToFreq(cam-0.5);
+            Real freqHi = camToFreq(cam+0.5);
 
             //lower and upper bin indices
             rectBinIndices_[i].resize(2);
@@ -85,7 +85,7 @@ namespace loudness{
         Real camHi = 38.9;
         nFilters_ = round((camHi-camLo)/camStep_)+1; 
 
-        const Real p51_1k = 4000 / FreqToERB(1000.0);
+        const Real p51_1k = 4000 / freqToERB(1000.0);
 
         //p upper is level invariant
         pu_.assign(nFilters_, 0.0);
@@ -112,7 +112,7 @@ namespace loudness{
             output_.initialize(372, 1, input.getFs());
             for(int i=0; i<372; i++)
             {
-                output_.setCentreFreq(i, CamToFreq(1.8 + i*0.1));
+                output_.setCentreFreq(i, camToFreq(1.8 + i*0.1));
                 LOUDNESS_DEBUG("FastRoexBank: Centre freq: " 
                         << output_.getCentreFreq(i));
             }
@@ -128,10 +128,10 @@ namespace loudness{
         for(int i=0; i<nFilters_; i++)
         {
             cams_[i] = camLo+(i*camStep_);
-            fc_[i] = CamToFreq(cams_[i]);
+            fc_[i] = camToFreq(cams_[i]);
             if(!interp_)
                 output_.setCentreFreq(i, fc_[i]); //some redundancy here
-            erb = FreqToERB(fc_[i]);
+            erb = freqToERB(fc_[i]);
             pu_[i] = 4*fc_[i]/erb;
             pl_[i] = 0.35*(pu_[i]/p51_1k);
         }

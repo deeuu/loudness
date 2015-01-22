@@ -47,7 +47,7 @@ namespace loudness{
          */
         int nChannels = input.getNChannels();
         int i=0, binIdxPrev = 0;
-        Real dif = FreqToCam(input.getCentreFreq(1)) - FreqToCam(input.getCentreFreq(0));
+        Real dif = freqToCam(input.getCentreFreq(1)) - freqToCam(input.getCentreFreq(0));
         int groupSize = std::max(2.0, floor(alpha_/(dif)));
         int groupSizePrev = groupSize;
         vector<int> groupSizeStore, binIdx;
@@ -56,7 +56,7 @@ namespace loudness{
         {
 
             //compute different between adjacent bins on Cam scale 
-            dif = FreqToCam(input.getCentreFreq(i+1)) - FreqToCam(input.getCentreFreq(i));
+            dif = freqToCam(input.getCentreFreq(i+1)) - freqToCam(input.getCentreFreq(i));
 
             //Check if we can sum bins in group size
             if(dif < (alpha_/double(groupSize)))
@@ -88,7 +88,7 @@ namespace loudness{
                  */
                 if(store<nChannels)
                 {
-                    dif = FreqToCam(input.getCentreFreq(store)) - FreqToCam(input.getCentreFreq(store-1));
+                    dif = freqToCam(input.getCentreFreq(store)) - freqToCam(input.getCentreFreq(store-1));
                     groupSize = std::max((double)groupSize, floor(alpha_/dif));
                 }
 
@@ -156,7 +156,7 @@ namespace loudness{
         Real freqLimit;
         for(unsigned int i=0; i<cfs.size()-1; i++)
         {
-            if((FreqToCam(cfs[i+1])-FreqToCam(cfs[i])) > alpha_)
+            if((freqToCam(cfs[i+1])-freqToCam(cfs[i])) > alpha_)
                 freqLimit = cfs[i];
         }
         LOUDNESS_DEBUG("CompressSpectrum: Criterion satisfied above "

@@ -33,11 +33,11 @@ namespace loudness{
         for(int i=0; i<input.getNChannels(); i++)
         {
             //ERB number of Centre frequency
-            Real cam = FreqToCam(input.getCentreFreq(i));
+            Real cam = freqToCam(input.getCentreFreq(i));
 
             //rectangular ERB band edges in Hz
-            Real freqLo = CamToFreq(cam-0.5);
-            Real freqHi = CamToFreq(cam+0.5);
+            Real freqLo = camToFreq(cam-0.5);
+            Real freqHi = camToFreq(cam+0.5);
 
             //lower and upper bin indices
             rectBinIndices_[i].resize(2);
@@ -75,7 +75,7 @@ namespace loudness{
         output_.initialize(nFilters_, 1, input.getFs());
         output_.setFrameRate(input.getFrameRate());
 
-        const Real p51_1k = 4000 / FreqToERB(1000.0);
+        const Real p51_1k = 4000 / freqToERB(1000.0);
 
         //p upper is level invariant
         pu_.assign(nFilters_, 0.0);
@@ -91,8 +91,8 @@ namespace loudness{
         for(int i=0; i<nFilters_; i++)
         {
             cam = camLo_+(i*camStep_);
-            fc = CamToFreq(cam);
-            erb = FreqToERB(fc);
+            fc = camToFreq(cam);
+            erb = freqToERB(fc);
             pu_[i] = 4*fc/erb;
             pl_[i] = 0.35*(pu_[i]/p51_1k);
             output_.setCentreFreq(i,fc);

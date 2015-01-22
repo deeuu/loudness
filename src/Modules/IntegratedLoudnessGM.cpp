@@ -90,7 +90,7 @@ namespace loudness{
         }
 
         //assumes uniformly spaced ERB filters
-        camStep_ = FreqToCam(input.getCentreFreq(1))-FreqToCam(input.getCentreFreq(0));
+        camStep_ = freqToCam(input.getCentreFreq(1))-freqToCam(input.getCentreFreq(0));
         LOUDNESS_DEBUG(name_ << ": Filter spacing (Cams): " << camStep_);
 
         //if excitation pattern is sampled non-uniformly, approximate integral
@@ -99,8 +99,8 @@ namespace loudness{
             for(int i=1; i<input.getNChannels(); i++)
             {
                 //compute difference between subsequent filters on cam scale
-                Real step = FreqToCam(input.getCentreFreq(i)) -
-                    FreqToCam(input.getCentreFreq(i-1));
+                Real step = freqToCam(input.getCentreFreq(i)) -
+                    freqToCam(input.getCentreFreq(i-1));
                 //store
                 camDif_.push_back(step);
             }

@@ -22,7 +22,7 @@
 
 namespace loudness{
 
-    Real IntExc(Real freq)
+    Real internalExcitation(Real freq)
     {
         if (freq>=500)
         {
@@ -43,7 +43,7 @@ namespace loudness{
         }
     };
 
-    Real GdBToA(Real gdB)
+    Real gdBToA(Real gdB)
     {
         if(gdB>=0)
         {
@@ -60,7 +60,7 @@ namespace loudness{
         }
     }
 
-    Real GdBToAlpha(Real gdB)
+    Real gdBToAlpha(Real gdB)
     {
         if(gdB>=0)
         {
@@ -94,7 +94,7 @@ namespace loudness{
         }
     };
 
-    Real SoneToPhon(Real sone, bool ansiS3407)
+    Real soneToPhon(Real sone, bool ansiS3407)
     {
 	Real s = log(sone);
 

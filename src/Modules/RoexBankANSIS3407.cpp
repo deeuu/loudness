@@ -45,7 +45,7 @@ namespace loudness{
         output_.initialize(nFilters_, 1, input.getFs());
         output_.setFrameRate(input.getFrameRate());
 
-        const Real p51_1k = 4000 / FreqToERB(1000.0);
+        const Real p51_1k = 4000 / freqToERB(1000.0);
 
         //pcomp is slope per component
         pcomp_.assign(nChannels, 0.0);
@@ -64,14 +64,14 @@ namespace loudness{
         for(int i=0; i<nChannels; i++)
         {
             fc = input.getCentreFreq(i);
-            erb = FreqToERB(fc);
+            erb = freqToERB(fc);
             pcomp_[i] = 4*fc/erb;
         }
         for(int i=0; i<nFilters_; i++)
         {
             cam = camLo_+(i*camStep_);
-            fc = CamToFreq(cam);
-            erb = FreqToERB(fc);
+            fc = camToFreq(cam);
+            erb = freqToERB(fc);
             pu_[i] = 4*fc/erb;
             pl_[i] = 0.35*(pu_[i]/p51_1k);
             output_.setCentreFreq(i,fc);
