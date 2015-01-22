@@ -22,13 +22,6 @@
 
 #include "../Support/Module.h"
 
-/*
- * =====================================================================================
- *        Class:  Filter
- *  Description:  Base class for other filter classes.
- * =====================================================================================
- */
-
 namespace loudness{
 
     /**
@@ -36,7 +29,7 @@ namespace loudness{
      *
      * @brief Abstract class for other filter subclasses.
      *
-     * This class provides some general functions common to digital filters 
+     * This class provides some general functions common to digital filters.
      *
      * @author Dominic Ward
      *

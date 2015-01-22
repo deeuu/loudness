@@ -115,7 +115,16 @@ namespace loudness{
          */
         int getNModules() const;
 
+        /**
+         * @brief Returns the name of a module residing within the model.
+         *
+         * @param module Module index.
+         */
         string getModuleName(int module) const;
+        
+        /**
+         * @brief Returns the name of the model.
+         */
         const string& getName() const;
 
     protected:
