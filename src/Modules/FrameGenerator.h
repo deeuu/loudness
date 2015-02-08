@@ -33,7 +33,8 @@ namespace loudness{
      * (not so flexible) implementation, the number of samples in the input
      * SignalBank cannot be greater than the hop size. If this happens, the hop
      * size is automatically adjusted. Furthermore, the hop size must be less
-     * than or equal to the frame size. In general, stick to powers of two.
+     * than or equal to the frame size, but does not have to be an integer
+     * multiple of it's length.
      *
      * @todo Check the implementation is read/write safe.
      *

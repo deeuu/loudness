@@ -116,6 +116,23 @@ namespace loudness{
         int getNModules() const;
 
         /**
+         * @brief Sets the time step (hop size in secs) for a dynamic loudness
+         * model.
+         */
+        void setTimeStep(Real timeStep);
+
+        /**
+         * @brief Returns the time step (hop size in secs) for a dynamic
+         * loudness model.
+         */
+        Real getTimeStep() const;
+
+        /**
+         * @brief Returns the centre of the analysis window.
+         */
+        int getCausalWindowCentreSample() const;
+
+        /**
          * @brief Returns the name of a module residing within the model.
          *
          * @param module Module index.
@@ -132,7 +149,8 @@ namespace loudness{
 
         string name_;
         bool dynamicModel_, initialized_;
-        int nModules_;
+        int nModules_, causalWindowCentreSample_ = 0;
+        Real timeStep_ = 0;
         vector<unique_ptr<Module>> modules_;
     };
 }

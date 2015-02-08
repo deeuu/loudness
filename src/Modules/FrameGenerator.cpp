@@ -60,26 +60,12 @@ namespace loudness{
         
         hopSize_ = inputBufferSize_*ceil(hopSize_/(Real) inputBufferSize_);
         LOUDNESS_DEBUG(name_ << ": Hop size in samples: " << hopSize_);
-
-        /*  
-        if((frameSize_ % hopSize_)>0)
-        {
-            LOUDNESS_WARNING(name_ << 
-                    ": Frame size is not an integer multiple of the hop size" 
-                    << "...automatically correcting.");
-
-            frameSize_ = hopSize_ * ceil(frameSize_ / (Real)hopSize_);
-        }
-        */
         LOUDNESS_DEBUG(name_ << ": Frame size in samples: " << frameSize_);
     
         //The audio buffer must also be an integer multiple of inputBufSize_
+        //We could save some memoery to deal with excess input samples but this
+        //simplifies the implementation.
         audioBufferSize_ = inputBufferSize_* ceil(frameSize_/(Real)inputBufferSize_);
-
-        /*  
-        if(hopSize_ > (audioBufferSize_ - inputBufferSize_))
-            audioBufferSize_ += inputBufferSize_;
-        */
 
         //OK, allocate memory
         audioBuffer_.assign(audioBufferSize_, 0.0);
@@ -103,6 +89,7 @@ namespace loudness{
         //initialise the output signal
         output_.initialize(1, frameSize_, input.getFs());
         output_.setFrameRate(input.getFs()/(Real)hopSize_);
+        output_.setTrig(false);
 
         return 1;
     }
@@ -129,13 +116,13 @@ namespace loudness{
             }
             readIdx_ = (writeIdx_ + hopSize_) % audioBufferSize_;
 
-            output_.setTrig(1);
+            output_.setTrig(true);
 
             count_ = 0;
             initNFramesFull_ = nFramesFull_;
         }
         else
-            output_.setTrig(0);
+            output_.setTrig(false);
     }
 
     void FrameGenerator::resetInternal()

@@ -112,11 +112,19 @@ namespace loudness{
     {
         return nModules_;
     }            
+    
+    void Model::setTimeStep(Real timeStep)
+    {
+        timeStep_ = timeStep;
+    }
+
+    Real Model::getTimeStep() const
+    {
+        return timeStep_;
+    }
+
+    int Model::getCausalWindowCentreSample() const
+    {
+        return causalWindowCentreSample_;
+    }
 }
-
-
-
-
-
-
-

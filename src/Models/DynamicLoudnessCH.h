@@ -84,8 +84,6 @@ namespace loudness{
              * @brief Loads a parameter set.
              */
             void loadParameterSet(ParameterSet set);
-
-            void setTimeStep(Real timeStep);
             void setDiffuseField(bool diffuseField);
             void setGoertzel(bool goertzel);
             void setDiotic(bool diotic);
@@ -93,14 +91,12 @@ namespace loudness{
             void setFilterSpacing(Real filterSpacing);
             void setCompressionCriterion(Real compressionCriterion);
 
-            Real getTimeStep() const;
-            
         private:
             virtual bool initializeInternal(const SignalBank &input);
 
             string pathToFilterCoefs_;
             int outerEarType_;
-            Real timeStep_, filterSpacing_, compressionCriterion_;
+            Real filterSpacing_, compressionCriterion_;
             bool uniform_, diotic_, goertzel_, diffuseField_;
     }; 
 }

@@ -1,0 +1,70 @@
+import numpy as np
+import loudness as ln
+import matplotlib.pyplot as plt
+
+class LoudnessExtractor:
+    '''Convienience class for processing numpy arrays'''
+
+    def __init__(self, model, moduleIndex = None, fs=32000):
+
+        if not model.isDynamicModel():
+            raise ValueError("Model must be dynamic.")
+
+        self.model = model
+        self.fs = int(fs)
+        self.timeStep = model.getTimeStep()
+        self.hopSize = int(fs*self.timeStep)
+        self.sampleDelay = 0
+        self.inputBuf = ln.SignalBank()
+        self.inputBuf.initialize(1, self.hopSize, self.fs)
+        if not self.model.initialize(self.inputBuf):
+            raise ValueError("Problem initialising the model!")
+        if moduleIndex is None:
+            moduleIndex = self.model.getNModules()-1
+        self.outputBank = self.model.getModuleOutput(moduleIndex)
+        self.numChannels = self.outputBank.getNChannels()
+        self.numSamplesToPadStart = model.getCausalWindowCentreSample()
+        self.numSamplesToPadEnd = self.numSamplesToPadStart
+        self.x = None
+        self.processed = False
+        self.loudness = None
+
+    def process(self, signal):
+
+        numOutputFrames = int(np.ceil(signal.size/float(self.hopSize)))
+        self.loudness = np.zeros((self.numChannels, numOutputFrames))
+        outputFrame = 0
+
+        #Pad signal so can centre window at start and do full processing
+        self.x = np.hstack((np.zeros(self.numSamplesToPadStart), signal,
+            np.zeros(self.numSamplesToPadEnd)))
+        self.signalSize = signal.size
+        processingFrame = 0
+
+        #One process call every hop samples
+        while(outputFrame < numOutputFrames):
+            #Overlap is generated c++ side, so just fill with new blocks
+            startIdx = processingFrame*self.hopSize
+            endIdx = startIdx + self.hopSize
+            self.inputBuf.setSignal(0, self.x[startIdx:endIdx])
+            self.model.process(self.inputBuf)
+
+            #get output if bank is ready
+            if self.outputBank.getTrig():
+                for chn in range(self.numChannels):
+                    self.loudness[chn, outputFrame] = self.outputBank.getSample(chn, 0)
+                outputFrame += 1
+            processingFrame += 1
+        self.processed = True
+
+    def plotLoudness(self):
+        if self.processed:
+            time = np.arange(self.signalSize) / float(self.fs)
+            frameTime = np.arange(self.loudness.shape[1]) * self.timeStep
+            print frameTime[-1]
+            fig, (ax1, ax2) = plt.subplots(2,1, sharex = True)
+            ax1.plot(time,\
+                    self.x[self.numSamplesToPadStart:self.numSamplesToPadStart+self.signalSize])
+            ax2.plot(frameTime, self.loudness.T)
+            plt.xlim(0, time[-1])
+            plt.show()

@@ -64,10 +64,14 @@ namespace loudness{
     {
         if(initialized_ && input.getTrig())
         {
+            output_.setTrig(true);
             processInternal(input);
-            if(targetModule_)
-                targetModule_->process(output_);
+            LOUDNESS_DEBUG(name_ << " Trig: " << output_.getTrig());
         }
+        else
+            output_.setTrig(false);
+        if(targetModule_)
+            targetModule_->process(output_);
     }
 
     void Module::reset()

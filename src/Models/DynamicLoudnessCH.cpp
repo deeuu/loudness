@@ -43,11 +43,6 @@ namespace loudness{
     {
     }
 
-    void DynamicLoudnessCH::setTimeStep(Real timeStep)
-    {
-        timeStep_ = timeStep;
-    }
-
     void DynamicLoudnessCH::setDiffuseField(bool diffuseField)
     {
         diffuseField_ = diffuseField;
@@ -72,11 +67,6 @@ namespace loudness{
     void DynamicLoudnessCH::setCompressionCriterion(Real compressionCriterion)
     {
         compressionCriterion_ = compressionCriterion;
-    }
-
-    Real DynamicLoudnessCH::getTimeStep() const
-    {
-        return timeStep_;
     }
 
     void DynamicLoudnessCH::loadParameterSet(ParameterSet set)
@@ -139,9 +129,10 @@ namespace loudness{
         /*
          * Frame generator for spectrogram
          */
+        int windowSize = round(0.128*input.getFs());
+        causalWindowCentreSample_ = ceil((windowSize-1)/2.0);
         if(!goertzel_)
         {
-            int windowSize = round(0.128*input.getFs());
             int hopSize = round(timeStep_*input.getFs());
             modules_.push_back(unique_ptr<Module> 
                     (new FrameGenerator(windowSize, hopSize)));
