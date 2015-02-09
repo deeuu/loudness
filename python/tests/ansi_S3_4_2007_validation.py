@@ -4,6 +4,7 @@ import loudness as ln
 import sys,os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),'../'))
 from Sound import Sound
+from LoudnessExtractor import LoudnessExtractor
 
 def loudness1kHz(model, fs=32e3):
 
@@ -23,34 +24,32 @@ def loudness1kHz(model, fs=32e3):
         buf = ln.SignalBank()
         buf.initialize(1,1,1)
         buf.setCentreFreq(0, 1000)
-
-    #initialise model
-    model.initialize(buf)
-    #final output should be loudness
-    moduleIndex = None
-    if moduleIndex is None:
-        moduleIndex = model.getNModules()-1
-    outputBank = model.getModuleOutput(moduleIndex)
+        #initialise model
+        model.initialize(buf)
+        #final output should be loudness
+        moduleIndex = None
+        if moduleIndex is None:
+            moduleIndex = model.getNModules()-1
+        outputBank = model.getModuleOutput(moduleIndex)
     outputSones = np.zeros(sones.size)
 
     for i, phon in enumerate(phons):
-
         if(model.isDynamicModel()):
-            tone = Sound.tone(1000, dur=0.5,fs=fs)
-            tone.applyRamp(0.1) 
+            tone = Sound.tone(1000, dur=0.6,fs=fs)
             tone.ref = 2e-5
             tone.normalise(phon)
-            buf.setSignal(0, tone.data[:,0])
+            tone.applyRamp(0.1) 
             extractor.process(tone.data[:,0])
             #For 1kHz tone, global loudness can be estimated as:
-            outputSones[i] = extractor.meanLoudness(0.1,0.1,'MAX')[0]
+            outputSones[i] = extractor.computeGlobalLoudness(0.2,0.4,'MAX')[0]
         else:
             buf.setSample(0,0,10**(phon/10.0))
             model.process(buf)
+            outputSones[i] = outputBank.getSample(0,0)
             #reset model state 
             model.reset()
-            outputSones[i] = outputBank.getSample(0,0)
-        print outputSones[i]
+        print "Input level (dB SPL):", phon
+        print "Loudness (sones):", outputSones[i]
         
     #Compute relative error as %
     relativeError = 100 * np.abs(sones - outputSones) / sones
@@ -60,7 +59,7 @@ def loudness1kHz(model, fs=32e3):
 if __name__ == '__main__':
 
     fs = 32000
-    #model = ln.SteadyLoudnessANSIS3407()
-    model = ln.DynamicLoudnessGM("../../filterCoefs/32000_FIR_4096_freemid.npy")
-    model.loadParameterSet(0)
+    model = ln.SteadyLoudnessANSIS3407()
+    #model = ln.DynamicLoudnessGM("../../filterCoefs/32000_FIR_4096_freemid.npy")
+    #model.loadParameterSet(0)
     loudness1kHz(model, fs)

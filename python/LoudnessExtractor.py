@@ -78,7 +78,7 @@ class LoudnessExtractor:
             plt.xlim(0, time[-1])
             plt.show()
 
-    def getGlobalLoudness(self, startSeconds=0, endSeconds=None,
+    def computeGlobalLoudness(self, startSeconds=0, endSeconds=None,
             feature='MEAN', inPhons=False):
         '''Compute the average loudness from startSeconds to endSeconds.
         Time points are based on nearest sample, so it is possible that sample points outside of
