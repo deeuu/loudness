@@ -107,6 +107,7 @@ namespace loudness{
             void setAnsiBank(bool ansiBank);
             void setPathToFilterCoefs(string pathToFilterCoefs);
             void setFastBank(bool fastBank);
+            void setAnsiSpecificLoudness(bool ansiSpecificLoudness);
 
         private:
             virtual bool initializeInternal(const SignalBank &input);
@@ -114,7 +115,7 @@ namespace loudness{
             int outerEarType_;
             Real filterSpacing_, compressionCriterion_;
             bool ansiBank_, fastBank_, interpRoexBank_, uniform_, diotic_, goertzel_;
-            bool hpf_, diffuseField_;
+            bool hpf_, diffuseField_, ansiSpecificLoudness_;
             string pathToFilterCoefs_;
     }; 
 }

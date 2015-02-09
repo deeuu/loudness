@@ -92,6 +92,10 @@ namespace loudness{
     {
         fastBank_ = fastBank;
     }
+    void DynamicLoudnessGM::setAnsiSpecificLoudness(bool ansiSpecificLoudness)
+    {
+        ansiSpecificLoudness_ = ansiSpecificLoudness;
+    }
     
     void DynamicLoudnessGM::loadParameterSet(ParameterSet set)
     {
@@ -106,6 +110,7 @@ namespace loudness{
         setFilterSpacing(0.25);
         setCompressionCriterion(0.0);
         setFastBank(false);
+        setSpecificLoudnessANSIS3407(false);
 
         switch(set){
             case GM02:
@@ -257,7 +262,7 @@ namespace loudness{
          * Specific loudness
          */
         modules_.push_back(unique_ptr<Module>
-                (new SpecificLoudnessGM));
+                (new SpecificLoudnessGM(ansiSpecificLoudness_));
 
         /*
         * Loudness integration 
