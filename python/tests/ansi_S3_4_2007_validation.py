@@ -60,7 +60,7 @@ if __name__ == '__main__':
 
     fs = 32000
     model = ln.SteadyLoudnessANSIS3407()
-    model = ln.DynamicLoudnessGM("../../filterCoefs/32000_FIR_4096_freemid.npy")
-    model.loadParameterSet(0)
-    model.setAnsiSpecificLoudness(True)
+    #model = ln.DynamicLoudnessGM("../../filterCoefs/32000_FIR_4096_freemid.npy")
+    #model.loadParameterSet(0)
+    #model.setAnsiSpecificLoudness(True)
     loudness1kHz(model, fs)

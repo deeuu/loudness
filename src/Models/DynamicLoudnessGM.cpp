@@ -110,7 +110,7 @@ namespace loudness{
         setFilterSpacing(0.25);
         setCompressionCriterion(0.0);
         setFastBank(false);
-        setSpecificLoudnessANSIS3407(false);
+        setAnsiSpecificLoudness(false);
 
         switch(set){
             case GM02:
@@ -262,7 +262,7 @@ namespace loudness{
          * Specific loudness
          */
         modules_.push_back(unique_ptr<Module>
-                (new SpecificLoudnessGM(ansiSpecificLoudness_));
+                (new SpecificLoudnessGM(ansiSpecificLoudness_)));
 
         /*
         * Loudness integration 
