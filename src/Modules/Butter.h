@@ -41,6 +41,4 @@ namespace loudness{
             Real fc_;
     };
 }
-
 #endif
-
