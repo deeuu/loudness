@@ -48,7 +48,7 @@ namespace loudness{
         if(inputBufferSize_ > hopSize_)
         {
             LOUDNESS_WARNING(name_ << 
-                    ": Hop size cannot be greater than input buffer size" 
+                    ": Hop size cannot be less than input buffer size" 
                     << "...automatically correcting.");
         }
         else if((hopSize_ % inputBufferSize_)>0)
@@ -84,7 +84,12 @@ namespace loudness{
 
         readIdx_ = 0;
         writeIdx_ = 0;
+        bool centreWritePosition = true;
+        if (centreWritePosition)
+            writeIdx_ = ceil((frameSize_-1)/2.0);
         count_ = 0;
+        remainingSamples_ = 0;
+        overlap_ = frameSize_-hopSize_;
 
         //initialise the output signal
         output_.initialize(1, frameSize_, input.getFs());
@@ -96,7 +101,42 @@ namespace loudness{
 
     void FrameGenerator::processInternal(const SignalBank &input)
     {
+        
+        if(writeIdx_ == frameSize_)
+        {
+            writeIdx_ = overlap_; //overlap_ = frameSize_ - hopSize_;
+            //output_.moveData(hopSize,frameSize_, 0, overlap_-1);
+            for(int i=0; i<overlap_; i++)
+                output_.setSample(0, i, output_.getSample(0, hopSize_ + i));
+        }
+        //copy to output (input buf can't be > than hopSize_ so safe)
+        for(int i=0; i<remainingSamples_; i++)
+            output_.setSample(0, writeIdx_++, audioBuffer_[i]);
+        remainingSamples_ = 0;
 
+        int numSamps = input.getNSamples();
+        int readIdx = 0;
+        while(readIdx<numSamps && writeIdx_<frameSize_)
+        {
+            output_.setSample(0, writeIdx_++, input.getSample(0,readIdx++));
+        } 
+
+        //if samples remaining store them
+        remainingSamples_ = numSamps-readIdx;
+        if(remainingSamples_)
+        {
+            for(int i=0; i<remainingSamples_; i++)
+                audioBuffer_[i] = input.getSample(0, readIdx++);
+        }
+
+        //if frames worth -> output
+        if(writeIdx_ == frameSize_)
+            output_.setTrig(true);
+        else
+            output_.setTrig(false);
+
+
+        /*
         //fill internal buffer
         for(int i=0; i<inputBufferSize_; i++)
             audioBuffer_[writeIdx_++] = input.getSample(0, i);
@@ -123,6 +163,7 @@ namespace loudness{
         }
         else
             output_.setTrig(false);
+        */
     }
 
     void FrameGenerator::resetInternal()
@@ -131,6 +172,7 @@ namespace loudness{
         nFramesFull_ = hopSize_ / inputBufferSize_;
         readIdx_ = 0;
         writeIdx_ = 0;
+        remainingSamples_ = 0;
         count_ = 0;
     }
 
