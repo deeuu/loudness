@@ -21,10 +21,11 @@
 
 namespace loudness{
 
-    FrameGenerator::FrameGenerator(int frameSize, int hopSize) :
+    FrameGenerator::FrameGenerator(int frameSize, int hopSize, bool startAtZero) :
         Module("FrameGenerator"),
         frameSize_(frameSize),
-        hopSize_(hopSize)
+        hopSize_(hopSize),
+        startAtZero_(startAtZero)
     {}
     
     FrameGenerator::~FrameGenerator()
@@ -45,51 +46,31 @@ namespace loudness{
         
         //Hop size checks
         LOUDNESS_DEBUG(name_ << ": Input buffer size in samples: " << inputBufferSize_);
-        if(inputBufferSize_ > hopSize_)
+        if(hopSize_ < inputBufferSize_)
         {
             LOUDNESS_WARNING(name_ << 
                     ": Hop size cannot be less than input buffer size" 
                     << "...automatically correcting.");
-        }
-        else if((hopSize_ % inputBufferSize_)>0)
-        {
-            LOUDNESS_WARNING(name_ << 
-                    ": Hop size is not an integer multiple of the input buffer size" 
-                    << "...automatically correcting.");
+            hopSize_ = inputBufferSize_;
         }
         
-        hopSize_ = inputBufferSize_*ceil(hopSize_/(Real) inputBufferSize_);
         LOUDNESS_DEBUG(name_ << ": Hop size in samples: " << hopSize_);
         LOUDNESS_DEBUG(name_ << ": Frame size in samples: " << frameSize_);
     
-        //The audio buffer must also be an integer multiple of inputBufSize_
-        //We could save some memoery to deal with excess input samples but this
-        //simplifies the implementation.
-        audioBufferSize_ = inputBufferSize_* ceil(frameSize_/(Real)inputBufferSize_);
-
-        //OK, allocate memory
+        //a buffer for storing remaining input samples once frame is full
+        audioBufferSize_ = inputBufferSize_;
         audioBuffer_.assign(audioBufferSize_, 0.0);
         LOUDNESS_DEBUG(name_ << 
                 ": Audio buffer size in samples: " 
                 << audioBufferSize_);
         
-        //Number of frames until we reach the end of buffer
-        initNFramesFull_ = audioBufferSize_ / inputBufferSize_;
-        nFramesFull_ = hopSize_ / inputBufferSize_; //will be an int >= 1
-        LOUDNESS_DEBUG(name_
-                << ": Number of process calls until we can extract first frame: " 
-                << initNFramesFull_
-                << "\n Number of process calls until we can extract further frames: " 
-                << nFramesFull_);
-
-        readIdx_ = 0;
-        writeIdx_ = 0;
-        bool centreWritePosition = true;
-        if (centreWritePosition)
+        if (startAtZero_)
+            writeIdx_ = 0;
+        else
             writeIdx_ = ceil((frameSize_-1)/2.0);
-        count_ = 0;
+
         remainingSamples_ = 0;
-        overlap_ = frameSize_-hopSize_;
+        overlap_ = frameSize_ - hopSize_;
 
         //initialise the output signal
         output_.initialize(1, frameSize_, input.getFs());
@@ -102,27 +83,31 @@ namespace loudness{
     void FrameGenerator::processInternal(const SignalBank &input)
     {
         
+        //pull signal back by overlap samples
         if(writeIdx_ == frameSize_)
         {
-            writeIdx_ = overlap_; //overlap_ = frameSize_ - hopSize_;
-            //output_.moveData(hopSize,frameSize_, 0, overlap_-1);
-            for(int i=0; i<overlap_; i++)
-                output_.setSample(0, i, output_.getSample(0, hopSize_ + i));
+            output_.pullSignalBack(0, hopSize_);
+            writeIdx_ = overlap_;
         }
-        //copy to output (input buf can't be > than hopSize_ so safe)
-        for(int i=0; i<remainingSamples_; i++)
-            output_.setSample(0, writeIdx_++, audioBuffer_[i]);
-        remainingSamples_ = 0;
 
-        int numSamps = input.getNSamples();
+        //copy to output (input buf can't be > than hopSize_ so safe)
+        if(remainingSamples_)
+        {
+            output_.fillSignal(0, writeIdx_, audioBuffer_, 0, remainingSamples_);
+            writeIdx_ += remainingSamples_;
+            remainingSamples_ = 0;
+        }
+
+        //refill
+        int nSamples = input.getNSamples();
         int readIdx = 0;
-        while(readIdx<numSamps && writeIdx_<frameSize_)
+        while(readIdx<nSamples && writeIdx_<frameSize_)
         {
             output_.setSample(0, writeIdx_++, input.getSample(0,readIdx++));
         } 
 
         //if samples remaining store them
-        remainingSamples_ = numSamps-readIdx;
+        remainingSamples_ = nSamples-readIdx;
         if(remainingSamples_)
         {
             for(int i=0; i<remainingSamples_; i++)
@@ -134,46 +119,12 @@ namespace loudness{
             output_.setTrig(true);
         else
             output_.setTrig(false);
-
-
-        /*
-        //fill internal buffer
-        for(int i=0; i<inputBufferSize_; i++)
-            audioBuffer_[writeIdx_++] = input.getSample(0, i);
-        //wrap write index
-        writeIdx_ = writeIdx_ % audioBufferSize_;
-
-        count_++;
-        if(count_ == initNFramesFull_)
-        {
-            LOUDNESS_DEBUG(name_ << ": readIdx_ : " << readIdx_);
-
-            //output frame
-            for(int i=0; i<frameSize_; i++)
-            {
-                output_.setSample(0, i, audioBuffer_[readIdx_++]);
-                readIdx_ = readIdx_ % audioBufferSize_;
-            }
-            readIdx_ = (writeIdx_ + hopSize_) % audioBufferSize_;
-
-            output_.setTrig(true);
-
-            count_ = 0;
-            initNFramesFull_ = nFramesFull_;
-        }
-        else
-            output_.setTrig(false);
-        */
     }
 
     void FrameGenerator::resetInternal()
     {
-        initNFramesFull_ = audioBufferSize_ / inputBufferSize_;
-        nFramesFull_ = hopSize_ / inputBufferSize_;
-        readIdx_ = 0;
         writeIdx_ = 0;
         remainingSamples_ = 0;
-        count_ = 0;
     }
 
     void FrameGenerator::setFrameSize(int frameSize)
@@ -186,6 +137,11 @@ namespace loudness{
         hopSize_ = hopSize;
     }
 
+    void FrameGenerator::setStartAtZero(bool startAtZero)
+    {
+        startAtZero_ = startAtZero;
+    }
+
     int FrameGenerator::getFrameSize() const
     {
         return frameSize_;
@@ -194,6 +150,11 @@ namespace loudness{
     int FrameGenerator::getHopSize() const
     {
         return hopSize_;
+    }
+
+    bool FrameGenerator::getStartAtZero() const
+    {
+        return startAtZero_;
     }
 
     int FrameGenerator::getAudioBufferSize() const

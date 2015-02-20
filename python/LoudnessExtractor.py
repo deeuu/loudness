@@ -25,8 +25,8 @@ class LoudnessExtractor:
             moduleIndex = self.model.getNModules()-1
         self.outputBank = self.model.getModuleOutput(moduleIndex)
         self.numChannels = self.outputBank.getNChannels()
-        self.numSamplesToPadStart = model.getCausalWindowCentreSample()
-        self.numSamplesToPadEnd = self.numSamplesToPadStart
+        self.numSamplesToPadStart = 0
+        self.numSamplesToPadEnd = int(0.2*self.fs)#see below
         self.x = None
         self.processed = False
         self.loudness = None
@@ -37,7 +37,8 @@ class LoudnessExtractor:
         self.loudness = np.zeros((self.numChannels, numOutputFrames))
         outputFrame = 0
 
-        #Pad signal so can centre window at start and do full processing
+        #FrameGenerator will place data in centre of the analysis window
+        #So only need to padd end, 0.2ms is more than enough
         self.x = np.hstack((np.zeros(self.numSamplesToPadStart), signal,
             np.zeros(self.numSamplesToPadEnd)))
         self.signalSize = signal.size
@@ -66,7 +67,6 @@ class LoudnessExtractor:
         if self.processed:
             time = np.arange(self.signalSize) / float(self.fs)
             frameTime = np.arange(self.loudness.shape[1]) * self.timeStep
-            print frameTime[-1]
             fig, (ax1, ax2) = plt.subplots(2,1, sharex = True)
             ax1.plot(time,\
                     self.x[self.numSamplesToPadStart:self.numSamplesToPadStart+self.signalSize])

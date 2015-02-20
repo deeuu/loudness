@@ -185,12 +185,11 @@ namespace loudness{
          * Frame generator for spectrogram
          */
         int windowSize = round(0.064*input.getFs());
-        causalWindowCentreSample_ = ceil((windowSize-1)/2.0);
         if(!goertzel_)
         {
             int hopSize = round(timeStep_*input.getFs());
             modules_.push_back(unique_ptr<Module> 
-                    (new FrameGenerator(windowSize, hopSize)));
+                    (new FrameGenerator(windowSize, hopSize, false)));
         }
 
         /*

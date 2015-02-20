@@ -123,8 +123,4 @@ namespace loudness{
         return timeStep_;
     }
 
-    int Model::getCausalWindowCentreSample() const
-    {
-        return causalWindowCentreSample_;
-    }
 }

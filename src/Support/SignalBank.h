@@ -123,10 +123,16 @@ namespace loudness{
          * @param index Sample index.
          * @param sample Value of the sample.
          */
+
         inline void setSample(int channel, int index, Real sample) 
         {
             signal_[channel][index] = sample;
         }
+
+        void fillSignal(int channel, int writeSampleIndex, const
+                RealVec& source, int readSampleIndex, int nSamples);
+
+        void pullSignalBack(int channel, int nSamples);
 
         /**
          * @brief Sets the trigger state of the SignalBank.

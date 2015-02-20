@@ -50,18 +50,24 @@ namespace loudness{
          * @param frameSize Number of samples in the frame.
          * @param hopSize Number of samples to hop forward.
          */
-        FrameGenerator(int frameSize = 1024, int hopSize = 512);
+        FrameGenerator(int frameSize = 1024, int hopSize = 512, bool startAtZero=false);
         virtual ~FrameGenerator();
 
         /**
-         * @brief Sets the frame size in seconds.
+         * @brief Sets the frame size in samples.
          */
         void setFrameSize(int frameSize);
 
         /**
-         * @brief Sets the hop size in seconds.
+         * @brief Sets the hop size in samples.
          */
         void setHopSize(int hopSize);
+
+        /**
+         * @brief Sets whether the write index starts at 0 or at the centre of
+         * the frame (default).
+         */
+        void setStartAtZero(bool startAtZero);
 
         /**
          * @brief Returns the total number of samples comprising the frame.
@@ -73,6 +79,11 @@ namespace loudness{
          */
         int getHopSize() const;
 
+        /**
+         * @brief Returns the startAtZero state.
+         */
+        bool getStartAtZero() const;
+
         int getAudioBufferSize() const;
 
     private:
@@ -82,8 +93,8 @@ namespace loudness{
         virtual void resetInternal();
 
         int frameSize_, hopSize_, audioBufferSize_, inputBufferSize_;
-        int count_, readIdx_, writeIdx_, initNFramesFull_, nFramesFull_;
-        int overlap_, remainingSamples_;
+        int writeIdx_, overlap_, remainingSamples_;
+        bool startAtZero_;
         RealVec audioBuffer_;
     };
 }

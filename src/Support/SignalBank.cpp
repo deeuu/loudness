@@ -110,6 +110,23 @@ namespace loudness{
                     << "Invalid channel index or signal lengths do not match, please correct.");
         }
     }
+    
+    void SignalBank::fillSignal(int channel, int writeSampleIndex, const RealVec& source, int readSampleIndex, int nSamples)
+    {
+        for(int i=0; i<nSamples; i++)
+            signal_[channel][writeSampleIndex++] = source[readSampleIndex++];
+    }
+
+    void SignalBank::pullSignalBack(int channel, int nSamples)
+    {
+        for(int i=0; i<nSamples_; i++)
+        {
+            if(nSamples<nSamples_)
+                signal_[channel][i] = signal_[channel][nSamples++];
+            else
+                signal_[channel][i] = 0.0;
+        }
+    }
 
     const RealVec &SignalBank::getSignal(int channel) const
     {
