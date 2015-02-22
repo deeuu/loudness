@@ -33,6 +33,7 @@ SOURCES=../src/cnpy/cnpy.cpp \
 ../src/Modules/FIR.cpp \
 ../src/Modules/IIR.cpp \
 ../src/Modules/Butter.cpp \
+../src/Modules/SMA.cpp \
 ../src/Modules/RoexBankANSIS3407.cpp \
 ../src/Modules/FastRoexBank.cpp \
 ../src/Modules/DoubleRoexBank.cpp \
