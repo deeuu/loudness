@@ -111,6 +111,16 @@ namespace loudness{
         z_.assign(z_.size(),0.0);
     }
 
+    const RealVec &Filter::getBCoefs() const
+    {
+        return bCoefs_;
+    }
+
+    const RealVec &Filter::getACoefs() const
+    {
+        return aCoefs_;
+    }
+
     Real Filter::getGain() const
     {
         return gain_;

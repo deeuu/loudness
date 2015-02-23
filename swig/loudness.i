@@ -50,11 +50,13 @@
 %}
 
 //Required for integration with numpy arrays
-%include "numpy.i"
+//%include "numpy.i"
 
+/*
 %init %{
 import_array();
 %}
+*/
 
 //apply all of the double typemaps to Real
 %apply double { Real };
@@ -102,6 +104,3 @@ using std::string;
 %include "../src/Models/DynamicLoudnessGM.h"
 %include "../src/Models/DynamicLoudnessCH.h"
 %include "../src/Models/SteadyLoudnessANSIS3407.h"
-
-
-

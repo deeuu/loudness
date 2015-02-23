@@ -75,6 +75,9 @@ namespace loudness{
          * coefficient (aCoefs[0]);
          */
         void normaliseCoefs();
+
+        const RealVec& getBCoefs() const;
+        const RealVec& getACoefs() const;
          
         /**
          * @brief Sets the linear gain of the digital filter.

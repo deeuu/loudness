@@ -54,6 +54,33 @@ namespace loudness{
             //normalise by a[0]
             normaliseCoefs();
 
+            //Transform coefficients if sampling frequency is different from
+            //the one used in origin filter design
+            //See: Parameter Quantization in Direct-Form Recursive Audio Filters
+            //by Neunaber (2008)
+            if((coefficientFs_ != 0) && (coefficientFs_ != input.getFs()))
+            {
+                double fc = (coefficientFs_/PI) * atan( sqrt( (1+aCoefs_[1]+aCoefs_[2]) /
+                            (1-aCoefs_[1]+aCoefs_[2])));
+                double Q = sqrt((aCoefs_[2]+1)*(aCoefs_[2]+1) - aCoefs_[1]*aCoefs_[1]) /
+                            (2*fabs(1-aCoefs_[2]));
+                double Vl = (bCoefs_[0]+bCoefs_[1]+bCoefs_[2]) / (1+aCoefs_[1]+aCoefs_[2]);
+                double Vb = (bCoefs_[0] - bCoefs_[2]) / (1-aCoefs_[2]);
+                double Vh = (bCoefs_[0]-bCoefs_[1]+bCoefs_[2]) / (1-aCoefs_[1]+aCoefs_[2]);
+
+                double omega = tan(PI*fc/input.getFs());
+                double omegaSqrd = omega*omega;
+                double denom = omegaSqrd + omega/Q + 1;
+
+                aCoefs_[0] = 1.0;
+                aCoefs_[1] = 2*(omegaSqrd - 1) / denom;
+                aCoefs_[2] = (omegaSqrd - (omega/Q) + 1)/ denom;
+
+                bCoefs_[0] = (Vl * omegaSqrd + Vb * (omega/Q) + Vh) / denom;
+                bCoefs_[1] = 2*(Vl*omegaSqrd - Vh) / denom;
+                bCoefs_[2] = (Vl*omegaSqrd - (Vb*omega/Q) + Vh) / denom;
+            }
+
             //delay line
             z_.assign(2*order_,0.0);
 
@@ -90,6 +117,11 @@ namespace loudness{
             //output sample
             output_.setSample(0, smp, y);
         }
+    }
+
+    void Biquad::setCoefficientFs(const Real coefficientFs)
+    {
+        coefficientFs_ = coefficientFs;
     }
 
     void Biquad::resetInternal()

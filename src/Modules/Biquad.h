@@ -30,12 +30,15 @@ namespace loudness{
             Biquad();
             Biquad(const RealVec &bCoefs, const RealVec &aCoefs);
 
+            void setCoefficientFs(const Real coefficientFs);
             virtual ~Biquad();
 
         private:
             virtual bool initializeInternal(const SignalBank &input);
             virtual void processInternal(const SignalBank &input);
             virtual void resetInternal();
+
+            Real coefficientFs_ = 0;
     };
 }
 #endif
