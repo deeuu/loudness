@@ -50,5 +50,7 @@ typedef unsigned int uint;
 typedef std::vector<Real> RealVec;
 typedef std::vector<int> IntVec;
 typedef std::vector<std::vector<Real> > RealVecVec;
+typedef std::complex<Real> Complex;
+typedef std::vector<Complex> ComplexVec;
 
 #endif  

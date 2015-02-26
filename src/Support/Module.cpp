@@ -38,7 +38,12 @@ namespace loudness{
 
     bool Module::initialize(const SignalBank &input)
     {
-        if(!initializeInternal(input))
+        if(initialized_)
+        {
+            LOUDNESS_ERROR(name_ << ": I'm already initialised!")
+            return 0;
+        }
+        else if(!initializeInternal(input))
         {
             LOUDNESS_ERROR(name_ << ": Not initialised!");
             return 0;
@@ -55,7 +60,6 @@ namespace loudness{
             initialized_ = 1;
             return 1;
         }
-
     }
 
     void Module::process(){}
