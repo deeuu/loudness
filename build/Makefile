@@ -29,6 +29,7 @@ SOURCES=../src/cnpy/cnpy.cpp \
 ../src/Support/Filter.cpp \
 ../src/Support/Model.cpp \
 ../src/Modules/FrameGenerator.cpp \
+../src/Modules/Window.cpp \
 ../src/Modules/AudioFileCutter.cpp \
 ../src/Modules/FIR.cpp \
 ../src/Modules/IIR.cpp \

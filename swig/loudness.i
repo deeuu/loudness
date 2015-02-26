@@ -35,6 +35,7 @@
 #include "../src/Modules/Biquad.h"
 #include "../src/Modules/AudioFileCutter.h"
 #include "../src/Modules/FrameGenerator.h"
+#include "../src/Modules/Window.h"
 #include "../src/Modules/IntegratedLoudnessGM.h"
 #include "../src/Modules/SpecificLoudnessGM.h"
 #include "../src/Modules/RoexBankANSIS3407.h"
@@ -60,19 +61,23 @@ import_array();
 
 //apply all of the double typemaps to Real
 %apply double { Real };
+%apply unsigned int { uint };
 
 %include "std_vector.i"
 namespace std {
     //The argument to %template() is the name of the instantiation in the target language
     %template(RealVec) vector<double>;
+    %template(IntVec) vector<int>;
     //apply all of the double vector typemaps to RealVec
     %apply vector<double> { RealVec };
     //apply all of the double vector reference typemaps to const RealVec&
     %apply const vector<double>& { const RealVec&};
+    %apply vector<int> { IntVec };
+    %apply const vector<int>& { const IntVec& };
 }
 
-using namespace std;
 %include "std_string.i"
+using namespace std;
 
 namespace loudness{
 using std::string;
@@ -87,6 +92,7 @@ using std::string;
 %include "../src/Support/Filter.h"
 %include "../src/Modules/AudioFileCutter.h"
 %include "../src/Modules/FrameGenerator.h"
+%include "../src/Modules/Window.h"
 %include "../src/Modules/FIR.h"
 %include "../src/Modules/IIR.h"
 %include "../src/Modules/SMA.h"

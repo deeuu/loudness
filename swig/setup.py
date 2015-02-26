@@ -18,6 +18,7 @@ setup(name="loudness",
             "../src/Support/Filter.cpp",
             "../src/Modules/AudioFileCutter.cpp",
             "../src/Modules/FrameGenerator.cpp",
+            "../src/Modules/Window.cpp",
             "../src/Modules/FIR.cpp",
             "../src/Modules/IIR.cpp",
             "../src/Modules/SMA.cpp",
@@ -40,4 +41,4 @@ setup(name="loudness",
         library_dirs=['/usr/lib', '/usr/local/lib'],
         libraries=['fftw3', 'sndfile'],
         swig_opts=['-c++'],
-        extra_compile_args=["-std=c++11", "-fPIC", "-O3"])])
+        extra_compile_args=["-std=c++11", "-fPIC", "-O3", "-DDEBUG"])])

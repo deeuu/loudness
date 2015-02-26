@@ -46,7 +46,9 @@ namespace loudness{
  * Types
  */
 typedef double Real;
+typedef unsigned int uint;
 typedef std::vector<Real> RealVec;
+typedef std::vector<int> IntVec;
 typedef std::vector<std::vector<Real> > RealVecVec;
 
 #endif  
