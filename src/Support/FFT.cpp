@@ -21,10 +21,9 @@
 
 namespace loudness{
 
-    FFT::FFT(int fftSize, const string & returnType) :
+    FFT::FFT(int fftSize) :
         Module("FFT"),
-        fftSize_(fftSize),
-        returnType_(returnType)
+        fftSize_(fftSize)
     {}
 
     FFT::~FFT()
@@ -35,13 +34,12 @@ namespace loudness{
             fftw_free(fftOutputBuf_);
             LOUDNESS_DEBUG("FFT: Buffers destroyed.");
 
-            for(vector<fftw_plan>::iterator i = fftPlans_.begin(); i != fftPlans_.end(); i++)
-                fftw_destroy_plan(*i);
+            fftw_destroy_plan(fftPlan_);
             LOUDNESS_DEBUG("FFT: Plan destroyed.");
         }
     }
 
-    bool FFT::initialize(const SignalBank &input)
+    bool FFT::initializeInternal(const SignalBank &input)
     {
         if(input.getNSamples() > fftSize_)
         {
@@ -59,17 +57,17 @@ namespace loudness{
             fftPlan_ = fftw_plan_r2r_1d(fftSize_, fftInputBuf_,
                     fftOutputBuf_, FFTW_R2HC, FFTW_PATIENT);
 
-            //FFT is viewed as a filter bank here so we go column wise
-            //Not as efficient due to contiguous memory though
-            if (returnType_ == "complex")
-                returnTypeInt_ = 0;
-            if (returnType_ == "power")
-                returnTypeInt_ = 1;
-            if (returnType_ == "magnitude")
-                returnTypeInt_ = 2;
-                output_.initialize(fftSize_, 2, input.getFs());
-            else
-                output_.initialize(fftSize_, 1, input.getFs());
+            //number of positive output components
+            //see: http://www.fftw.org/fftw2_doc/fftw_3.html 
+            nPositiveComponents_ = fftSize_/2 + 1;
+            nReals_ = nPositiveComponents_;
+            nImags_ = nReals_ - 2 + (fftSize_ % 2);
+            
+            if(allowOutput_)
+            {
+                output_.initialize(nPositiveComponents_, 2, input.getFs());
+                output_.setFrameRate(input.getFrameRate());
+            }
 
             return 1;
         }
@@ -78,35 +76,36 @@ namespace loudness{
     void FFT::processInternal(const SignalBank &input)
     {
         //fill the buffer
-        for(int i=0; j<input.getNSamples(); i++)
-            fftInputBuf_[j] = input.getSample(0, i);
+        for(int i=0; i<input.getNSamples(); i++)
+            fftInputBuf_[i] = input.getSample(0, i);
 
         //compute fft
         fftw_execute(fftPlan_);
 
-        //clear for next one
-        double re, im;
-        for(int j=0; j<fftSize_; j++)
+        if(allowOutput_)
         {
-            fftInputBuf_[j] = 0.0;
-            re = fftOutputBuf_[j];
-            im = fftOutputBuf_[fftSize_ - j];
-            if(returnTypeInt_ == 0)
-            {
-                output_.setSample(j, 0, re);
-                output_.setSample(j, 1, im);
-            }
-            else
-            {
-                y = re*re + im*im;
-                if(returnTypeInt_ == 2)
-                    y = sqrt(y);
-                output_.setSample(j, 0, y);
-            }
+            for (int i=0; i < nReals_; i++)
+                output_.setSample(i, 0, fftOutputBuf_[i]);
+            for (int i=1; i <= nImags_; i++)
+                output_.setSample(i, 1, fftOutputBuf_[fftSize_ - i]);
         }
+    }
+
+    int FFT::getFftSize() const
+    {
+        return fftSize_;
+    }
+
+    int FFT::getNPositiveComponents() const
+    {
+        return nPositiveComponents_;
+    }
+
+    void FFT::setAllowOutput(bool allowOutput)
+    {
+        allowOutput_ = allowOutput;
     }
 
     void FFT::resetInternal()
     {}
 }
-

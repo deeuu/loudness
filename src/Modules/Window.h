@@ -58,6 +58,26 @@ namespace loudness{
         Window();
         virtual ~Window();
 
+        /**
+         * @brief Normalises the window, typically for FFT usage.
+         *
+         * @param normalisation A string dictating the normalisation factor
+         * applied to the window(s). 
+         *
+         * If "rms", the window is normalised such according to:
+         * sqrt(mean(window^2)) = 1.0
+         * This is useful for energy conservation when computing the power
+         * spectrum of a windowed segment.
+         *
+         * If "amplitude", the window is normalised according to:
+         * sum(window) = 1.0
+         * This is useful for preserving the peak amplitude of an input sinusoid
+         * when computing the magnitude spectrum of a windowed segment.
+         *
+         */
+        void normaliseWindow(RealVec &window, const string &normalisation);
+        void setNormalisation(const string &normalisation);
+
         //Window functions are available for naughty method swiping
         void generateWindow(RealVec &window, const string &windowType, bool periodic);
 
@@ -84,6 +104,7 @@ namespace loudness{
         string windowType_ = "hann";
         IntVec length_, windowOffset_;
         int nWindows_, largestWindowSize_;
+        string normalisation_ = "";
         bool periodic_=true, average_=false, sum_=false, squareInput_=false;
         bool sqrRoot_=false, alignOutput_ = true;
         bool parallelWindows_;

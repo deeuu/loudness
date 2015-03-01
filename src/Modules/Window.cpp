@@ -47,6 +47,34 @@ namespace loudness{
         if(windowType == "hann")
             hann(window, periodic);
     }
+
+    void Window::setNormalisation(const string &normalisation)
+    {
+        normalisation_ = normalisation;
+    }
+
+    void Window::normaliseWindow(RealVec &window, const string &normalisation)
+    {
+        if(!normalisation.empty())
+        {
+            double x = 0.0;
+            double sum = 0.0, sumSquares = 0.0;
+            double normFactor = 1.0;
+            uint wSize = window.size();
+            for(uint i=0; i < wSize; i++)
+            {
+                 x = window[i];
+                 sum += x;
+                 sumSquares += x*x;
+            }
+            if (normalisation == "rms")
+                normFactor = 1.0/sqrt(sumSquares/wSize);
+            else if (normalisation == "amplitude")
+                normFactor = 1.0 / sum;
+            for(uint i=0; i < wSize; i++)
+                window[i] *= normFactor;
+        }
+    }
     
     void Window::hann(RealVec &window, bool periodic)
     {
@@ -96,6 +124,7 @@ namespace loudness{
         {
             window_[w].assign(length_[w],0.0);
             generateWindow(window_[w], windowType_, periodic_);
+            normaliseWindow(window_[w], normalisation_);
             LOUDNESS_DEBUG(name_ << ": Length of window " << w << " = " << window_[w].size());
         }
         //initialise the output signal

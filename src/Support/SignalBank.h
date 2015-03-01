@@ -132,7 +132,7 @@ namespace loudness{
         void fillSignal(int channel, int writeSampleIndex, const
                 RealVec& source, int readSampleIndex, int nSamples);
 
-        void pullSignalBack(int channel, int nSamples);
+        void pullBack(int nSamples);
 
         /**
          * @brief Sets the trigger state of the SignalBank.

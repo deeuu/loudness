@@ -117,14 +117,18 @@ namespace loudness{
             signal_[channel][writeSampleIndex++] = source[readSampleIndex++];
     }
 
-    void SignalBank::pullSignalBack(int channel, int nSamples)
+    void SignalBank::pullBack(int nSamples)
     {
-        for(int i=0; i<nSamples_; i++)
+        for (int chn=0; chn < nChannels_; chn++)
         {
-            if(nSamples<nSamples_)
-                signal_[channel][i] = signal_[channel][nSamples++];
-            else
-                signal_[channel][i] = 0.0;
+            int sample = nSamples;
+            for (int i=0; i < nSamples_; i++)
+            {
+                if(sample<nSamples_)
+                    signal_[chn][i] = signal_[chn][sample++];
+                else
+                    signal_[chn][i] = 0.0;
+            }
         }
     }
 

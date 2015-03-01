@@ -86,7 +86,7 @@ namespace loudness{
         //pull signal back by overlap samples
         if(writeIdx_ == frameSize_)
         {
-            output_.pullSignalBack(0, hopSize_);
+            output_.pullBack(hopSize_);
             writeIdx_ = overlap_;
         }
 

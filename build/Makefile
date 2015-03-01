@@ -28,6 +28,7 @@ SOURCES=../src/cnpy/cnpy.cpp \
 ../src/Support/Spline.cpp \
 ../src/Support/Filter.cpp \
 ../src/Support/Model.cpp \
+../src/Support/FFT.cpp \
 ../src/Modules/FrameGenerator.cpp \
 ../src/Modules/Window.cpp \
 ../src/Modules/AudioFileCutter.cpp \

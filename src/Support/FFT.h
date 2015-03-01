@@ -77,6 +77,33 @@ namespace loudness{
 
         virtual ~FFT();
 
+        void setAllowOutput(bool allowOutput);
+
+        int getFftSize() const;
+        int getNPositiveComponents() const;
+
+        inline Real getReal(int i)
+        {
+            if (i < nReals_)
+                return fftOutputBuf_[i];
+            else
+                return 0.0;
+        }
+        inline Real getImag(int i)
+        {
+            if ((i > 0) && (i <= nImags_))
+                return fftOutputBuf_[fftSize_ - i];
+            else
+                return 0.0;
+        }
+
+        inline Real getPower(int i)
+        {
+            double real = getReal(i);
+            double imag = getImag(i);
+            return real*real + imag*imag;
+        }
+
     private:
 
         virtual bool initializeInternal(const SignalBank &input);
@@ -85,13 +112,11 @@ namespace loudness{
 
         virtual void resetInternal();
 
-        int fftSize_;
+        int fftSize_, nPositiveComponents_, nReals_, nImags_;
+        bool allowOutput_ = false;
         Real *fftInputBuf_;
-        Complex *fftOutputBuf_;
-        vector<int> windowSizeSamps_, fftSize_, windowDelay_;
-        vector<fftw_plan> fftPlans_;
-        RealVecVec windows_;
-        vector<vector<int> > bandBinIndices_; 
+        Real *fftOutputBuf_;
+        fftw_plan fftPlan_;
     };
 }
 
