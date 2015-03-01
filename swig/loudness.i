@@ -46,9 +46,6 @@
 #include "../src/Modules/GoertzelPS.h"
 #include "../src/Modules/CompressSpectrum.h"
 #include "../src/Modules/WeightSpectrum.h"
-#include "../src/Models/DynamicLoudnessGM.h"
-#include "../src/Models/DynamicLoudnessCH.h"
-#include "../src/Models/SteadyLoudnessANSIS3407.h"
 %}
 
 //Required for integration with numpy arrays
@@ -109,6 +106,3 @@ using std::string;
 %include "../src/Modules/RoexBankANSIS3407.h"
 %include "../src/Modules/FastRoexBank.h"
 %include "../src/Modules/DoubleRoexBank.h"
-%include "../src/Models/DynamicLoudnessGM.h"
-%include "../src/Models/DynamicLoudnessCH.h"
-%include "../src/Models/SteadyLoudnessANSIS3407.h"

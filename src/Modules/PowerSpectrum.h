@@ -22,6 +22,7 @@
 
 #include <fftw3.h>
 #include "../Support/Module.h"
+#include "../Support/FFT.h"
 
 namespace loudness{
 
@@ -71,9 +72,8 @@ namespace loudness{
          *
          * @param bandFreqsHz A vector of consecutive band edges in Hz.
          * @param windowSizeSecs A vector of window lengths for each band in ms.
-         * @param uniform true for uniform spectral sampling, false otherwise.
          */
-        PowerSpectrum(const RealVec& bandFreqsHz, const RealVec& windowSizeSecs, bool uniform);
+        PowerSpectrum(const RealVec& bandFreqsHz);
 
         virtual ~PowerSpectrum();
 
@@ -85,17 +85,12 @@ namespace loudness{
 
         virtual void resetInternal();
 
-        void hannWindow(RealVec &w, int fftSize);
-
-        RealVec bandFreqsHz_, windowSizeSecs_;
+        RealVec bandFreqsHz_, normalisation_;
         bool uniform_;
         int nWindows_;
-        Real temporalCentre_;
-        Real *fftInputBuf_, *fftOutputBuf_;
-        vector<int> windowSizeSamps_, fftSize_, windowDelay_;
-        vector<fftw_plan> fftPlans_;
-        RealVecVec windows_;
+        vector<int> fftSize_;
         vector<vector<int> > bandBinIndices_; 
+        vector<unique_ptr<FFT>> ffts_;
     };
 }
 

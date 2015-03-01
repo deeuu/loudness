@@ -23,6 +23,7 @@
 #include "../Modules/Butter.h"
 #include "../Modules/FIR.h"
 #include "../Modules/IIR.h"
+#include "../Modules/Window.h"
 #include "../Modules/PowerSpectrum.h"
 #include "../Modules/GoertzelPS.h"
 #include "../Modules/CompressSpectrum.h"
@@ -199,6 +200,9 @@ namespace loudness{
 
         //window spec
         RealVec windowSizeSecs {0.064, 0.032, 0.016, 0.008, 0.004, 0.002};
+        vector<int> windowSizeSamples(6,0);
+        for(int w=0; w<6; w++)
+            windowSizeSamples[w] = (int)round(windowSizeSecs[w] * input.getFs());
         
         //create module
         if(goertzel_)
@@ -207,8 +211,10 @@ namespace loudness{
                     (new GoertzelPS(bandFreqsHz, windowSizeSecs, timeStep_))); 
         }
         else{
+            modules_.push_back(unique_ptr<Module>
+                    (new Window("hann", windowSizeSamples, true, "rms", uniform_)));
             modules_.push_back(unique_ptr<Module> 
-                    (new PowerSpectrum(bandFreqsHz, windowSizeSecs, uniform_))); 
+                    (new PowerSpectrum(bandFreqsHz))); 
         }
 
         /*

@@ -33,11 +33,9 @@ setup(name="loudness",
             "../src/Modules/PowerSpectrum.cpp",
             "../src/Modules/GoertzelPS.cpp",
             "../src/Modules/CompressSpectrum.cpp",
-            "../src/Modules/WeightSpectrum.cpp",
-            "../src/Models/DynamicLoudnessGM.cpp",
-            "../src/Models/DynamicLoudnessCH.cpp",
-            "../src/Models/SteadyLoudnessANSIS3407.cpp"
+            "../src/Modules/WeightSpectrum.cpp"
             ],
+
         #include_dirs = [numpy_include, "/usr/include"],
         library_dirs=['/usr/lib', '/usr/local/lib'],
         libraries=['fftw3', 'sndfile'],

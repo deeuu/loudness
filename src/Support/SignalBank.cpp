@@ -72,6 +72,12 @@ namespace loudness{
         }
     }
 
+    void SignalBank::resizeSignal(int channel, int nSamples)
+    {
+        if (channel < nChannels_)
+            signal_[channel].assign(nSamples, 0.0);
+    }
+
     void SignalBank::clear()
     {
         for(int i=0; i<nChannels_; i++)

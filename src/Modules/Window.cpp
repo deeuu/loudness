@@ -21,16 +21,28 @@
 
 namespace loudness{
 
-    Window::Window(const string &windowType, const IntVec &length, bool periodic) :
+    Window::Window(const string &windowType, const IntVec &length, bool periodic, const string &normalisation, bool alignOutput) :
         Module("Window"),
         windowType_(windowType),
         length_(length),
-        periodic_(periodic)
+        periodic_(periodic),
+        normalisation_(normalisation),
+        alignOutput_(alignOutput),
+        sum_(false),
+        average_(false),
+        squareInput_(false),
+        sqrRoot_(false)
     {}
-    Window::Window(const string &windowType, int length, bool periodic) :
+    Window::Window(const string &windowType, int length, bool periodic, const string &normalisation, bool alignOutput) :
         Module("Window"),
         windowType_(windowType),
-        periodic_(periodic)
+        periodic_(periodic),
+        normalisation_(normalisation),
+        alignOutput_(alignOutput),
+        sum_(false),
+        average_(false),
+        squareInput_(false),
+        sqrRoot_(false)
     {
        length_.assign(1, length); 
     }
@@ -71,6 +83,8 @@ namespace loudness{
                 normFactor = 1.0/sqrt(sumSquares/wSize);
             else if (normalisation == "amplitude")
                 normFactor = 1.0 / sum;
+            else 
+                LOUDNESS_WARNING(name_ << ": Normalisation must be 'rms' or 'amplitude'");
             for(uint i=0; i < wSize; i++)
                 window[i] *= normFactor;
         }
@@ -131,7 +145,15 @@ namespace loudness{
         if(sum_)
             output_.initialize(nWindows_, 1, input.getFs());//frame rate?
         else
+        {
             output_.initialize(nWindows_, largestWindowSize_, input.getFs());
+            if(!alignOutput_)
+            {
+                for(int w=0; w < nWindows_; w++)
+                    output_.resizeSignal(w, length_[w]);
+            }
+
+        }
 
         return 1;
     }
@@ -205,5 +227,20 @@ namespace loudness{
     bool Window::getSquareInput() const
     {
         return squareInput_;
+    }
+
+    bool Window::getSum() const
+    {
+        return sum_;
+    }
+
+    bool Window::getSqrRoot() const
+    {
+        return sqrRoot_;
+    }
+
+    bool Window::getAlignOutput() const
+    {
+        return alignOutput_;
     }
 }

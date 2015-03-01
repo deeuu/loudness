@@ -53,8 +53,8 @@ namespace loudness{
          * @param squareInput Set to true if the input samples should be squared
          * (default is false).
          */
-        Window(const string &windowType, const IntVec& length, bool periodic);
-        Window(const string &windowType, int length, bool periodic);
+        Window(const string &windowType, const IntVec& length, bool periodic, const string &normalisation, bool alignOutput);
+        Window(const string &windowType, int length, bool periodic, const string &normalisation, bool alignOutput);
         Window();
         virtual ~Window();
 
@@ -90,7 +90,10 @@ namespace loudness{
         void setSquareInput(bool squareInput);
         void setSqrRoot(bool sqrRoot);
 
+        bool getSum() const;
         bool getSquareInput() const;
+        bool getSqrRoot() const;
+        bool getAlignOutput() const;
 
     private:
 
@@ -101,15 +104,14 @@ namespace loudness{
         //window functions
         void hann(RealVec &window, bool periodic);
 
-        string windowType_ = "hann";
+        string windowType_;
         IntVec length_, windowOffset_;
         int nWindows_, largestWindowSize_;
-        string normalisation_ = "";
-        bool periodic_=true, average_=false, sum_=false, squareInput_=false;
-        bool sqrRoot_=false, alignOutput_ = true;
+        bool periodic_,average_, sum_, squareInput_;
+        string normalisation_;
+        bool sqrRoot_, alignOutput_;
         bool parallelWindows_;
         RealVecVec window_;
-
     };
 }
 

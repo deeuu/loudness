@@ -22,13 +22,19 @@
 namespace loudness{
 
     FFT::FFT(int fftSize) :
-        Module("FFT"),
         fftSize_(fftSize)
-    {}
+    {
+        LOUDNESS_DEBUG("FFT: Constructed");
+    }
 
     FFT::~FFT()
     { 
-        if(initialized_) //I thought you said don't worry
+        freeFFTW();
+    }
+
+    void FFT::freeFFTW(){
+
+        if (initialized_)
         {
             fftw_free(fftInputBuf_);
             fftw_free(fftOutputBuf_);
@@ -39,56 +45,43 @@ namespace loudness{
         }
     }
 
-    bool FFT::initializeInternal(const SignalBank &input)
+    bool FFT::initialize()
     {
-        if(input.getNSamples() > fftSize_)
-        {
-            LOUDNESS_ERROR(name_ << ": Number of input samples is > FFT size");
-            return 0;
-        }
-        else
-        {
-            //don't worry, we are protected from reinitialisation
-            //allocate memory for FFT input buffers...all FFT inputs can make use of a single buffer
-            //since we are not doing zero phase insersion
-            fftInputBuf_ = (Real*) fftw_malloc(sizeof(Real) * fftSize_);
-            fftOutputBuf_ = (Real*) fftw_malloc(sizeof(Real) * fftSize_);
-            
-            fftPlan_ = fftw_plan_r2r_1d(fftSize_, fftInputBuf_,
-                    fftOutputBuf_, FFTW_R2HC, FFTW_PATIENT);
+        LOUDNESS_DEBUG("FFT: Setting up...");
+        freeFFTW();
+        //don't worry, we are protected from reinitialisation
+        //allocate memory for FFT input buffers...all FFT inputs can make use of a single buffer
+        //since we are not doing zero phase insersion
+        fftInputBuf_ = (Real*) fftw_malloc(sizeof(Real) * fftSize_);
+        fftOutputBuf_ = (Real*) fftw_malloc(sizeof(Real) * fftSize_);
+        LOUDNESS_DEBUG("FFT: Allocated input and output buffers for an FFT size of " << fftSize_);
+        
+        fftPlan_ = fftw_plan_r2r_1d(fftSize_, fftInputBuf_,
+                fftOutputBuf_, FFTW_R2HC, FFTW_PATIENT);
 
-            //number of positive output components
-            //see: http://www.fftw.org/fftw2_doc/fftw_3.html 
-            nPositiveComponents_ = fftSize_/2 + 1;
-            nReals_ = nPositiveComponents_;
-            nImags_ = nReals_ - 2 + (fftSize_ % 2);
-            
-            if(allowOutput_)
-            {
-                output_.initialize(nPositiveComponents_, 2, input.getFs());
-                output_.setFrameRate(input.getFrameRate());
-            }
+        LOUDNESS_DEBUG("FFT: Plan set up");
 
-            return 1;
-        }
+        //number of positive output components
+        //see: http://www.fftw.org/fftw2_doc/fftw_3.html 
+        nPositiveComponents_ = fftSize_/2 + 1;
+        nReals_ = nPositiveComponents_;
+        nImags_ = nReals_ - 2 + (fftSize_ % 2);
+
+        LOUDNESS_DEBUG("FFT: Number of positive components = " << nPositiveComponents_);
+
+        initialized_ = true;
+        
+        return 1;
     }
 
-    void FFT::processInternal(const SignalBank &input)
+    void FFT::process(const RealVec &input)
     {
         //fill the buffer
-        for(int i=0; i<input.getNSamples(); i++)
-            fftInputBuf_[i] = input.getSample(0, i);
+        for(uint i=0; i<input.size(); i++)
+            fftInputBuf_[i] = input[i];
 
         //compute fft
         fftw_execute(fftPlan_);
-
-        if(allowOutput_)
-        {
-            for (int i=0; i < nReals_; i++)
-                output_.setSample(i, 0, fftOutputBuf_[i]);
-            for (int i=1; i <= nImags_; i++)
-                output_.setSample(i, 1, fftOutputBuf_[fftSize_ - i]);
-        }
     }
 
     int FFT::getFftSize() const
@@ -101,11 +94,4 @@ namespace loudness{
         return nPositiveComponents_;
     }
 
-    void FFT::setAllowOutput(bool allowOutput)
-    {
-        allowOutput_ = allowOutput;
-    }
-
-    void FFT::resetInternal()
-    {}
 }

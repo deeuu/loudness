@@ -62,7 +62,7 @@ namespace loudness{
      *
      * @sa FrameGenerator
      */
-    class FFT: public Module
+    class FFT
     {
     public:
 
@@ -75,9 +75,11 @@ namespace loudness{
          */
         FFT(int fftSize);
 
-        virtual ~FFT();
+        ~FFT();
 
-        void setAllowOutput(bool allowOutput);
+        bool initialize();
+        void process(const RealVec &input);
+        void freeFFTW();
 
         int getFftSize() const;
         int getNPositiveComponents() const;
@@ -97,23 +99,10 @@ namespace loudness{
                 return 0.0;
         }
 
-        inline Real getPower(int i)
-        {
-            double real = getReal(i);
-            double imag = getImag(i);
-            return real*real + imag*imag;
-        }
-
     private:
 
-        virtual bool initializeInternal(const SignalBank &input);
-
-        virtual void processInternal(const SignalBank &input);
-
-        virtual void resetInternal();
-
         int fftSize_, nPositiveComponents_, nReals_, nImags_;
-        bool allowOutput_ = false;
+        bool initialized_ = false;
         Real *fftInputBuf_;
         Real *fftOutputBuf_;
         fftw_plan fftPlan_;

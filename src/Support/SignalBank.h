@@ -71,6 +71,8 @@ namespace loudness{
          */
         void clear();
 
+        void resizeSignal(int channel, int nSamples);
+
         /*
          * setters
          */
