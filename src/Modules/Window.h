@@ -48,13 +48,9 @@ namespace loudness{
          * @brief Constructs an Window object.
          *
          * @param windowSize Number of samples in the sliding window.
-         * @param average Set to true (default) to average the samples in the
-         * window.
-         * @param squareInput Set to true if the input samples should be squared
-         * (default is false).
          */
-        Window(const string &windowType, const IntVec& length, bool periodic, const string &normalisation, bool alignOutput);
-        Window(const string &windowType, int length, bool periodic, const string &normalisation, bool alignOutput);
+        Window(const string &windowType, const IntVec& length, bool periodic);
+        Window(const string &windowType, int length, bool periodic);
         Window();
         virtual ~Window();
 
@@ -64,24 +60,28 @@ namespace loudness{
          * @param normalisation A string dictating the normalisation factor
          * applied to the window(s). 
          *
-         * If "rms", the window is normalised such according to:
-         * sqrt(mean(window^2)) = 1.0
+         * If "energy", the window is normalised such according to:
+         * mean(window^2) = 1.0
          * This is useful for energy conservation when computing the power
          * spectrum of a windowed segment.
          *
          * If "amplitude", the window is normalised according to:
-         * sum(window) = 1.0
+         * mean(window) = 1.0
          * This is useful for preserving the peak amplitude of an input sinusoid
          * when computing the magnitude spectrum of a windowed segment.
          *
          */
-        void normaliseWindow(RealVec &window, const string &normalisation);
+        bool normaliseWindow(RealVec &window, const string &normalisation, Real ref);
         void setNormalisation(const string &normalisation);
 
         //Window functions are available for naughty method swiping
         void generateWindow(RealVec &window, const string &windowType, bool periodic);
 
+        /**
+         * @brief For debugging
+         */
         void setAlignOutput(bool alignOutput);
+
         void setSum(bool sum);
 
         /**
@@ -89,11 +89,11 @@ namespace loudness{
          */
         void setSquareInput(bool squareInput);
         void setSqrRoot(bool sqrRoot);
+        void setRef(const Real ref);
 
         bool getSum() const;
         bool getSquareInput() const;
         bool getSqrRoot() const;
-        bool getAlignOutput() const;
 
     private:
 
@@ -105,13 +105,15 @@ namespace loudness{
         void hann(RealVec &window, bool periodic);
 
         string windowType_;
-        IntVec length_, windowOffset_;
-        int nWindows_, largestWindowSize_;
-        bool periodic_,average_, sum_, squareInput_;
+        IntVec length_;
+        bool periodic_;
         string normalisation_;
-        bool sqrRoot_, alignOutput_;
-        bool parallelWindows_;
+        Real ref_;
+        bool sum_, average_, squareInput_, sqrRoot_;
+        int nWindows_, largestWindowSize_;
+        bool parallelWindows_, alignOutput_;
         RealVecVec window_;
+        IntVec windowOffset_;
     };
 }
 

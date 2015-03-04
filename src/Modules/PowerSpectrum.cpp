@@ -21,9 +21,11 @@
 
 namespace loudness{
 
-    PowerSpectrum::PowerSpectrum(const RealVec& bandFreqsHz):
+    PowerSpectrum::PowerSpectrum(const RealVec& bandFreqsHz, bool uniform):
         Module("PowerSpectrum"),
-        bandFreqsHz_(bandFreqsHz)
+        bandFreqsHz_(bandFreqsHz),
+        uniform_(uniform),
+        normalisation_("averageEnergy")
     {}
 
     PowerSpectrum::~PowerSpectrum()
@@ -45,34 +47,35 @@ namespace loudness{
         //sampling freqeuncy
         int fs = input.getFs();
         
-        //create the FFTs based on input windows
-        int largestWindowSize = input.getNSamples();
-        vector<int> windowSize(nWindows_, largestWindowSize);
-        LOUDNESS_DEBUG(name_ << ": Length of lagest window: " << largestWindowSize);
-        vector<int> fftSize(nWindows_, 0);
-        int windowSizePrev = largestWindowSize;
-        for(int w=0; w<nWindows_; w++)
+        //temporary vectors
+        int windowSizePrev = input.getNSamples();//largest window
+        vector<int> windowSize(nWindows_, windowSizePrev);
+        vector<int> fftSize(nWindows_, pow(2, ceil(log2(windowSizePrev))));
+        //work out FFT sizes (force power of 2)
+        for(int w=1; w<nWindows_; w++)
         {
             const vector<Real> &signal = input.getSignal(w);
             windowSize[w] = (int)signal.size();
-            fftSize[w] = pow(2, ceil(log2(windowSize[w])));
+
+            if(!uniform_)
+                fftSize[w] = pow(2, ceil(log2(windowSize[w])));
+
+            //windows must be largest to smallest
             if (windowSize[w] > windowSizePrev)
             {
                 LOUDNESS_ERROR(name_ << ": Window lengths must be in descending order.");
                 return 0;
             }
-            else if (windowSize[w] < windowSizePrev)
-            {
-                uniform_ = true;
-            }
+
             windowSizePrev = windowSize[w];
         }
+        //One FFT for all windows - uniform spectral sampling
         if(uniform_)
         {
             ffts_.push_back(unique_ptr<FFT> (new FFT(fftSize[0]))); 
             ffts_[0] -> initialize();
         }
-        else
+        else //seperate
         {
             for(int w=0; w<nWindows_; w++)
             {
@@ -83,7 +86,7 @@ namespace loudness{
 
         //desired bins indices (lo and hi) per band
         bandBinIndices_.resize(nWindows_);
-        normalisation_.resize(nWindows_);
+        normFactor_.resize(nWindows_);
         for(int i=0; i<nWindows_; i++)
         {
             //bin indices to use for compiled spectrum
@@ -114,9 +117,12 @@ namespace loudness{
                 bandBinIndices_[i][1] = nyqIdx-1;
             }
 
-            //normalisation
-            normalisation_[i] = 1.0/(fftSize[i] * windowSize[i]);
-            LOUDNESS_DEBUG(name_ << ": Normalisation factor : " << normalisation_[i]);
+            //Power spectrum normalisation
+            if(normalisation_ == "averageEnergy")
+                normFactor_[i] = 2.0/(fftSize[i] * windowSize[i]);
+            else
+                normFactor_[i] = 2.0/fftSize[i];
+            LOUDNESS_DEBUG(name_ << ": Normalisation factor : " << normFactor_[i]);
         }
 
         //count total number of bins and ensure no overlap
@@ -126,12 +132,10 @@ namespace loudness{
             while((bandBinIndices_[i][0]*fs/fftSize[i]) <= (bandBinIndices_[i-1][1]*fs/fftSize[i-1]))
                 bandBinIndices_[i][0] += 1;
             nBins += bandBinIndices_[i-1][1]-bandBinIndices_[i-1][0] + 1;
-            LOUDNESS_DEBUG(name_ << ": nBins : " << nBins);
         }
         
         //total number of bins in the output spectrum
         nBins += bandBinIndices_[nWindows_-1][1]-bandBinIndices_[nWindows_-1][0] + 1;
-
         LOUDNESS_DEBUG(name_ 
                 << ": Total number of bins comprising the output spectrum: " << nBins);
 
@@ -169,7 +173,7 @@ namespace loudness{
             {
                 re = ffts_[fftIdx] -> getReal(j);
                 im = ffts_[fftIdx] -> getImag(j);
-                power = normalisation_[i] * (re*re + im*im);
+                power = normFactor_[i] * (re*re + im*im);
                 output_.setSample(writeIdx++, 0, power);
             }
         }
@@ -177,5 +181,9 @@ namespace loudness{
 
     void PowerSpectrum::resetInternal()
     {}
-}
 
+    void PowerSpectrum::setNormalisation(const string &normalisation)
+    {
+        normalisation_ = normalisation;
+    }
+}

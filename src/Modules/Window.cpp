@@ -21,28 +21,30 @@
 
 namespace loudness{
 
-    Window::Window(const string &windowType, const IntVec &length, bool periodic, const string &normalisation, bool alignOutput) :
+    Window::Window(const string &windowType, const IntVec &length, bool periodic) :
         Module("Window"),
         windowType_(windowType),
         length_(length),
         periodic_(periodic),
-        normalisation_(normalisation),
-        alignOutput_(alignOutput),
+        normalisation_("energy"),
+        ref_(2e-5),
         sum_(false),
         average_(false),
         squareInput_(false),
-        sqrRoot_(false)
+        sqrRoot_(false),
+        alignOutput_(false)
     {}
-    Window::Window(const string &windowType, int length, bool periodic, const string &normalisation, bool alignOutput) :
+    Window::Window(const string &windowType, int length, bool periodic) :
         Module("Window"),
         windowType_(windowType),
         periodic_(periodic),
-        normalisation_(normalisation),
-        alignOutput_(alignOutput),
+        normalisation_("energy"),
+        ref_(2e-5),
         sum_(false),
         average_(false),
         squareInput_(false),
-        sqrRoot_(false)
+        sqrRoot_(false),
+        alignOutput_(false)
     {
        length_.assign(1, length); 
     }
@@ -65,7 +67,7 @@ namespace loudness{
         normalisation_ = normalisation;
     }
 
-    void Window::normaliseWindow(RealVec &window, const string &normalisation)
+    bool Window::normaliseWindow(RealVec &window, const string &normalisation, double ref)
     {
         if(!normalisation.empty())
         {
@@ -79,15 +81,24 @@ namespace loudness{
                  sum += x;
                  sumSquares += x*x;
             }
-            if (normalisation == "rms")
-                normFactor = 1.0/sqrt(sumSquares/wSize);
+            if (normalisation == "energy")
+            {
+                normFactor = sqrt(wSize/sumSquares);
+            }
             else if (normalisation == "amplitude")
-                normFactor = 1.0 / sum;
+            {
+                normFactor = wSize/sum;
+            }
             else 
-                LOUDNESS_WARNING(name_ << ": Normalisation must be 'rms' or 'amplitude'");
+            {
+                LOUDNESS_WARNING(name_ << ": Normalisation must be 'energy' or 'amplitude'");
+                return 0;
+            }
+            normFactor /= ref;
             for(uint i=0; i < wSize; i++)
                 window[i] *= normFactor;
         }
+        return 1;
     }
     
     void Window::hann(RealVec &window, bool periodic)
@@ -116,7 +127,9 @@ namespace loudness{
         window_.resize(nWindows_);
         largestWindowSize_ = length_[0];
         LOUDNESS_DEBUG(name_ << ": Largest window size = " << largestWindowSize_);
-        
+
+        //first window (largest) does not require a shift
+        windowOffset_.push_back(0);
         //check if we are using multi windows on one input channel
         if((input.getNChannels()==1) && (nWindows_>1))
         {
@@ -124,7 +137,6 @@ namespace loudness{
             parallelWindows_ = true;
             int alignmentSample = ceil((largestWindowSize_-1)/2.0);
             LOUDNESS_DEBUG(name_ << ": Alignment sample = " << alignmentSample);
-            windowOffset_.push_back(0);
             for(int w=1; w<nWindows_; w++)
             {
                 int thisCentreSample = ceil((length_[w]-1)/2.0);
@@ -134,11 +146,12 @@ namespace loudness{
                 LOUDNESS_DEBUG(name_ << ": Offset for window " << w << " = " << thisWindowOffset);
             }
         }
+        //generate the normalised window functions
         for (int w=0; w<nWindows_; w++)
         {
             window_[w].assign(length_[w],0.0);
             generateWindow(window_[w], windowType_, periodic_);
-            normaliseWindow(window_[w], normalisation_);
+            normaliseWindow(window_[w], normalisation_, ref_);
             LOUDNESS_DEBUG(name_ << ": Length of window " << w << " = " << window_[w].size());
         }
         //initialise the output signal
@@ -149,28 +162,29 @@ namespace loudness{
             output_.initialize(nWindows_, largestWindowSize_, input.getFs());
             if(!alignOutput_)
             {
+                //we resize the outputs so PowerSpectrum knows
                 for(int w=0; w < nWindows_; w++)
                     output_.resizeSignal(w, length_[w]);
             }
-
         }
+        output_.setFrameRate(input.getFrameRate());
 
         return 1;
     }
 
     void Window::processInternal(const SignalBank &input)
     {
-        int chnIdx, offset1, offset2;
+        int chnIdx=0, offset=0, offset2=0;
         for(int w=0; w<nWindows_; w++)
         {
-            //offset 1 is the read position
-            offset1 = windowOffset_[w];
-            //offset 2 is the write position
-            offset2 = 0;
+            //offset the read position
+            offset = windowOffset_[w];
+            if(!parallelWindows_)
+                chnIdx = w;
+
+            //For debugging
             if(alignOutput_)
-                offset2 = offset1;
-            if(parallelWindows_)
-                chnIdx = 0;
+                offset2 = offset;
 
             if(sum_)
             {
@@ -179,7 +193,7 @@ namespace loudness{
                 {
                     for (int smp=0; smp<length_[w]; smp++)
                     {
-                        x = input.getSample(chnIdx, offset1+smp);
+                        x = input.getSample(chnIdx, offset++);
                         x *= x;
                         y += x;
                     }
@@ -189,20 +203,25 @@ namespace loudness{
                 else
                 {    
                     for (int smp=0; smp<length_[w]; smp++)
-                        y += window_[w][smp] * input.getSample(chnIdx, offset1+smp);
+                        y += window_[w][smp] * input.getSample(chnIdx, offset++);
                 }
                 output_.setSample(w, 0, y);
             }
             else //normal windowing e.g. for FFT
             {
                 for (int smp=0; smp<length_[w]; smp++)
-                    output_.setSample(w, offset2+smp, window_[w][smp] * input.getSample(chnIdx, offset1+smp));
+                    output_.setSample(w, smp+offset2, window_[w][smp] * input.getSample(chnIdx, offset++));
             }
         }
     }
 
     void Window::resetInternal()
     {
+    }
+
+    void Window::setRef(const Real ref)
+    {
+        ref_ = ref;
     }
 
     void Window::setAlignOutput(bool alignOutput)
@@ -237,10 +256,5 @@ namespace loudness{
     bool Window::getSqrRoot() const
     {
         return sqrRoot_;
-    }
-
-    bool Window::getAlignOutput() const
-    {
-        return alignOutput_;
     }
 }

@@ -22,7 +22,10 @@
 namespace loudness{
 
     FFT::FFT(int fftSize) :
-        fftSize_(fftSize)
+        fftSize_(fftSize),
+        initialized_(false),
+        nReals_(0),
+        nImags_(0)
     {
         LOUDNESS_DEBUG("FFT: Constructed");
     }
@@ -67,7 +70,7 @@ namespace loudness{
         nReals_ = nPositiveComponents_;
         nImags_ = nReals_ - 2 + (fftSize_ % 2);
 
-        LOUDNESS_DEBUG("FFT: Number of positive components = " << nPositiveComponents_);
+        LOUDNESS_DEBUG("FFT: Number of positive frequency components = " << nPositiveComponents_);
 
         initialized_ = true;
         
@@ -76,12 +79,19 @@ namespace loudness{
 
     void FFT::process(const RealVec &input)
     {
-        //fill the buffer
-        for(uint i=0; i<input.size(); i++)
-            fftInputBuf_[i] = input[i];
+        if(initialized_)
+        {
+            //fill the buffer
+            for(uint i=0; i<input.size(); i++)
+                fftInputBuf_[i] = input[i];
 
-        //compute fft
-        fftw_execute(fftPlan_);
+            //compute fft
+            fftw_execute(fftPlan_);
+
+            //clear the input buffer
+            for(int i=0; i<fftSize_; i++)
+                fftInputBuf_[i] = 0.0;
+        }
     }
 
     int FFT::getFftSize() const

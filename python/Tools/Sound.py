@@ -40,6 +40,7 @@ class Sound:
         if file_path:
             self.file_path_ = file_path
         self.ref = 1
+        self.filepath = file_path
 
     @staticmethod
     def loadAudioFile(file_path, mono=True):
@@ -92,6 +93,9 @@ class Sound:
         data   = random.randn(round(dur), channels)
         data   = data/max(abs(data))
         return Sound(data,fs)
+
+    def getDuration(self):
+        return self.nSamples / float(self.fs)
 
     def writeAudioFile(self, file_path, enc='pcm16'):
         if ".wav" in file_path:

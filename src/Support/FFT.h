@@ -102,7 +102,7 @@ namespace loudness{
     private:
 
         int fftSize_, nPositiveComponents_, nReals_, nImags_;
-        bool initialized_ = false;
+        bool initialized_;
         Real *fftInputBuf_;
         Real *fftOutputBuf_;
         fftw_plan fftPlan_;

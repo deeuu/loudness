@@ -146,8 +146,13 @@ namespace loudness{
         //window spec
         RealVec windowSizeSecs {0.128, 0.064, 0.032, 0.016, 0.008, 0.004};
         vector<int> windowSizeSamples(6,0);
+        //round to nearest sample and force to be even such that centre samples
+        //are aligned.
         for(int w=0; w<6; w++)
+        {
             windowSizeSamples[w] = (int)round(windowSizeSecs[w] * input.getFs());
+            windowSizeSamples[w] += windowSizeSamples[w]%2;
+        }
         
         //create module
         if(goertzel_)
@@ -156,10 +161,12 @@ namespace loudness{
                     (new GoertzelPS(bandFreqsHz, windowSizeSecs, timeStep_))); 
         }
         else{
+            //configure windowing
             modules_.push_back(unique_ptr<Module>
-                    (new Window("hann", windowSizeSamples, true, "rms", uniform_)));
+                    (new Window("hann", windowSizeSamples, true)));
+            //power spectrum
             modules_.push_back(unique_ptr<Module> 
-                    (new PowerSpectrum(bandFreqsHz))); 
+                    (new PowerSpectrum(bandFreqsHz, uniform_))); 
         }
 
         /*
