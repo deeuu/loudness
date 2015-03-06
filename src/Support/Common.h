@@ -50,5 +50,6 @@ typedef unsigned int uint;
 typedef std::vector<Real> RealVec;
 typedef std::vector<int> IntVec;
 typedef std::vector<std::vector<Real> > RealVecVec;
+typedef std::vector<std::vector<std::vector<Real> > > RealVecVecVec;
 
 #endif  

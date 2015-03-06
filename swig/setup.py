@@ -5,11 +5,8 @@ from distutils import sysconfig
 
 if __name__ == "__main__":
 
-    debug = False
-    if debug:
-        debugFlag = "-DDEBUG"
-    else
-        debugFlag = ""
+    debugFlag = "-DDEBUG"
+
     setup(name="loudness",
             py_modules=['loudness'], 
             ext_modules=[Extension("_loudness",

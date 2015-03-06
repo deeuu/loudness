@@ -61,11 +61,13 @@ namespace loudness{
             LOUDNESS_DEBUG("Filter: Shape is: (" << arr.shape[0] << " x " << arr.shape[1] << ")");
 
             //transfer data
+            bCoefs_.assign(1,RealVecVec(1,RealVec));
+            aCoefs_.assign(1,RealVecVec(1,RealVec));
             for(unsigned int i=0; i<arr.shape[1]; i++)
             {
-                bCoefs_.push_back(data[i]);
+                bCoefs_[0][0].push_back(data[i]);
                 if(iir)
-                    aCoefs_.push_back(data[i+arr.shape[1]]);
+                    aCoefs_[0][0].push_back(data[i+arr.shape[1]]);
             }
             
             //clean up
@@ -77,12 +79,14 @@ namespace loudness{
 
     void Filter::setBCoefs(const RealVec &bCoefs)
     {
-        bCoefs_ = bCoefs;
+        bCoefs_.assign(RealVecVec(1, RealVec(bCoefs)));
+        //bCoefs_ = bCoefs;
     }
 
     void Filter::setACoefs(const RealVec &aCoefs)
     {
-        aCoefs_ = aCoefs;
+        bCoefs_.assign(RealVecVec(1, RealVec(bCoefs)));
+        //aCoefs_ = aCoefs;
     }
 
     void Filter::normaliseCoefs()

@@ -44,7 +44,7 @@ namespace loudness{
             z_.assign(order_,0.0);
 
             //output SignalBank
-            output_.initialize(input.getNChannels(), input.getNSamples(), input.getFs());
+            output_.initialize(input);
 
             return 1;
         }
@@ -57,25 +57,29 @@ namespace loudness{
     void FIR::processInternal(const SignalBank &input)
     {
         int smp, j;
+        int earIdx=0, chnIdx=0;
         Real x;
 
-        LOUDNESS_DEBUG("FIR: New block");
-        for(smp=0; smp<input.getNSamples(); smp++)
+        for(int ear=0; ear<input.getNEars(); ear++)
         {
-            //input sample
-            x = input.getSample(0, smp) * gain_;
+            for(int chn=0; chn<input.getNChannels(); chn++)
+            {
+                for(smp=0; smp<input.getNSamples(); smp++)
+                {
+                    //input sample
+                    x = input.getSample(ear, chn, smp) * gain_;
 
-            LOUDNESS_DEBUG("FIR: Input sample: " << x);
+                    //output sample
+                    output_.setSample(ear, chn, smp, bCoefs_[earIdx][chnIdx][0] * x + z_[ear][chn][0]);
 
-            //output sample
-            output_.setSample(0, smp, bCoefs_[0] * x + z_[0]);
+                    //fill delay
+                    for (j=1; j<order_; j++)
+                        z_[ear][chn][j-1] = bCoefs_[earIdx][chnIdx][j] * x + z_[ear][chn][j];
 
-            //fill delay
-            for (j=1; j<order_; j++)
-                z_[j-1] = bCoefs_[j] * x + z_[j];
-
-            //final sample
-            z_[orderMinus1_] = bCoefs_[order_] * x;
+                    //final sample
+                    z_[ear][chn][orderMinus1_] = bCoefs_[earIdx][chnIdx][order_] * x;
+                }
+            }
         }
     }
 

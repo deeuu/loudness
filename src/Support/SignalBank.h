@@ -57,6 +57,7 @@ namespace loudness{
          * @param fs Sampling frequency.
          */
         void initialize(int nChannels, int nSamples, int fs);
+        void initialize(int nEars, int nChannels, int nSamples, int fs);
 
         /**
          * @brief Initialises the SignalBank with the same parameters as the 
@@ -72,6 +73,7 @@ namespace loudness{
         void clear();
 
         void resizeSignal(int channel, int nSamples);
+        void resizeSignal(int ear, int channel, int nSamples);
 
         /*
          * setters
@@ -128,10 +130,18 @@ namespace loudness{
 
         inline void setSample(int channel, int index, Real sample) 
         {
-            signal_[channel][index] = sample;
+            signal_[0][channel][index] = sample;
+        }
+
+        inline void setSample(int ear, int channel, int index, Real sample) 
+        {
+            signal_[ear][channel][index] = sample;
         }
 
         void fillSignal(int channel, int writeSampleIndex, const
+                RealVec& source, int readSampleIndex, int nSamples);
+
+        void fillSignal(int ear, int channel, int writeSampleIndex, const
                 RealVec& source, int readSampleIndex, int nSamples);
 
         void pullBack(int nSamples);
@@ -162,6 +172,11 @@ namespace loudness{
             return trig_;
         }
 
+        inline int getNEars() const
+        {
+            return nEars_;
+        }
+
         /**
          * @brief Returns the number of channels in the SignalBank.
          *
@@ -182,6 +197,7 @@ namespace loudness{
             return nSamples_;
         }
 
+
         /**
          * @brief Returns a single sample from a specified channel and sample index.
          *
@@ -192,10 +208,16 @@ namespace loudness{
          */
         inline Real getSample(int channel, int index) const
         {
-            return signal_[channel][index];
+            return signal_[0][channel][index];
+        }
+
+        inline Real getSample(int ear, int channel, int index) const
+        {
+            return signal_[ear][channel][index];
         }
 
         const RealVec &getSignal(int channel) const;
+        const RealVec &getSignal(int ear, int channel) const;
 
         /**
          * @brief Returns the centre frequency of a channel.
@@ -242,11 +264,11 @@ namespace loudness{
 
     private:
 
-        int nChannels_, nSamples_;
+        int nEars_, nChannels_, nSamples_;
         bool trig_, initialized_;
         int fs_;
         Real frameRate_;
-        RealVecVec signal_;
+        RealVecVecVec signal_;
         RealVec centreFreqs_;
     }; 
 }
