@@ -59,10 +59,10 @@ namespace loudness{
         /*
          * Weighting filter
          */
-        OME::MiddleEarType middleEar = OME::ANSI;
-        OME::OuterEarType outerEar = OME::ANSI_FREE;
+        string middleEar = "ANSI";
+        string outerEar = "ANSI_FREE";
         if(diffuseField_)
-            outerEar = OME::ANSI_DIFFUSE;
+            outerEar = "ANSI_DIFFUSE";
 
         modules_.push_back(unique_ptr<Module>
                 (new WeightSpectrum(middleEar, outerEar))); 
@@ -89,4 +89,3 @@ namespace loudness{
     }
 
 }
-

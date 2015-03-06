@@ -190,11 +190,10 @@ namespace loudness{
          */
         if(pathToFilterCoefs_.empty())
         {
-            OME::MiddleEarType middleEar = OME::CHEN_ETAL;
-            OME::OuterEarType outerEar = OME::ANSI_FREE;
-
+             string middleEar = "CHEN_ETAL";
+            string outerEar = "ANSI_FREE";
             if(diffuseField_)
-                outerEar = OME::ANSI_DIFFUSE;
+                outerEar = "ANSI_DIFFUSE";
 
             modules_.push_back(unique_ptr<Module> 
                     (new WeightSpectrum(middleEar, outerEar))); 

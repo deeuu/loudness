@@ -143,31 +143,27 @@ namespace loudness{
 
     class OME{
         public:
-            enum MiddleEarType{
-                ANSI = 0 /**< ANSI S3.4 2007. */,
-                ANSI_HPF = 1 /**< ANSI S3.4 2007 for HPF correction. */,
-                CHEN_ETAL = 2 /**< Chen et al 2011. */
-            };
-            enum OuterEarType{
-                ANSI_FREE = 0 /**< Free-field ANSI S3.4 2007. */,
-                ANSI_DIFFUSE = 1 /**< Diffuse-field ANSI S3.4 2007. */
-            };
 
-            OME(MiddleEarType middleEarType = ANSI, OuterEarType outerEarType = ANSI_FREE);
+            OME(){};
+            OME(const string& middleEarType, const string& outerEarType);
             ~OME() {};
 
-            void setMiddleEarType(MiddleEarType middleEarType);
-            void setOuterEarType(OuterEarType outerEarType);
-            bool interpolateResponse(const RealVec &freqs, RealVec &response);
+            void setMiddleEarType(const string& middleEarType);
+            void setOuterEarType(const string& outerEarType);
+            //This should really take a RealVec by reference and modify
+            //However, I need to get non-const vectors working with swig
+            bool interpolateResponse(const RealVec &freqs);
+            const RealVec& getResponse() const;
+            const RealVec& getFreqPoints() const;
+            const RealVec& getMiddleEardB() const;
+            const RealVec& getOuterEardB() const;
 
         private:
             void getData();
-            int middleEarType_, outerEarType_;
-            RealVec freqVec_, middleEardB_, outerEardB_;
+            string middleEarType_, outerEarType_;
+            RealVec freqPoints_, phoneFreqPoints_, middleEardB_, outerEardB_, response_;
+            bool usingPhones_;
     };
 }
 
 #endif
-
-
-

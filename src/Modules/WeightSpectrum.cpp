@@ -26,8 +26,8 @@ namespace loudness{
         weights_(weights),
         usingOME_(false)
     {}
-    WeightSpectrum::WeightSpectrum(OME::MiddleEarType middleEarType, 
-            OME::OuterEarType outerEarType) :
+
+    WeightSpectrum::WeightSpectrum(const string& middleEarType, const string& outerEarType) :
         Module("WeightSpectrum"),
         ome_(middleEarType, outerEarType),
         usingOME_(true)
@@ -39,9 +39,10 @@ namespace loudness{
     {
         if(usingOME_)
         {
-            weights_.assign(input.getNChannels(),0.0);
-            ome_.interpolateResponse(input.getCentreFreqs(), weights_);
+            ome_.interpolateResponse(input.getCentreFreqs());
+            weights_ = ome_.getResponse();
         }
+
         if((int)weights_.size() != input.getNChannels())
         {
             LOUDNESS_WARNING(name_

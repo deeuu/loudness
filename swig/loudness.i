@@ -46,6 +46,8 @@
 #include "../src/Modules/GoertzelPS.h"
 #include "../src/Modules/CompressSpectrum.h"
 #include "../src/Modules/WeightSpectrum.h"
+#include "../src/Models/DynamicLoudnessGM.h"
+#include "../src/Models/DynamicLoudnessCH.h"
 %}
 
 //Required for integration with numpy arrays
@@ -66,11 +68,11 @@ namespace std {
     //The argument to %template() is the name of the instantiation in the target language
     %template(RealVec) vector<double>;
     %template(IntVec) vector<int>;
-    //apply all of the double vector typemaps to RealVec
-    %apply vector<double> { RealVec };
-    //apply all of the double vector reference typemaps to const RealVec&
-    %apply const vector<double>& { const RealVec&};
+
+    %apply vector<double>& { RealVec& };
+    %apply const vector<double>& { const RealVec& };
     %apply vector<int> { IntVec };
+    %apply vector<int>& { IntVec& };
     %apply const vector<int>& { const IntVec& };
 }
 
@@ -106,3 +108,5 @@ using std::string;
 %include "../src/Modules/RoexBankANSIS3407.h"
 %include "../src/Modules/FastRoexBank.h"
 %include "../src/Modules/DoubleRoexBank.h"
+%include "../src/Models/DynamicLoudnessGM.h"
+%include "../src/Models/DynamicLoudnessCH.h"

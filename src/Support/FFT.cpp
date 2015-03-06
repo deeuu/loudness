@@ -23,9 +23,9 @@ namespace loudness{
 
     FFT::FFT(int fftSize) :
         fftSize_(fftSize),
-        initialized_(false),
         nReals_(0),
-        nImags_(0)
+        nImags_(0),
+        initialized_(false)
     {
         LOUDNESS_DEBUG("FFT: Constructed");
     }

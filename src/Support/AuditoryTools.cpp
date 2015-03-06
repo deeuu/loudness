@@ -129,7 +129,7 @@ namespace loudness{
         }
     }
     
-    OME::OME(MiddleEarType middleEarType, OuterEarType outerEarType) :
+    OME::OME(const string& middleEarType, const string& outerEarType) :
         middleEarType_(middleEarType),
         outerEarType_(outerEarType)
     {
@@ -158,76 +158,88 @@ namespace loudness{
             -7, -9.2, -10.2, -12.2, -10.8, -10.1, -12.7, -15, -18.2,
             -23.8, -32.3, -45.5, -50};
 
+        //can get away with the same freq spec as ANSI standard
         Real midChenEtAl[41] = {-100, -33, -28.5, -23.6, -19.4, -16.4, -13.4,
             -10.3, -8, -6.3, -4.7, -3.7, -2.7, -2.5, -1.9, -1.8, -2.1, -2.4,
             -2.4, -2.6, -3.7, -5.5 , -6.8, -11.4, -14.4, -11.3, -11 , -10.5,
             -10.9, -12.9, -13.9, -16.4, -15.6, -15.1, -16.8, -18.9, -20.9,
             -21.8, -22.3, -23.2, -24};
 
-        //put data into vectors
-        freqVec_.assign(freqs, freqs + 41);
+        //Beyerdynamic DT990 requires own sample points
+        Real phoneFreqs[86] = {0, 5, 11, 17, 23, 29, 35, 41, 46, 52, 58, 64, 70,
+            76, 82, 88, 101, 116, 133, 153, 176, 202, 232, 266, 306, 352, 404,
+            464, 533, 612, 703, 808, 928, 1066, 1224, 1406, 1615, 1856, 2131,
+            2448, 2813, 3231, 3711, 3928, 4144, 4396, 4897, 5215, 5437, 5625,
+            5780, 6110, 6500, 6800, 7422, 7920, 8400, 8526, 8830, 9000, 9160,
+            9230, 9360, 9650, 9900, 10500, 10900, 11250, 11700, 12200, 12500,
+            12923, 13500, 14000, 14350, 14600, 14750, 14845, 15350, 16100,
+            16700, 17200, 17750, 18420, 19587, 20000};
 
-        switch(middleEarType_)
+        Real dt990[86] = {-6.45, -6.45, -7.48, -5.75, -3.69, -2.52, -1.61,
+            -0.71, -0.42, 0.13,  0.24, -0.51,  0.56,  1.61,  2.02,  2.28,  2.6 ,
+            2.79, 2.82,  2.69,  2.43,  2.09,  1.68,  1.31,  0.77,  0.15, -0.31,
+            -0.64, -0.96, -1.36, -1.41, -1.16, -0.52,  0.  ,  1.24,  1.84, 2.8 ,
+            4.28,  5.77,  7.5 ,  8.39,  7.2 ,  4.3 ,  3.37,  4.  , 4.52,  2.25,
+            1.36,  2.26,  4.69,  7.01,  9.37,  9.6 ,  9.66, 7.8 ,  6.07,  8.25,
+            8.9 ,  7.84,  5.42,  2.24,  0.73, -0.08, 0.69,  1.23,  2.01,  1.47,
+            0.8 ,  0.54,  3.06,  3.5 ,  1.79, -3.52, -7.86, -8.68, -9.81, -7.1 ,
+            -5.09, -1.14,  0.02,  1.6 , 0.25, -2.8 , -3.97, -7.45, -6.8 };
+            
+        //frequencies
+        freqPoints_.assign(freqs, freqs + 41);
+
+        //Middle ear
+        if(middleEarType_ == "ANSI")
+            middleEardB_.assign(midANSI, midANSI + 41);
+        else if(middleEarType_ == "ANSI_HPF")
+            middleEardB_.assign(midANSI, midANSI + 41);
+        else if(middleEarType_ == "CHEN_ETAL")
+            middleEardB_.assign(midChenEtAl, midChenEtAl + 41);
+        else
+            middleEarType_ = "";
+
+        //Outer ear
+        usingPhones_ = false;
+        if(outerEarType_ == "ANSI_FREEFIELD")
         {
-            case ANSI:
-            {
-                middleEardB_.assign(midANSI, midANSI + 41);
-                break;
-            }
-            case ANSI_HPF:
-            {
-                middleEardB_.assign(midANSI, midANSI + 41);
-                break;
-            }
-            case CHEN_ETAL:
-            {
-                middleEardB_.assign(midChenEtAl, midChenEtAl + 41);
-                break;
-            }
-            default:
-            {
-                middleEardB_.assign(midANSI, midANSI + 41);
-                middleEarType_ = ANSI;
-            }
+            outerEardB_.assign(freeANSI, freeANSI + 41);
         }
-        switch(outerEarType_)
+        else if(outerEarType_ == "ANSI_DIFFUSEFIELD")
         {
-            case ANSI_FREE:
-            {
-                outerEardB_.assign(freeANSI, freeANSI + 41);
-                break;
-            }
-            case ANSI_DIFFUSE:
-            {
-                outerEardB_.assign(diffuseANSI, diffuseANSI + 41);
-                break;
-            }
-            default:
-            {
-                outerEardB_.assign(freeANSI, freeANSI + 41);
-                outerEarType_ = ANSI_FREE;
-            }
+            outerEardB_.assign(diffuseANSI, diffuseANSI + 41);
+        }
+        else if(outerEarType_ == "DT990")
+        {
+            outerEardB_.assign(dt990, dt990 + 86);
+            phoneFreqPoints_.assign(phoneFreqs, phoneFreqs+86);
+            usingPhones_ = true;
+        }
+        else
+        {
+            outerEarType_ = "";
         }
     }
 
-    void OME::setMiddleEarType(MiddleEarType middleEarType)
+    void OME::setMiddleEarType(const string& middleEarType)
     {
         middleEarType_ = middleEarType;
     }
 
-    void OME::setOuterEarType(OuterEarType outerEarType)
+    void OME::setOuterEarType(const string& outerEarType)
     {
         outerEarType_ = outerEarType;
     }
-    bool OME::interpolateResponse(const RealVec &freqs, RealVec &response)
+    bool OME::interpolateResponse(const RealVec &freqs)
     {
-        if(freqs.size() != response.size())
+        if(freqs.empty())
         {
-            LOUDNESS_ERROR("OME: Input vectors (freqs and response) are not equal");
+            LOUDNESS_ERROR("OME: Input vector has no elements.");
             return 0;
         }
         else
         {
+            response_.resize(freqs.size(), 0.0);
+
             //load the data into vectors
             getData();    
 
@@ -235,29 +247,75 @@ namespace loudness{
             spline s;
 
             //middle ear
-            s.set_points(freqVec_, middleEardB_);
-            for(unsigned int i=0; i<freqs.size(); i++)
+            if(!middleEarType_.empty())
             {
-                if((freqs[i]<=75) && (middleEarType_ == ANSI_HPF))
-                        response[i] = -14.6; //Post HPF correction
-                else if(freqs[i]>=freqVec_[40])
-                    response[i] = middleEardB_[40];
-                else
-                    response[i] = s(freqs[i]);
+                s.set_points(freqPoints_, middleEardB_);
+                for(unsigned int i=0; i<freqs.size(); i++)
+                {
+                    if((freqs[i]<=75) && (middleEarType_ == "ANSI_HPF"))
+                            response_[i] = -14.6; //Post HPF correction
+                    else if(freqs[i]>=freqPoints_[40])
+                        response_[i] = middleEardB_[40];
+                    else
+                        response_[i] = s(freqs[i]);
+                }
+            }
+            else
+            {
+                LOUDNESS_WARNING("OME: No middle ear filter used.");
             }
 
             //outer ear
-            s.set_points(freqVec_, outerEardB_);
-            for(unsigned int i=0; i<freqs.size(); i++)
+            if(!outerEarType_.empty())
             {
-                if(freqs[i]>=freqVec_[40])
-                    response[i] += outerEardB_[40];
+                Real lastFreq = freqPoints_.back();
+                Real lastDataPoint = outerEardB_.back();
+                if(usingPhones_)
+                {
+                    lastFreq = phoneFreqPoints_.back();
+                    s.set_points(phoneFreqPoints_, outerEardB_);
+                }
                 else
-                    response[i] += s(freqs[i]);
+                {
+                    s.set_points(freqPoints_, outerEardB_);
+                }
+                for(unsigned int i=0; i<freqs.size(); i++)
+                {
+                    if(freqs[i]>=lastFreq)
+                        response_[i] += lastDataPoint;
+                    else
+                        response_[i] += s(freqs[i]);
+                }
+            }
+            else
+            {
+                LOUDNESS_WARNING("OME: No outer ear filter used.");
             }
 
-            return 0;
+            return 1;
         }
     }
-}
 
+    const RealVec& OME::getResponse() const
+    {
+        return response_;
+    }
+
+    const RealVec& OME::getMiddleEardB() const
+    {
+        return middleEardB_;
+    }
+
+    const RealVec& OME::getOuterEardB() const
+    {
+        return outerEardB_;
+    }
+
+    const RealVec& OME::getFreqPoints() const
+    {
+        if (usingPhones_)
+            return phoneFreqPoints_;
+        else
+            return freqPoints_;
+    }
+}

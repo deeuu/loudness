@@ -245,12 +245,12 @@ namespace loudness{
          */
         if(weightSpectrum)
         {
-            OME::MiddleEarType middleEar = OME::ANSI;
-            OME::OuterEarType outerEar = OME::ANSI_FREE;
+            string middleEar = "ANSI";
+            string outerEar = "ANSI_FREE";
             if(hpf_)
-                middleEar = OME::ANSI_HPF;
+                middleEar = "ANSI_HPF";
             if(diffuseField_)
-                outerEar = OME::ANSI_DIFFUSE;
+                outerEar = "ANSI_DIFFUSE";
 
             modules_.push_back(unique_ptr<Module> 
                     (new WeightSpectrum(middleEar, outerEar))); 
