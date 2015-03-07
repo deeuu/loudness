@@ -5,11 +5,7 @@ from distutils import sysconfig
 
 if __name__ == "__main__":
 
-    debug = False
-    if debug:
-        debugFlag = "-DDEBUG"
-    else
-        debugFlag = ""
+    debugFlag = "-DDEBUG"
     setup(name="loudness",
             py_modules=['loudness'], 
             ext_modules=[Extension("_loudness",
@@ -41,6 +37,7 @@ if __name__ == "__main__":
                 "../src/Modules/GoertzelPS.cpp",
                 "../src/Modules/CompressSpectrum.cpp",
                 "../src/Modules/WeightSpectrum.cpp",
+                "../src/Models/SteadyLoudnessANSIS3407.cpp",
                 "../src/Models/DynamicLoudnessGM.cpp",
                 "../src/Models/DynamicLoudnessCH.cpp"
                 ],
@@ -49,4 +46,4 @@ if __name__ == "__main__":
             library_dirs=['/usr/lib', '/usr/local/lib'],
             libraries=['fftw3', 'sndfile'],
             swig_opts=['-c++'],
-            extra_compile_args=["-std=c++11", "-fPIC", "-O3", debugFlag])])
+            extra_compile_args=["-std=c++11", "-fPIC", "-O3"])])

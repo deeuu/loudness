@@ -26,13 +26,11 @@
 namespace loudness{
 
     SteadyLoudnessANSIS3407::SteadyLoudnessANSIS3407() :
-        Model("SteadyLoudnessANSIS3407", false)
-    {
-        //Default parameters
-        setDiotic(true);
-        setDiffuseField(false);
-        setFilterSpacing(0.1);
-    }
+        Model("SteadyLoudnessANSIS3407", false),
+        diotic_(true),
+        diffuseField_(false),
+        filterSpacing_(0.1)
+    {}
 
     SteadyLoudnessANSIS3407::~SteadyLoudnessANSIS3407()
     {
@@ -60,9 +58,9 @@ namespace loudness{
          * Weighting filter
          */
         string middleEar = "ANSI";
-        string outerEar = "ANSI_FREE";
+        string outerEar = "ANSI_FREEFIELD";
         if(diffuseField_)
-            outerEar = "ANSI_DIFFUSE";
+            outerEar = "ANSI_DIFFUSEFIELD";
 
         modules_.push_back(unique_ptr<Module>
                 (new WeightSpectrum(middleEar, outerEar))); 
@@ -83,9 +81,9 @@ namespace loudness{
         * Loudness integration 
         */   
         modules_.push_back(unique_ptr<Module>
-                (new IntegratedLoudnessGM));
+                (new IntegratedLoudnessGM(IntegratedLoudnessGM::GM02, diotic_,
+                        1.0)));
 
         return 1;
     }
-
 }

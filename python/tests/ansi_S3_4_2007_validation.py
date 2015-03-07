@@ -2,7 +2,7 @@ import matplotlib.pylab as plt
 import numpy as np
 import loudness as ln
 import sys,os
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),'../'))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),'../Tools/'))
 from Sound import Sound
 from LoudnessExtractor import LoudnessExtractor
 
@@ -49,18 +49,20 @@ def loudness1kHz(model, fs=32e3):
             #reset model state 
             model.reset()
         print "Input level (dB SPL):", phon
+        print "Target Loudness (sones):", sones[i]
         print "Loudness (sones):", outputSones[i]
         
-    #Compute relative error as %
-    relativeError = 100 * np.abs(sones - outputSones) / sones
-
-    return outputSones, relativeError
+    return outputSones
 
 if __name__ == '__main__':
 
-    fs = 32000
     model = ln.SteadyLoudnessANSIS3407()
-    #model = ln.DynamicLoudnessGM("../../filterCoefs/32000_FIR_4096_freemid.npy")
-    #model.loadParameterSet(0)
-    #model.setAnsiSpecificLoudness(True)
-    loudness1kHz(model, fs)
+    sones = loudness1kHz(model)
+    np.savetxt('./results/ANSI_S34_2007_1kHz_sones.csv', sones, delimiter = ',')
+
+    fs = 32000
+    model = ln.DynamicLoudnessGM("../../filterCoefs/32000_FIR_4096_freemid.npy")
+    model.loadParameterSet(0)
+    model.setAnsiSpecificLoudness(True)
+    sones = loudness1kHz(model, fs)
+    np.savetxt('./results/GM_2002_1kHz_sones.csv', sones, delimiter = ',')

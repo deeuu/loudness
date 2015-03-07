@@ -123,8 +123,11 @@ namespace loudness{
 
     void FrameGenerator::resetInternal()
     {
-        writeIdx_ = 0;
         remainingSamples_ = 0;
+        if (startAtZero_)
+            writeIdx_ = 0;
+        else
+            writeIdx_ = ceil((frameSize_-1)/2.0);
     }
 
     void FrameGenerator::setFrameSize(int frameSize)

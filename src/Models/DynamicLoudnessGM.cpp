@@ -246,11 +246,11 @@ namespace loudness{
         if(weightSpectrum)
         {
             string middleEar = "ANSI";
-            string outerEar = "ANSI_FREE";
             if(hpf_)
                 middleEar = "ANSI_HPF";
+            string outerEar = "ANSI_FREEFIELD";
             if(diffuseField_)
-                outerEar = "ANSI_DIFFUSE";
+                outerEar = "ANSI_DIFFUSEFIELD";
 
             modules_.push_back(unique_ptr<Module> 
                     (new WeightSpectrum(middleEar, outerEar))); 
@@ -285,6 +285,4 @@ namespace loudness{
 
         return 1;
     }
-
 }
-

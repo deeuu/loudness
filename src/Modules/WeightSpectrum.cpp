@@ -56,9 +56,7 @@ namespace loudness{
 
         //convert to linear power units for weighting power spectrum
         for(int i=0; i<output_.getNChannels(); i++)
-        {
             weights_[i] = pow(10, weights_[i]/10.0);
-        }
 
         return 1;
     }
