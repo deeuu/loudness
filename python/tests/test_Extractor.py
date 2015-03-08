@@ -1,7 +1,7 @@
 import loudness as ln
 import numpy as np
 import sys,os
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),'../'))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),'../Tools/'))
 from Sound import Sound
 from LoudnessExtractor import LoudnessExtractor
 
