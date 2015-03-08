@@ -20,9 +20,7 @@ class LoudnessExtractor:
         if not self.model.initialize(self.inputBuf):
             raise ValueError("Problem initialising the model!")
         #Assume signal bank containing loudness is final module
-        moduleIndex = None
-        if moduleIndex is None:
-            moduleIndex = self.model.getNModules()-1
+        moduleIndex = self.model.getNModules()-1
         self.outputBank = self.model.getModuleOutput(moduleIndex)
         self.numChannels = self.outputBank.getNChannels()
         self.numSamplesToPadStart = 0
@@ -30,11 +28,13 @@ class LoudnessExtractor:
         self.x = None
         self.processed = False
         self.loudness = None
+        self.numOutputFrames = None
 
     def process(self, signal):
 
-        numOutputFrames = int(np.ceil(signal.size/float(self.hopSize)))
-        self.loudness = np.zeros((self.numChannels, numOutputFrames))
+        if self.numOutputFrames is None:
+            self.numOutputFrames = int(np.ceil(signal.size/float(self.hopSize)))
+        self.loudness = np.zeros((self.numChannels, self.numOutputFrames))
         outputFrame = 0
 
         #FrameGenerator will place data in centre of the analysis window
@@ -45,7 +45,7 @@ class LoudnessExtractor:
         processingFrame = 0
 
         #One process call every hop samples
-        while(outputFrame < numOutputFrames):
+        while(outputFrame < self.numOutputFrames):
             #Overlap is generated c++ side, so just fill with new blocks
             startIdx = processingFrame*self.hopSize
             endIdx = startIdx + self.hopSize

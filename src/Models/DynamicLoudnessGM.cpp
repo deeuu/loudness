@@ -186,11 +186,15 @@ namespace loudness{
          * Frame generator for spectrogram
          */
         int windowSize = round(0.064*input.getFs());
-        if(!goertzel_)
+        int hopSize = round(timeStep_*input.getFs());
+        if((!goertzel_) && (hopSize<windowSize))
         {
-            int hopSize = round(timeStep_*input.getFs());
             modules_.push_back(unique_ptr<Module> 
                     (new FrameGenerator(windowSize, hopSize, false)));
+        }
+        else
+        {
+            LOUDNESS_DEBUG(name_ << ": Not using FrameGenerator.");
         }
 
         /*
