@@ -194,7 +194,8 @@ namespace loudness{
         }
         else
         {
-            LOUDNESS_DEBUG(name_ << ": Not using FrameGenerator.");
+            LOUDNESS_WARNING(name_ << ": FrameGenerator will not be used as no overlap required."
+                    << "Input signal will be aligned with the first analysis window sample (index 0).");
         }
 
         /*
