@@ -35,13 +35,18 @@ namespace loudness{
     {
         if(bCoefs_.size()>0)
         {
-            //constants
-            order_ = (int)bCoefs_.size()-1;
+            //constants, order currently fixed for all ears/channels
+            order_ = (int)bCoefs_[0][0].size()-1;
             orderMinus1_ = order_-1;
             LOUDNESS_DEBUG("FIR: Filter order is: " << order_);
 
+            if(!checkBCoefs(input))
+                return 0;
+
             //delay line
-            z_.assign(order_,0.0);
+            z_.assign(input.getNEars(),
+                    RealVecVec(input.getNChannels(), 
+                        RealVec(order_, 0.0)));
 
             //output SignalBank
             output_.initialize(input);
@@ -62,6 +67,8 @@ namespace loudness{
 
         for(int ear=0; ear<input.getNEars(); ear++)
         {
+            if (!duplicateEarCoefs_)
+                earIdx=ear;
             for(int chn=0; chn<input.getNChannels(); chn++)
             {
                 for(smp=0; smp<input.getNSamples(); smp++)

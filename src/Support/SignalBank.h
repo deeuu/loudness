@@ -119,6 +119,7 @@ namespace loudness{
          * @param signal Signal vector.
          */
         void setSignal(int channel, const RealVec &signal);
+        void setSignal(int ear, int channel, const RealVec &signal);
 
         /**
          * @brief Sets the value of an individual sample in a specified channel.

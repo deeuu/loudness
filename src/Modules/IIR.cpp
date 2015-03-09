@@ -38,36 +38,50 @@ namespace loudness{
     {
 
         //constants
-        int n_b = (int)bCoefs_.size();
-        int n_a = (int)aCoefs_.size();
+        uint n_b = bCoefs_[0][0].size();
+        uint n_a = aCoefs_[0][0].size();
         if(n_b*n_a > 0)
         {
             if(n_b > n_a)
             {
-                aCoefs_.resize(n_b,0);
+                for(uint ear=0; ear<aCoefs_.size(); ear++)
+                {
+                    for(uint chn=0; chn<aCoefs_[ear].size(); chn++)
+                        aCoefs_[ear][chn].resize(n_b,0);
+                }
                 order_ = n_b-1;
             }
             else
             {
-                bCoefs_.resize(n_a,0);
+                for(uint ear=0; ear<bCoefs_.size(); ear++)
+                {
+                    for(uint chn=0; chn<bCoefs_[ear].size(); chn++)
+                        bCoefs_[ear][chn].resize(n_b,0);
+                }
                 order_ = n_a-1;
             }
+
             LOUDNESS_DEBUG("IIR: Filter order is: " << order_);
             orderMinus1_ = order_-1;
 
             //Normalise coefficients if a[0] != 1
             normaliseCoefs();
 
+            if(!checkBCoefs(input))
+                return 0;
+
             //delay line
-            z_.assign(order_,0.0);
+            z_.assign(input.getNEars(),
+                    RealVecVec(input.getNChannels(), 
+                        RealVec(order_, 0.0)));
 
             //output SignalBank
-            output_.initialize(input.getNChannels(), input.getNSamples(), input.getFs());
+            output_.initialize(input);
 
             return 1;
         }
         {
-            LOUDNESS_ERROR("IIR: No filter coefficients");
+            LOUDNESS_ERROR(name_ << ": No filter coefficients");
             return 0;
         }
     }
@@ -75,23 +89,36 @@ namespace loudness{
     void IIR::processInternal(const SignalBank &input)
     {
         int smp, j;
-        Real x,y;
+        int earIdx=0, chnIdx=0;
+        Real x, y;
 
-        for(smp=0; smp<input.getNSamples(); smp++)
+        for(int ear=0; ear<input.getNEars(); ear++)
         {
-            //input sample
-            x = input.getSample(0, smp) * gain_;
+            if (!duplicateEarCoefs_)
+                earIdx=ear;
+            for(int chn=0; chn<input.getNChannels(); chn++)
+            {
+                for(smp=0; smp<input.getNSamples(); smp++)
+                {
+                    //input sample
+                    x = input.getSample(ear, chn, smp) * gain_;
 
-            //output sample
-            y = bCoefs_[0] * x + z_[0];
-            output_.setSample(0, smp, y);
+                    //output sample
+                    y = bCoefs_[earIdx][chnIdx][0] * x + z_[ear][chn][0];
+                    output_.setSample(ear, chn, smp, y);
 
-            //fill delay
-            for (j=1; j<order_; j++)
-                z_[j-1] = bCoefs_[j] * x + z_[j] - aCoefs_[j] * y;
+                    //fill delay
+                    for (j=1; j<order_; j++)
+                        z_[ear][chn][j-1] = bCoefs_[earIdx][chnIdx][j] * x;
+                    z_[ear][chn][orderMinus1_] = bCoefs_[earIdx][chnIdx][order_] * x;
+                    for (j=1; j<order_; j++)
+                        z_[ear][chn][j-1] += z_[ear][chn][j];
+                    for (j=1; j<order_; j++)
+                        z_[ear][chn][j-1] -= aCoefs_[earIdx][chnIdx][j] * y;
+                    z_[ear][chn][orderMinus1_] -= aCoefs_[earIdx][chnIdx][order_] * y;
 
-            //final sample
-            z_[orderMinus1_] = bCoefs_[order_] * x - aCoefs_[order_] * y;
+                }
+            }
         }
     }
 

@@ -28,7 +28,8 @@ SOURCES=../src/cnpy/cnpy.cpp \
 ../src/Support/Spline.cpp \
 ../src/Support/Filter.cpp \
 ../src/Support/Model.cpp \
-../src/Modules/FIR.cpp
+../src/Modules/FIR.cpp \
+../src/Modules/IIR.cpp
 
 OBJECTS=$(SOURCES:.cpp=.o)
 

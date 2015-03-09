@@ -147,6 +147,17 @@ namespace loudness{
                     << "Invalid channel index or signal lengths do not match, please correct.");
         }
     }
+
+    void SignalBank::setSignal(int ear, int channel, const RealVec &signal)
+    {
+        if((ear<nEars) && (channel<nChannels_) && ((int)signal.size()==nSamples_))
+            signal_[ear][channel][0] = signal;
+        else
+        {
+            LOUDNESS_ERROR("SignalBank: "
+                    << "Invalid ear/channel index or signal lengths do not match, please correct.");
+        }
+    }
     
     void SignalBank::fillSignal(int channel, int writeSampleIndex, const RealVec& source, int readSampleIndex, int nSamples)
     {
