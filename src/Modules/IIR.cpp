@@ -38,26 +38,18 @@ namespace loudness{
     {
 
         //constants
-        uint n_b = bCoefs_[0][0].size();
-        uint n_a = aCoefs_[0][0].size();
+        uint n_b = bCoefs_.size();
+        uint n_a = aCoefs_.size();
         if(n_b*n_a > 0)
         {
             if(n_b > n_a)
             {
-                for(uint ear=0; ear<aCoefs_.size(); ear++)
-                {
-                    for(uint chn=0; chn<aCoefs_[ear].size(); chn++)
-                        aCoefs_[ear][chn].resize(n_b,0);
-                }
+                aCoefs_.resize(n_b,0);
                 order_ = n_b-1;
             }
             else
             {
-                for(uint ear=0; ear<bCoefs_.size(); ear++)
-                {
-                    for(uint chn=0; chn<bCoefs_[ear].size(); chn++)
-                        bCoefs_[ear][chn].resize(n_b,0);
-                }
+                bCoefs_.resize(n_b,0);
                 order_ = n_a-1;
             }
 
@@ -67,13 +59,8 @@ namespace loudness{
             //Normalise coefficients if a[0] != 1
             normaliseCoefs();
 
-            if(!checkBCoefs(input))
-                return 0;
-
             //delay line
-            z_.assign(input.getNEars(),
-                    RealVecVec(input.getNChannels(), 
-                        RealVec(order_, 0.0)));
+            z_.assign(input.getNEars()*order_, 0.0);
 
             //output SignalBank
             output_.initialize(input);
@@ -88,36 +75,31 @@ namespace loudness{
 
     void IIR::processInternal(const SignalBank &input)
     {
-        int smp, j;
-        int earIdx=0, chnIdx=0;
-        Real x, y;
-
         for(int ear=0; ear<input.getNEars(); ear++)
         {
-            if (!duplicateEarCoefs_)
-                earIdx=ear;
-            for(int chn=0; chn<input.getNChannels(); chn++)
+            int smp, j;
+            int zIdx = ear * order_;
+            const Real *inputSignal = input.getSignal(ear, 0);
+            Real *outputSignal = output_.getSignal(ear, 0);
+            Real x;
+
+            for(smp=0; smp<input.getNSamples(); smp++)
             {
-                for(smp=0; smp<input.getNSamples(); smp++)
-                {
-                    //input sample
-                    x = input.getSample(ear, chn, smp) * gain_;
+                //input sample
+                x = inputSignal[smp] * gain_;
 
-                    //output sample
-                    y = bCoefs_[earIdx][chnIdx][0] * x + z_[ear][chn][0];
-                    output_.setSample(ear, chn, smp, y);
+                //output sample
+                outputSignal[smp] = bCoefs_[0] * x + z_[zIdx];
 
-                    //fill delay
-                    for (j=1; j<order_; j++)
-                        z_[ear][chn][j-1] = bCoefs_[earIdx][chnIdx][j] * x;
-                    z_[ear][chn][orderMinus1_] = bCoefs_[earIdx][chnIdx][order_] * x;
-                    for (j=1; j<order_; j++)
-                        z_[ear][chn][j-1] += z_[ear][chn][j];
-                    for (j=1; j<order_; j++)
-                        z_[ear][chn][j-1] -= aCoefs_[earIdx][chnIdx][j] * y;
-                    z_[ear][chn][orderMinus1_] -= aCoefs_[earIdx][chnIdx][order_] * y;
+                //fill delay
+                for (j=1; j<order_; j++)
+                    z_[zIdx+j-1] = bCoefs_[j] * x + z_[zIdx+j];
+                z_[zIdx + orderMinus1_] = bCoefs_[order_] * x;
 
-                }
+                for (j=1; j<order_; j++)
+                    z_[zIdx+j-1] -= aCoefs_[j] * outputSignal[smp];
+                z_[zIdx + orderMinus1_] -= aCoefs_[order_] * outputSignal[smp];
+
             }
         }
     }
@@ -126,7 +108,4 @@ namespace loudness{
     {
         resetDelayLine();
     }
-
 }
-
-

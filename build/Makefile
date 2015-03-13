@@ -11,7 +11,7 @@ TARGET_DIR=/usr/local
 CFLAGS = -std=c++11 -c -fPIC -g -Wall -O3
 
 #Debug mode or not
-DEBUG=0
+DEBUG=1
 ifeq ($(DEBUG),1)
     CFLAGS += -DDEBUG
 endif
@@ -23,11 +23,7 @@ INCS=-I.
 SOURCES=../src/cnpy/cnpy.cpp \
 ../src/Support/SignalBank.cpp \
 ../src/Support/Module.cpp \
-../src/Support/Timer.cpp \
-../src/Support/AuditoryTools.cpp \
-../src/Support/Spline.cpp \
 ../src/Support/Filter.cpp \
-../src/Support/Model.cpp \
 ../src/Modules/FIR.cpp \
 ../src/Modules/IIR.cpp
 
@@ -57,6 +53,3 @@ install:
 uninstall:
 	rm -rf $(TARGET_DIR)/include/$(NAME)
 	rm -rf $(TARGET_DIR)/lib/$(EXECUTABLE)
-
-
-

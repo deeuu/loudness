@@ -61,13 +61,11 @@ namespace loudness{
             LOUDNESS_DEBUG("Filter: Shape is: (" << arr.shape[0] << " x " << arr.shape[1] << ")");
 
             //transfer data
-            bCoefs_.assign(1,RealVecVec(1));
-            aCoefs_.assign(1,RealVecVec(1));
             for(unsigned int i=0; i<arr.shape[1]; i++)
             {
-                bCoefs_[0][0].push_back(data[i]);
+                bCoefs_.push_back(data[i]);
                 if(iir)
-                    aCoefs_[0][0].push_back(data[i+arr.shape[1]]);
+                    aCoefs_.push_back(data[i+arr.shape[1]]);
             }
             
             //clean up
@@ -79,74 +77,45 @@ namespace loudness{
 
     void Filter::setBCoefs(const RealVec &bCoefs)
     {
-        bCoefs_.assign(1, RealVecVec(1, bCoefs));
+        bCoefs_ = bCoefs;
     }
 
     void Filter::setACoefs(const RealVec &aCoefs)
     {
-        aCoefs_.assign(1, RealVecVec(1, aCoefs));
+        aCoefs_ = aCoefs;
     }
 
     void Filter::normaliseCoefs()
     {
-        for(uint ear=0; ear<aCoefs_[0].size(); ear++)
+        if(aCoefs_.size()>0)
         {
-            for(uint chn=0; chn<aCoefs_[ear].size(); chn++)
+            if(aCoefs_[0]!=1.0)
             {
-                if(aCoefs_[ear][chn].size()>0)
-                {
-                    if(aCoefs_[ear][chn][0]!=1.0)
-                    {
-                        LOUDNESS_DEBUG("Filter: Normalising filter coeffients.");
-                        for(int i=(int)bCoefs_[ear][chn].size()-1; i>-1; i--)
-                            bCoefs_[ear][chn][i] /= aCoefs_[ear][chn][0];
-                        for(int i=(int)aCoefs_[ear][chn].size()-1; i>-1; i--)
-                            aCoefs_[ear][chn][i] /= aCoefs_[ear][chn][0];
-                    }
-                    else
-                        LOUDNESS_WARNING("Filter: Coefficient a[0] == 0.");
-                }
+                LOUDNESS_DEBUG("Filter: Normalising filter coeffients.");
+                for(int i=(int)bCoefs_.size()-1; i>-1; i--)
+                    bCoefs_[i] /= aCoefs_[0];
+                for(int i=(int)aCoefs_.size()-1; i>-1; i--)
+                    aCoefs_[i] /= aCoefs_[0];
             }
+            else
+                LOUDNESS_WARNING("Filter: Coefficient a[0] == 0.");
         }
     }
 
     void Filter::resetDelayLine()
     {
         //zero delay line
-        for(uint ear=0; ear<z_.size(); ear++)
-            for(uint chn=0; chn<z_[ear].size(); chn++)
-                for(uint i=0; i<z_[ear][chn].size(); i++)
-                    z_[ear][chn][i] = 0.0;
+        z_.assign(z_.size(), 0.0);
     }
     
-    bool Filter::checkBCoefs(const SignalBank& input)
-    {
-        //check filter configuration
-        if(input.getNEars() == (int)bCoefs_.size())
-        {
-            duplicateEarCoefs_ = false;
-        }
-        else if((input.getNEars()>1) && (bCoefs_.size()==1))
-        {
-            duplicateEarCoefs_ = true;
-        }
-        else
-        {
-            LOUDNESS_WARNING("Filter: Either single vector of filter coefficients or one per ear.");
-            return 0;
-        }
-
-        return 1;
-    }
-
     const RealVec &Filter::getBCoefs() const
     {
-        return bCoefs_[0][0];
+        return bCoefs_;
     }
 
     const RealVec &Filter::getACoefs() const
     {
-        return aCoefs_[0][0];
+        return aCoefs_;
     }
 
     Real Filter::getGain() const

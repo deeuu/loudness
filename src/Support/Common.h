@@ -49,7 +49,6 @@ typedef double Real;
 typedef unsigned int uint;
 typedef std::vector<Real> RealVec;
 typedef std::vector<int> IntVec;
-typedef std::vector<std::vector<Real> > RealVecVec;
-typedef std::vector<std::vector<std::vector<Real> > > RealVecVecVec;
+typedef std::vector<Real>::iterator RealIter;
 
 #endif  
