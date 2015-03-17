@@ -78,7 +78,6 @@ namespace loudness{
 
     void FrameGenerator::processInternal(const SignalBank &input)
     {
-        
         //pull all signals back by overlap samples
         if(writeIdx_ == frameSize_)
         {
@@ -103,6 +102,7 @@ namespace loudness{
             remainingSamples_ = nSamples - nSamplesToFill;
 
         output_.fillSignalBank(writeIdx_, input, 0, nSamplesToFill);
+        writeIdx_ += nSamplesToFill;
 
         //if samples remaining store them
         if(remainingSamples_)

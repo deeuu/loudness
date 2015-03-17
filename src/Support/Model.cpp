@@ -45,7 +45,7 @@ namespace loudness{
             //set up the chain
             nModules_ = (int)modules_.size();
             for(int i=0; i<nModules_-1; i++)
-                modules_[i]->setTargetModule(modules_[i+1].get());
+                modules_[i]->setTargetModule(modules_[i+1]);
             //initialise all
             modules_[0]->initialize(input);
 

@@ -120,9 +120,9 @@ namespace loudness{
          * continue to exist for the lifetime of the aggregate object when
          * initialize(), process() or reset() are called.
          *
-         * @param targetModule Pointer to the target module.
+         * @param targetModule A reference to the target module.
          */
-        void setTargetModule(Module *targetModule);
+        void setTargetModule(Module& targetModule);
         
         /**
          * @brief Removes the target module.
@@ -137,12 +137,11 @@ namespace loudness{
         bool isInitialized() const;
 
         /**
-         * @brief Returns a pointer to the output SignalBank used for storing the
-         * processing result.
+         * @brief Returns a const reference to the output SignalBank used for
+         * storing the processing result.
          *
-         * @return SignalBank pointer.
          */
-        const SignalBank* getOutput() const;
+        const SignalBank& getOutput() const;
 
         /**
          * @brief Returns the name of the module.

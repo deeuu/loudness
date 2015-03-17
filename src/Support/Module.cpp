@@ -90,14 +90,14 @@ namespace loudness{
             targetModule_->reset();
     }
 
-    void Module::setTargetModule(Module *targetModule)
+    void Module::setTargetModule(Module& targetModule)
     {
-        targetModule_ = targetModule;
+        targetModule_ = &targetModule;
     }
 
     void Module::removeTargetModule()
     {
-        targetModule_ = 0;
+        targetModule_ = nullptr;
     }
 
     bool Module::isInitialized() const
@@ -105,10 +105,12 @@ namespace loudness{
         return initialized_;
     }
 
-    const SignalBank* Module::getOutput() const
+    const SignalBank& Module::getOutput() const
     {
-        return &output_;
+        return output_;
     }
+
+
 
     const std::string& Module::getName() const
     {
