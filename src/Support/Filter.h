@@ -60,7 +60,6 @@ namespace loudness{
          */
         bool loadCoefsFromNumpyArray(string pathToFilterCoefs="");
 
-        bool checkBCoefs(const SignalBank& input);
         /**
          * @brief Sets the feedforward coefficients.
          */

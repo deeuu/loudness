@@ -95,7 +95,7 @@ namespace loudness{
         int frameSize_, hopSize_, audioBufferSize_, inputBufferSize_;
         int writeIdx_, overlap_, remainingSamples_;
         bool startAtZero_;
-        RealVec audioBuffer_;
+        SignalBank audioBufferBank_;
     };
 }
 

@@ -28,7 +28,6 @@
 #include "../src/Support/AuditoryTools.h"
 #include "../src/Support/Timer.h"
 #include "../src/Support/Filter.h"
-#include "../src/Support/FFT.h"
 #include "../src/Modules/FIR.h"
 #include "../src/Modules/IIR.h"
 %}

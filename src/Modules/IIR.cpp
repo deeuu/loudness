@@ -36,7 +36,6 @@ namespace loudness{
 
     bool IIR::initializeInternal(const SignalBank &input)
     {
-
         //constants
         uint n_b = bCoefs_.size();
         uint n_a = aCoefs_.size();
@@ -59,7 +58,7 @@ namespace loudness{
             //Normalise coefficients if a[0] != 1
             normaliseCoefs();
 
-            //delay line
+            //internal delay line - single vector for all ears
             z_.assign(input.getNEars()*order_, 0.0);
 
             //output SignalBank
@@ -79,8 +78,8 @@ namespace loudness{
         {
             int smp, j;
             int zIdx = ear * order_;
-            const Real *inputSignal = input.getSignal(ear, 0);
-            Real *outputSignal = output_.getSignal(ear, 0);
+            const Real *inputSignal = input.getSignalReadPointer(ear, 0);
+            Real *outputSignal = output_.getSignalWritePointer(ear, 0);
             Real x;
 
             for(smp=0; smp<input.getNSamples(); smp++)

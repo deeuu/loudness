@@ -72,9 +72,6 @@ namespace loudness{
          */
         void clear();
 
-        void resizeSignal(int channel, int nSamples);
-        void resizeSignal(int ear, int channel, int nSamples);
-
         /*
          * setters
          */
@@ -96,7 +93,7 @@ namespace loudness{
         void setFrameRate(Real frameRate);
 
         /**
-         * @brief Sets the centre frequencies of all channels.
+         * @brief Sets the centre frequencies of all channels in all ears.
          *
          * @param centreFreqs A vector of centre frequencies in Hz.
          */
@@ -111,16 +108,6 @@ namespace loudness{
         void setCentreFreq(int channel, Real freq);
 
         /**
-         * @brief Sets the signal of a specific channel.
-         *
-         * Signal length must be nSamples_.
-         *
-         * @param channel Channel index.
-         * @param signal Real vector.
-         */
-        void setSignal(int ear, int channel, const RealVec &signal);
-
-        /**
          * @brief Sets the value of an individual sample in a specified channel.
          *
          * @param channel Channel index.
@@ -130,14 +117,27 @@ namespace loudness{
 
         inline void setSample(int ear, int channel, int index, Real sample) 
         {
-            signal_[ear * nChannels_ * nSamples_ + channel * nSamples_ + index] = sample;
+            signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + index] = sample;
         }
 
+        /**
+         * @brief Fills a single signal at a given sample index with nSamples
+         * worth of samples taken from an input vector starting from
+         * readSampleIndex. The ear and channel must be specified, along with
+         * the number of samples to copy.
+         */
         void fillSignal(int ear, int channel, int writeSampleIndex, const
                 RealVec& source, int readSampleIndex, int nSamples);
 
-        void pullBack(int nSamples);
+        /**
+         * @brief Fills the entire SignalBank with contents of another. Both the
+         * destination sample index and source sample index must be specified,
+         * along with the number of samples to copy.
+         */
+        void fillSignalBank(int writeSampleIndex, const SignalBank& input, int readSampleIndex, int nSamples);
 
+
+        void pullBack(int nSamples);
         /**
          * @brief Sets the trigger state of the SignalBank.
          *
@@ -194,6 +194,8 @@ namespace loudness{
             return nTotalSamples_;
         }
 
+        void copySignalBank(const SignalBank& input);
+
         /**
          * @brief Returns a single sample from a specified channel and sample index.
          *
@@ -204,21 +206,53 @@ namespace loudness{
          */
         inline Real getSample(int index) const
         {
-            return signal_[index];
+            return signals_[index];
         }
 
         inline Real getSample(int channel, int index) const
         {
-            return signal_[channel * nSamples_ + index];
+            return signals_[channel * nSamples_ + index];
         }
 
         inline Real getSample(int ear, int channel, int index) const
         {
-            return signal_[ear * nChannels_ * nSamples_ + channel * nSamples_ + index];
+            return signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + index];
         }
 
-        Real *getSignal(int ear, int channel);
-        const Real *getSignal(int ear, int channel) const;
+        Real* getSignalWritePointer(int ear, int channel)
+        {
+            return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_];
+        }
+
+        Real* getSignalWritePointer(int ear, int channel, int index)
+        {
+            return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + index];
+        }
+
+        Real* getSingleSampleWritePointer(int ear)
+        {
+            return &signals_[ear * nChannels_ * nSamples_];
+        }
+        
+        const Real* getSingleSampleReadPointer(int ear) const
+        {
+            return &signals_[ear * nChannels_ * nSamples_];
+        }
+
+        const Real* getSignalReadPointer(int ear, int channel) const
+        {
+            return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_];
+        }
+
+        const Real* getSignalReadPointer(int ear, int channel, int index) const
+        {
+            return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + index];
+        }
+
+        const RealVec& getSignals() const
+        {
+            return signals_;
+        }
 
         /**
          * @brief Returns the centre frequency of a channel.
@@ -269,7 +303,7 @@ namespace loudness{
         bool trig_, initialized_;
         int fs_;
         Real frameRate_;
-        RealVec signal_;
+        RealVec signals_;
         RealVec centreFreqs_;
     }; 
 }

@@ -25,7 +25,8 @@ SOURCES=../src/cnpy/cnpy.cpp \
 ../src/Support/Module.cpp \
 ../src/Support/Filter.cpp \
 ../src/Modules/FIR.cpp \
-../src/Modules/IIR.cpp
+../src/Modules/IIR.cpp \
+../src/Modules/FrameGenerator.cpp
 
 OBJECTS=$(SOURCES:.cpp=.o)
 

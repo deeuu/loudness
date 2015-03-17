@@ -175,42 +175,21 @@ namespace loudness{
     void Window::processInternal(const SignalBank &input)
     {
         int chnIdx=0, offset=0, offset2=0;
-        for(int w=0; w<nWindows_; w++)
+        for(int ear=0; ear<input.getNEars(); ear++)
         {
-            //offset the read position
-            offset = windowOffset_[w];
-            if(!parallelWindows_)
-                chnIdx = w;
-
-            //For debugging
-            if(alignOutput_)
-                offset2 = offset;
-
-            if(sum_)
+            //if output windows are not aligned, can keep incrementing the
+            //output array and move through it's dimensions.
+            Real* outputSignal = output_.getSignal(0);
+            for(int w=0; w<nWindows_; w++)
             {
-                double x=0.0, y=0.0;
-                if(squareInput_)
-                {
-                    for (int smp=0; smp<length_[w]; smp++)
-                    {
-                        x = input.getSample(chnIdx, offset++);
-                        x *= x;
-                        y += x;
-                    }
-                    if(sqrRoot_)
-                        y = sqrt(x);
-                }
-                else
-                {    
-                    for (int smp=0; smp<length_[w]; smp++)
-                        y += window_[w][smp] * input.getSample(chnIdx, offset++);
-                }
-                output_.setSample(w, 0, y);
-            }
-            else //normal windowing e.g. for FFT
-            {
-                for (int smp=0; smp<length_[w]; smp++)
-                    output_.setSample(w, smp+offset2, window_[w][smp] * input.getSample(chnIdx, offset++));
+                const Real* inputSignal = input.getSignal(ear, 0, windowOffset_[w]);
+
+                //if aligned, better get the correct index.
+                if(alignOutput_)
+                    outputSignal = output_.getSignal(ear, 0, windowOffset_[w]);
+
+                for(int smp=0; smp<length_[w]; smp++)
+                    *outputSignal++ = window[w][smp] * (*inputSignal++);
             }
         }
     }

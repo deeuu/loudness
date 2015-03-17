@@ -40,7 +40,7 @@ namespace loudness{
             orderMinus1_ = order_-1;
             LOUDNESS_DEBUG("FIR: Filter order is: " << order_);
 
-            //delay line
+            //internal delay line - single vector for all ears
             z_.assign(input.getNEars() * order_, 0.0);
 
             //output SignalBank
@@ -61,8 +61,8 @@ namespace loudness{
         {
             int smp, j;
             int zIdx = ear * order_;
-            const Real *inputSignal = input.getSignal(ear, 0);
-            Real *outputSignal = output_.getSignal(ear, 0);
+            const Real *inputSignal = input.getSignalReadPointer(ear, 0);
+            Real *outputSignal = output_.getSignalWritePointer(ear, 0);
             Real x;
 
             for(smp=0; smp<input.getNSamples(); smp++)
