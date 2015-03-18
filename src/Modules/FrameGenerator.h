@@ -54,22 +54,6 @@ namespace loudness{
         virtual ~FrameGenerator();
 
         /**
-         * @brief Sets the frame size in samples.
-         */
-        void setFrameSize(int frameSize);
-
-        /**
-         * @brief Sets the hop size in samples.
-         */
-        void setHopSize(int hopSize);
-
-        /**
-         * @brief Sets whether the write index starts at 0 or at the centre of
-         * the frame (default).
-         */
-        void setStartAtZero(bool startAtZero);
-
-        /**
          * @brief Returns the total number of samples comprising the frame.
          */
         int getFrameSize() const;
@@ -83,8 +67,6 @@ namespace loudness{
          * @brief Returns the startAtZero state.
          */
         bool getStartAtZero() const;
-
-        int getAudioBufferSize() const;
 
     private:
 

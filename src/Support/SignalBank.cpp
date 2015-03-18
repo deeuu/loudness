@@ -54,6 +54,7 @@ namespace loudness{
 
             centreFreqs_.assign(nChannels_, 0.0);
             signals_.assign(nTotalSamples_, 0.0);
+            LOUDNESS_DEBUG("SignalBank: Initialised.");
         }
     }
 
@@ -105,28 +106,34 @@ namespace loudness{
            centreFreqs_[channel] = freq;
     }
 
-    void SignalBank::fillSignal(int ear, int channel, int writeSampleIndex, const RealVec& source, int readSampleIndex, int nSamples)
+    void SignalBank::setEffectiveSignalLength(int ear, const IntVec& effectiveSignalLength)
     {
+        LOUDNESS_ASSERT(nChannels_ == (int)effectiveSignalLength.size());
+        effectiveSignalLength_ = effectiveSignalLength;
+    }
+
+    void SignalBank::copySignal(int ear, int channel, int writeSampleIndex, const Real* source, int nSamples)
+    {
+        LOUDNESS_ASSERT(((nSamples+writeSampleIndex) < nSamples_) &&
+                isPositiveAndLessThanUpper(ear, nEars_) &&
+                isPositiveAndLessThanUpper(channel, nChannels_));
+
         int startIdx = (ear * nChannels_ * nSamples_ + channel * nSamples_);
         Real* write = &signals_[startIdx + writeSampleIndex];
-        const Real* read = &source[readSampleIndex];
         for(int smp=0; smp<nSamples; smp++)
-            *write++ = *read++;
+            *write++ = *source++;
     }
 
-    void SignalBank::copySignalBank(const SignalBank& input)
+    void SignalBank::copyAllSignals(const SignalBank& input)
     {
-        if( input.getNTotalSamples() != nTotalSamples_)
-        {
-            LOUDNESS_WARNING("SignalBank: Total number of samples do not match");
-        }
-        else
-        {
-            signals_ = input.getSignals();
-        }
+        LOUDNESS_ASSERT( input.getNEars() == nEars_ && 
+                input.getNChannels() == nChannels_ &&
+                input.getNSamples() == nSamples_,
+                "SignalBank: Dimensions do not match");
+        signals_ = input.getSignals();
     }
 
-    void SignalBank::fillSignalBank(int writeSampleIndex, const SignalBank& input, int readSampleIndex, int nSamples)
+    void SignalBank::copyAllSignals(int writeSampleIndex, const SignalBank& input, int readSampleIndex, int nSamples)
     {
         Real* write = &signals_[writeSampleIndex];
         const Real *read = input.getSignalReadPointer(0, 0, readSampleIndex);
@@ -165,7 +172,7 @@ namespace loudness{
             signals_.assign(nTotalSamples_, 0.0);
         }
     }
-    
+   
     const RealVec &SignalBank::getCentreFreqs() const
     {
         return centreFreqs_;

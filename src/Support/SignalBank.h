@@ -107,7 +107,7 @@ namespace loudness{
          */
         void setCentreFreq(int channel, Real freq);
 
-        /**
+       /**
          * @brief Sets the value of an individual sample in a specified channel.
          *
          * @param channel Channel index.
@@ -115,9 +115,12 @@ namespace loudness{
          * @param sample Value of the sample.
          */
 
-        inline void setSample(int ear, int channel, int index, Real sample) 
+        inline void setSample(int ear, int channel, int sample, Real value) 
         {
-            signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + index] = sample;
+            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
+                    isPositiveAndLessThanUpper(channel, nChannels_) &&
+                    isPositiveAndLessThanUpper(sample, nSamples_));
+            signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + sample] = value;
         }
 
         /**
@@ -126,16 +129,15 @@ namespace loudness{
          * readSampleIndex. The ear and channel must be specified, along with
          * the number of samples to copy.
          */
-        void fillSignal(int ear, int channel, int writeSampleIndex, const
-                RealVec& source, int readSampleIndex, int nSamples);
+        void copySignal(int ear, int channel, int writeSampleIndex, const Real* source, int nSamples);
 
         /**
          * @brief Fills the entire SignalBank with contents of another. Both the
          * destination sample index and source sample index must be specified,
          * along with the number of samples to copy.
          */
-        void fillSignalBank(int writeSampleIndex, const SignalBank& input, int readSampleIndex, int nSamples);
-
+        void copyAllSignals(int writeSampleIndex, const SignalBank& input, int readSampleIndex, int nSamples);
+        void copyAllSignals(const SignalBank& input);
 
         void pullBack(int nSamples);
         /**
@@ -149,6 +151,13 @@ namespace loudness{
         {
             trig_ = trig;
         }
+
+        /** Sets the effective length of each signal in the specified ear, i.e.
+         * the number of non-zero samples in a given channel on average. This
+         * can be useful for some modules that process a subset of the total
+         * nSamples_ depending on the channel.  
+         */
+        void setEffectiveSignalLength(int ear, const IntVec& effectiveSignalLength);
 
         /*
          * Getters
@@ -194,59 +203,54 @@ namespace loudness{
             return nTotalSamples_;
         }
 
-        void copySignalBank(const SignalBank& input);
-
-        /**
-         * @brief Returns a single sample from a specified channel and sample index.
-         *
-         * @param channel Channel index.
-         * @param index Sample index.
-         *
-         * @return Sample value.
-         */
-        inline Real getSample(int index) const
+        inline Real getSample(int ear, int channel, int sample) const
         {
-            return signals_[index];
-        }
-
-        inline Real getSample(int channel, int index) const
-        {
-            return signals_[channel * nSamples_ + index];
-        }
-
-        inline Real getSample(int ear, int channel, int index) const
-        {
-            return signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + index];
+             LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
+                     isPositiveAndLessThanUpper(channel, nChannels_) &&
+                     isPositiveAndLessThanUpper(sample, nSamples_));
+            return signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + sample];
         }
 
         Real* getSignalWritePointer(int ear, int channel)
         {
+            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
+                    isPositiveAndLessThanUpper(channel, nChannels_));
             return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_];
         }
 
-        Real* getSignalWritePointer(int ear, int channel, int index)
+        Real* getSignalWritePointer(int ear, int channel, int sample)
         {
-            return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + index];
+             LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
+                     isPositiveAndLessThanUpper(channel, nChannels_) &&
+                     isPositiveAndLessThanUpper(sample, nSamples_));
+            return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + sample];
         }
 
         Real* getSingleSampleWritePointer(int ear)
         {
+            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_));
             return &signals_[ear * nChannels_ * nSamples_];
         }
         
         const Real* getSingleSampleReadPointer(int ear) const
         {
+            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_));
             return &signals_[ear * nChannels_ * nSamples_];
         }
 
         const Real* getSignalReadPointer(int ear, int channel) const
         {
+            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
+                    isPositiveAndLessThanUpper(channel, nChannels_));
             return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_];
         }
 
-        const Real* getSignalReadPointer(int ear, int channel, int index) const
+        const Real* getSignalReadPointer(int ear, int channel, int sample) const
         {
-            return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + index];
+            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
+                    isPositiveAndLessThanUpper(channel, nChannels_) &&
+                    isPositiveAndLessThanUpper(sample, nSamples_));
+            return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + sample];
         }
 
         const RealVec& getSignals() const
@@ -289,7 +293,7 @@ namespace loudness{
          * @return The frame rate (Hz).
          */
         Real getFrameRate() const;
-
+        
         /**
          * @brief Returns the state of the SignalBank.
          *
@@ -305,6 +309,7 @@ namespace loudness{
         Real frameRate_;
         RealVec signals_;
         RealVec centreFreqs_;
+        IntVec effectiveSignalLength_;
     }; 
 }
 #endif 

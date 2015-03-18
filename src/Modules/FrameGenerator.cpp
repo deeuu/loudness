@@ -88,7 +88,7 @@ namespace loudness{
         //copy to output (input buf can't be < than hopSize_ so safe)
         if(remainingSamples_)
         {
-            output_.fillSignalBank(writeIdx_, audioBufferBank_, 0, remainingSamples_);
+            output_.copyAllSignals(writeIdx_, audioBufferBank_, 0, remainingSamples_);
             writeIdx_ += remainingSamples_;
             remainingSamples_ = 0;
         }
@@ -101,14 +101,14 @@ namespace loudness{
         else
             remainingSamples_ = nSamples - nSamplesToFill;
 
-        output_.fillSignalBank(writeIdx_, input, 0, nSamplesToFill);
+        output_.copyAllSignals(writeIdx_, input, 0, nSamplesToFill);
         writeIdx_ += nSamplesToFill;
 
         //if samples remaining store them
         if(remainingSamples_)
         {
             int readIdx = nSamples - remainingSamples_;
-            audioBufferBank_.fillSignalBank(0, input, readIdx, remainingSamples_);
+            audioBufferBank_.copyAllSignals(0, input, readIdx, remainingSamples_);
         }
 
         //if frames worth -> output
@@ -123,21 +123,6 @@ namespace loudness{
         writeIdx_ = 0;
         remainingSamples_ = 0;
         audioBufferBank_.clear();
-    }
-
-    void FrameGenerator::setFrameSize(int frameSize)
-    {
-        frameSize_ = frameSize;
-    }
-
-    void FrameGenerator::setHopSize(int hopSize)
-    {
-        hopSize_ = hopSize;
-    }
-
-    void FrameGenerator::setStartAtZero(bool startAtZero)
-    {
-        startAtZero_ = startAtZero;
     }
 
     int FrameGenerator::getFrameSize() const

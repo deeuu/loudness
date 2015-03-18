@@ -17,32 +17,36 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#ifndef  COMMON_H
-#define  COMMON_H
+#ifndef  USEFULFUNCTIONS_H
+#define  USEFULFUNCTIONS_H
 
-#include <memory>
-#include <vector>
-#include <string>
-#include "Debug.h"
-#include "UsefulFunctions.h"
+#include <math.h>
+#define PI 3.14159265358979323846264338327
+#define LOW_LIMIT_POWER 1e-10
+#define LOW_LIMIT_DB -100
 
-/*
- * Expose objects
- */
 namespace loudness{
-    using std::vector;
-    using std::string;
-    using std::unique_ptr;
+
+    /** Return the larger of a or b. */
+    template <typename Type>
+    inline Type Max (Type const& a, Type const&b )
+    {
+        return a < b ? b : a;
+    }
+
+    /** Return the smaller of a or b. */
+    template <typename Type>
+    inline Type Min (Type const& a, Type const&b )
+    {
+        return a < b ? a : b;
+    }
+
+    /** Returns true if value is positive and less than upper. */
+    template <typename Type>
+    inline bool isPositiveAndLessThanUpper(Type const& value, Type const& upper)
+    {
+        return value>=0 && value<upper;
+    }
 }
 
-/*
- * Types
- */
-typedef double Real;
-typedef unsigned int uint;
-typedef std::vector<Real> RealVec;
-typedef std::vector<std::vector<Real> > RealVecVec;
-typedef std::vector<int> IntVec;
-typedef std::vector<Real>::iterator RealIter;
-
-#endif  
+#endif 

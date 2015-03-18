@@ -8,10 +8,9 @@ BASENAME=lib$(NAME).so
 EXECUTABLE=$(BASENAME).$(MAJOR).$(MINOR).$(REVISION)
 TARGET_DIR=/usr/local
 
-CFLAGS = -std=c++11 -c -fPIC -g -Wall -O3
+CFLAGS = -std=c++11 -c -fPIC -g -Wall #-O3
 
 #Debug mode or not
-DEBUG=1
 ifeq ($(DEBUG),1)
     CFLAGS += -DDEBUG
 endif
@@ -26,7 +25,8 @@ SOURCES=../src/cnpy/cnpy.cpp \
 ../src/Support/Filter.cpp \
 ../src/Modules/FIR.cpp \
 ../src/Modules/IIR.cpp \
-../src/Modules/FrameGenerator.cpp
+../src/Modules/FrameGenerator.cpp \
+../src/Modules/Window.cpp
 
 OBJECTS=$(SOURCES:.cpp=.o)
 

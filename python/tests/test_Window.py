@@ -7,23 +7,25 @@ windowSizeSeconds = np.array([0.064, 0.032, 0.016, 0.008, 0.004, 0.002])
 windowSize = np.round(windowSizeSeconds * fs).astype('int')
 windowSize += windowSize%2 #Force even
 
-window = ln.Window("hann", windowSize, True)
-window.setAlignOutput(True)
+window = ln.Window("hann", windowSize, True, True)
 
 bank = ln.SignalBank()
-bank.initialize(1, windowSize[0], fs)
+bank.initialize(2, 1, windowSize[0], fs)
 window.initialize(bank)
 
-bank.setSignal(0, np.ones(windowSize[0]))
+x = np.ones(windowSize[0])
+for i, smp in enumerate(x):
+    bank.setSample(0, 0, i, smp)
+    bank.setSample(1, 0, i, smp)
 window.process(bank)
 
 bankOut = window.getOutput()
-windows = np.zeros((windowSize[0], 6))
-windows[:,0] = bankOut.getSignal(0)
-windows[:,1] = bankOut.getSignal(1)
-windows[:,2] = bankOut.getSignal(2)
-windows[:,3] = bankOut.getSignal(3)
-windows[:,4] = bankOut.getSignal(4)
-windows[:,5] = bankOut.getSignal(5)
+windows = np.zeros((bankOut.getNEars(), bankOut.getNChannels(), bankOut.getNSamples()))
 
-plt.plot(windows)
+for w in range(bankOut.getNChannels()):
+    for i in range(bankOut.getNSamples()):
+        windows[0, w, i] = bankOut.getSample(0, w, i)
+        windows[1, w, i] = bankOut.getSample(1, w, i)
+    plt.plot(windows[0,w], 'k')
+    plt.plot(windows[1,w], 'r', linestyle='--')
+

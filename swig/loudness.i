@@ -20,22 +20,18 @@
 %module loudness
 %{
 #define SWIG_FILE_WITH_INIT
-
+#include "../src/Support/Debug.h"
+#include "../src/Support/UsefulFunctions.h"
+#include "../src/Support/Common.h"
 #include "../src/Support/SignalBank.h"
 #include "../src/Support/Module.h"
-#include "../src/Support/Model.h"
-#include "../src/Support/Spline.h"
-#include "../src/Support/AuditoryTools.h"
-#include "../src/Support/Timer.h"
-#include "../src/Support/Filter.h"
-#include "../src/Modules/FIR.h"
-#include "../src/Modules/IIR.h"
+#include "../src/Modules/FrameGenerator.h"
+#include "../src/Modules/Window.h"
 %}
 
-//Required for integration with numpy arrays
-//%include "numpy.i"
-
 /*
+//Required for integration with numpy arrays
+%include "numpy.i"
 %init %{
 import_array();
 %}
@@ -63,14 +59,23 @@ using namespace std;
 
 namespace loudness{
 using std::string;
+
+class SignalBank {
+public:
+    SignalBank();
+    ~SignalBank();
+    void initialize(int nEars, int nChannels, int nSamples, int fs);
+    inline int getNChannels();
+    inline int getNSamples();
+    inline int getNEars();
+    inline int getNTotalSamples();
+    inline void setSample(int ear, int channel, int sample, Real value);
+    inline Real getSample(int ear, int channel, int sample) const;
+    inline bool getTrig();
+    inline void setTrig(bool trig);
+};
 }
 
-%include "../src/Support/SignalBank.h"
 %include "../src/Support/Module.h"
-%include "../src/Support/Model.h"
-%include "../src/Support/Spline.h"
-%include "../src/Support/AuditoryTools.h"
-%include "../src/Support/Timer.h"
-%include "../src/Support/Filter.h"
-%include "../src/Modules/FIR.h"
-%include "../src/Modules/IIR.h"
+%include "../src/Modules/FrameGenerator.h"
+%include "../src/Modules/Window.h"

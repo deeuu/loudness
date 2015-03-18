@@ -23,21 +23,41 @@
 #include <iostream>
 #include <iomanip>
 
-//I need to throw an exception
+#define DEBUG
+
+#if defined(DEBUG)
+#define LOUDNESS_DEBUG(msg) do {std::cerr << msg << std::endl;} while (false)
+//overloading macros: http://stackoverflow.com/questions/11761703/overloading-macro-on-number-of-arguments
+#define GET_MACRO(_1,_2,NAME,...) NAME
+#define LOUDNESS_ASSERT(...) GET_MACRO(__VA_ARGS__, LOUDNESS_ASSERT2, LOUDNESS_ASSERT1)(__VA_ARGS__)
+
+#define LOUDNESS_ASSERT1(condition) \
+    do { \
+        if (! (condition)) { \
+            std::cerr << "Assertion `" #condition "` failed in " << __FILE__ \
+                      << " line " << __LINE__ << std::endl; \
+            std::exit(EXIT_FAILURE); \
+        } \
+    } while (false)
+
+#define LOUDNESS_ASSERT2(condition, msg) \
+    do { \
+        if (! (condition)) { \
+            std::cerr << "Assertion `" #condition "` failed in " << __FILE__ \
+                      << " line " << __LINE__ << ": " << msg << std::endl; \
+            std::exit(EXIT_FAILURE); \
+        } \
+    } while (false)
+
+
+#else
+#define LOUDNESS_DEBUG(msg) do {} while (false)
+#define LOUDNESS_ASSERT(condition, msg) do {} while (false)
+#endif
+//exceptions...
 #define LOUDNESS_ERROR(msg) std::cerr << msg << std::endl;
-//general concerns
+//general concerns and corrections
 #define LOUDNESS_WARNING(msg) std::cerr << msg << std::endl;
 
-// If none of the NO_DEBUG are defined we enable debugging
-#if defined(DEBUG)
-
-#define LOUDNESS_DEBUG(msg) std::cerr << msg << std::endl;
-
-// else we do nothing
-#else
-
-#define LOUDNESS_DEBUG(msg)
-
-#endif
 
 #endif
