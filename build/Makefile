@@ -22,11 +22,13 @@ INCS=-I.
 SOURCES=../src/cnpy/cnpy.cpp \
 ../src/Support/SignalBank.cpp \
 ../src/Support/Module.cpp \
+../src/Support/FFT.cpp \
 ../src/Support/Filter.cpp \
 ../src/Modules/FIR.cpp \
 ../src/Modules/IIR.cpp \
 ../src/Modules/FrameGenerator.cpp \
-../src/Modules/Window.cpp
+../src/Modules/Window.cpp \
+../src/Modules/PowerSpectrum.cpp
 
 OBJECTS=$(SOURCES:.cpp=.o)
 

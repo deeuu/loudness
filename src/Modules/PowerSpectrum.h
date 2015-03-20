@@ -90,8 +90,7 @@ namespace loudness{
         RealVec bandFreqsHz_, normFactor_;
         bool uniform_;
         string normalisation_;
-        int nWindows_;
-        vector<int> fftSize_;
+        vector<int> windowSize_;
         vector<vector<int> > bandBinIndices_; 
         vector<unique_ptr<FFT>> ffts_;
     };

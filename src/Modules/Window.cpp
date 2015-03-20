@@ -103,11 +103,7 @@ namespace loudness{
         //initialise the output signal
         output_.initialize(input.getNEars(), nOutputChannels, largestWindowSize_, input.getFs());
         output_.setFrameRate(input.getFrameRate());
-        if(!alignOutput_)
-        {
-            output_.setEffectiveSignalLength(0, length_);
-            output_.setEffectiveSignalLength(1, length_);
-        }
+        output_.setEffectiveSignalLengths(length_);
 
         return 1;
     }
@@ -121,11 +117,7 @@ namespace loudness{
             for(int w=0; w<nWindows_; w++)
             {
                 inputSignal = input.getSignalReadPointer(ear, 0, windowOffset_[w]);
-
-                if(alignOutput_)
-                    outputSignal = output_.getSignalWritePointer(ear, w, windowOffset_[w]);
-                else
-                    outputSignal = output_.getSignalWritePointer(ear, w, 0);
+                outputSignal = output_.getSignalWritePointer(ear, w, 0);
 
                 for(int smp=0; smp<length_[w]; smp++)
                     *outputSignal++ = window_[w][smp] * (*inputSignal++);

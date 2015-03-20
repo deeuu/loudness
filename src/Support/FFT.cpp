@@ -77,20 +77,19 @@ namespace loudness{
         return 1;
     }
 
-    void FFT::process(const RealVec &input)
+    void FFT::process(const Real* input, int length)
     {
         if(initialized_)
         {
             //fill the buffer
-            for(uint i=0; i<input.size(); i++)
-                fftInputBuf_[i] = input[i];
+            int i = fftSize_;
+            while(i > length)
+                fftInputBuf_[--i] = 0.0;
+            while(i > 0)
+                fftInputBuf_[--i] = input[i];
 
             //compute fft
             fftw_execute(fftPlan_);
-
-            //clear the input buffer
-            for(int i=0; i<fftSize_; i++)
-                fftInputBuf_[i] = 0.0;
         }
     }
 

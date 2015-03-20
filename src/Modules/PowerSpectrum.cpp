@@ -35,59 +35,47 @@ namespace loudness{
     {
         
         //number of windows
-        nWindows_ = input.getNChannels();
+        int nWindows = input.getNChannels();
 
-        if((int)bandFreqsHz_.size() != (nWindows_ + 1))
+        //If passed in by Window module, the window lengths are given here
+        windowSize_ = input.getEffectiveSignalLengths();
+
+        //Fix conditions where this module is used independently of Window.cpp
+        if((int)windowSize_.size() != nWindows)
         {
-            LOUDNESS_ERROR(name_ 
-                    << ": Number of frequency bands should equal number of windows + 1.");
-            return 0;
+            windowSize_.assign(nWindows, input.getNSamples());
+            uniform_ = true;
         }
 
-        //sampling freqeuncy
-        int fs = input.getFs();
-        
-        //temporary vectors
-        int windowSizePrev = input.getNSamples();//largest window
-        vector<int> windowSize(nWindows_, windowSizePrev);
-        vector<int> fftSize(nWindows_, pow(2, ceil(log2(windowSizePrev))));
-        //work out FFT sizes (force power of 2)
-        for(int w=1; w<nWindows_; w++)
-        {
-            const vector<Real> &signal = input.getSignal(w);
-            windowSize[w] = (int)signal.size();
+        //some checks
+        LOUDNESS_ASSERT((int)bandFreqsHz_.size() == (nWindows + 1),
+                name_ << ": Number of frequency bands should equal number of input channels + 1.");
+        LOUDNESS_ASSERT(!anyAscendingValues(windowSize_),
+                    name_ << ": Window lengths must be in descending order.");
 
-            if(!uniform_)
-                fftSize[w] = pow(2, ceil(log2(windowSize[w])));
-
-            //windows must be largest to smallest
-            if (windowSize[w] > windowSizePrev)
-            {
-                LOUDNESS_ERROR(name_ << ": Window lengths must be in descending order.");
-                return 0;
-            }
-
-            windowSizePrev = windowSize[w];
-        }
-        //One FFT for all windows - uniform spectral sampling
+        //work out FFT configuration (constrain to power of 2)
+        int largestWindowSize = input.getNSamples();
+        vector<int> fftSize(nWindows, nextPowerOfTwo(largestWindowSize));
         if(uniform_)
         {
             ffts_.push_back(unique_ptr<FFT> (new FFT(fftSize[0]))); 
             ffts_[0] -> initialize();
         }
-        else //seperate
+        else
         {
-            for(int w=0; w<nWindows_; w++)
+            for(int w=0; w<nWindows; w++)
             {
+                fftSize[w] = nextPowerOfTwo(windowSize_[w]);
                 ffts_.push_back(unique_ptr<FFT> (new FFT(fftSize[w]))); 
                 ffts_[w] -> initialize();
             }
         }
 
         //desired bins indices (lo and hi) per band
-        bandBinIndices_.resize(nWindows_);
-        normFactor_.resize(nWindows_);
-        for(int i=0; i<nWindows_; i++)
+        bandBinIndices_.resize(nWindows);
+        normFactor_.resize(nWindows);
+        int fs = input.getFs();
+        for(int i=0; i<nWindows; i++)
         {
             //bin indices to use for compiled spectrum
             bandBinIndices_[i].resize(2);
@@ -97,11 +85,8 @@ namespace loudness{
             bandBinIndices_[i][1] = ceil(bandFreqsHz_[i+1]*fftSize[i]/fs)-1;
             LOUDNESS_DEBUG(name_ << ": band hi : " << bandBinIndices_[i][1]);
 
-            if(bandBinIndices_[i][1]==0)
-            {
-                LOUDNESS_ERROR(name_ << ": No components found in band number " << i);
-                return 0;
-            }
+            LOUDNESS_ASSERT(bandBinIndices_[i][1]>0,
+                    name_ << ": No components found in band number " << i);
 
             //exclude DC and Nyquist if found
             int nyqIdx = (fftSize[i]/2) + (fftSize[i]%2);
@@ -119,7 +104,7 @@ namespace loudness{
 
             //Power spectrum normalisation
             if(normalisation_ == "averageEnergy")
-                normFactor_[i] = 2.0/(fftSize[i] * windowSize[i]);
+                normFactor_[i] = 2.0/(fftSize[i] * windowSize_[i]);
             else
                 normFactor_[i] = 2.0/fftSize[i];
             LOUDNESS_DEBUG(name_ << ": Normalisation factor : " << normFactor_[i]);
@@ -127,7 +112,7 @@ namespace loudness{
 
         //count total number of bins and ensure no overlap
         int nBins = 0;
-        for(int i=1; i<nWindows_; i++)
+        for(int i=1; i<nWindows; i++)
         {
             while((bandBinIndices_[i][0]*fs/fftSize[i]) <= (bandBinIndices_[i-1][1]*fs/fftSize[i-1]))
                 bandBinIndices_[i][0] += 1;
@@ -135,17 +120,17 @@ namespace loudness{
         }
         
         //total number of bins in the output spectrum
-        nBins += bandBinIndices_[nWindows_-1][1]-bandBinIndices_[nWindows_-1][0] + 1;
+        nBins += bandBinIndices_[nWindows-1][1]-bandBinIndices_[nWindows-1][0] + 1;
         LOUDNESS_DEBUG(name_ 
                 << ": Total number of bins comprising the output spectrum: " << nBins);
 
         //initialize the output SignalBank
-        output_.initialize(nBins, 1, fs);
+        output_.initialize(input.getNEars(), nBins, 1, fs);
         output_.setFrameRate(input.getFrameRate());
 
         //output frequencies in Hz
         int j = 0, k = 0;
-        for(int i=0; i<nWindows_; i++)
+        for(int i=0; i<nWindows; i++)
         {
             j = bandBinIndices_[i][0];
             while(j <= bandBinIndices_[i][1])
@@ -157,24 +142,30 @@ namespace loudness{
 
     void PowerSpectrum::processInternal(const SignalBank &input)
     {
-        //for each window
-        int fftIdx = 0, writeIdx = 0;
-        for(int i=0; i<nWindows_; i++)
+        int fftIdx = 0;
+        int nWindows = windowSize_.size();
+        for(int ear=0; ear<input.getNEars(); ear++)
         {
-            if(!uniform_)
-                fftIdx = i;
-            
-            //Do the FFT
-            ffts_[fftIdx] -> process(input.getSignal(i));
+            //get a single sample pointer for moving through channels
+            Real* outputSignal = output_.getSingleSampleWritePointer(ear,0);
 
-            //Extract components from band and compute powers
-            Real re, im, power;
-            for(int j=bandBinIndices_[i][0]; j<=bandBinIndices_[i][1]; j++)
+            for(int chn=0; chn<nWindows; chn++)
             {
-                re = ffts_[fftIdx] -> getReal(j);
-                im = ffts_[fftIdx] -> getImag(j);
-                power = normFactor_[i] * (re*re + im*im);
-                output_.setSample(writeIdx++, 0, power);
+                if(!uniform_)
+                    fftIdx = chn;
+
+                //Do the FFT
+                ffts_[fftIdx] -> process(input.getSignalReadPointer(ear, chn, 0), windowSize_[chn]);
+
+                //Extract components from band and compute powers
+                Real re, im;
+                int bin = bandBinIndices_[chn][0];
+                while(bin++ <= bandBinIndices_[chn][1])
+                {
+                    re = ffts_[fftIdx] -> getReal(bin);
+                    im = ffts_[fftIdx] -> getImag(bin);
+                    *outputSignal++ = normFactor_[chn] * (re*re + im*im);
+                }
             }
         }
     }

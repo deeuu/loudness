@@ -47,6 +47,42 @@ namespace loudness{
     {
         return value>=0 && value<upper;
     }
+
+    template <typename Type>
+    bool anyAscendingValues(const Type* data, int length)
+    {
+        bool ascending = false;
+        while(length-- > 1 && !ascending)
+            ascending = *data < *(++data);
+        return ascending;
+    }
+
+    template <typename Type, typename Type2>
+    bool anyDescendingValues(const Type* data, Type2 length)
+    {
+        bool descending = false;
+        while(length-- > 1 && !descending)
+            descending = *data > *(++data);
+        return descending;
+    }
+
+    template <typename Type>
+    bool anyAscendingValues(const std::vector<Type>& data)
+    {
+        return anyAscendingValues(&data[0], data.size());
+    }
+
+    template <typename Type>
+    bool anyDescendingValues(const std::vector<Type>& data)
+    {
+        return anyDescendingValues(&data[0], data.size());
+    }
+
+    template <typename Type>
+    Type nextPowerOfTwo(const Type& value)
+    {
+        return pow( 2, ceil( log2(value) ) );
+    }
 }
 
 #endif 

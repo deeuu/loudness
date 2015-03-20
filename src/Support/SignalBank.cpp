@@ -106,10 +106,15 @@ namespace loudness{
            centreFreqs_[channel] = freq;
     }
 
-    void SignalBank::setEffectiveSignalLength(int ear, const IntVec& effectiveSignalLength)
+    void SignalBank::setEffectiveSignalLengths(const IntVec& effectiveSignalLengths)
     {
-        LOUDNESS_ASSERT(nChannels_ == (int)effectiveSignalLength.size());
-        effectiveSignalLength_ = effectiveSignalLength;
+        LOUDNESS_ASSERT(nChannels_ == (int)effectiveSignalLengths.size());
+        effectiveSignalLengths_ = effectiveSignalLengths;
+    }
+
+    const vector<int>& SignalBank::getEffectiveSignalLengths() const
+    {
+        return effectiveSignalLengths_;
     }
 
     void SignalBank::copySignal(int ear, int channel, int writeSampleIndex, const Real* source, int nSamples)

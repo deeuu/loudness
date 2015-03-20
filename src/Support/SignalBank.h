@@ -152,12 +152,13 @@ namespace loudness{
             trig_ = trig;
         }
 
-        /** Sets the effective length of each signal in the specified ear, i.e.
+        /** Sets the effective length of each channel signals, i.e.
          * the number of non-zero samples in a given channel on average. This
          * can be useful for some modules that process a subset of the total
          * nSamples_ depending on the channel.  
          */
-        void setEffectiveSignalLength(int ear, const IntVec& effectiveSignalLength);
+        void setEffectiveSignalLengths(const IntVec& effectiveSignalLengths);
+        const vector<int>& getEffectiveSignalLengths() const;
 
         /*
          * Getters
@@ -226,16 +227,18 @@ namespace loudness{
             return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + sample];
         }
 
-        Real* getSingleSampleWritePointer(int ear)
+        Real* getSingleSampleWritePointer(int ear, int channel)
         {
-            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_));
-            return &signals_[ear * nChannels_ * nSamples_];
+            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
+                     isPositiveAndLessThanUpper(channel, nChannels_));
+            return &signals_[ear * nChannels_ * nSamples_ + channel];
         }
         
-        const Real* getSingleSampleReadPointer(int ear) const
+        const Real* getSingleSampleReadPointer(int ear, int channel) const
         {
-            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_));
-            return &signals_[ear * nChannels_ * nSamples_];
+            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
+                     isPositiveAndLessThanUpper(channel, nChannels_));
+            return &signals_[ear * nChannels_ * nSamples_ + channel];
         }
 
         const Real* getSignalReadPointer(int ear, int channel) const
@@ -309,7 +312,7 @@ namespace loudness{
         Real frameRate_;
         RealVec signals_;
         RealVec centreFreqs_;
-        IntVec effectiveSignalLength_;
+        IntVec effectiveSignalLengths_;
     }; 
 }
 #endif 
