@@ -29,14 +29,14 @@ namespace loudness{
 
     /** Return the larger of a or b. */
     template <typename Type>
-    inline Type Max (Type const& a, Type const&b )
+    inline Type max (Type const& a, Type const&b )
     {
         return a < b ? b : a;
     }
 
     /** Return the smaller of a or b. */
     template <typename Type>
-    inline Type Min (Type const& a, Type const&b )
+    inline Type min (Type const& a, Type const&b )
     {
         return a < b ? a : b;
     }

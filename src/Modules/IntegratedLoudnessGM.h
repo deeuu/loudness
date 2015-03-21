@@ -49,11 +49,11 @@ namespace loudness{
             CH12 = 2
         };
  
-        IntegratedLoudnessGM(SMOOTHTIMES=GM02, bool diotic=true, Real cParam=1);
+        IntegratedLoudnessGM(const string& author, Real cParam);
 
         virtual ~IntegratedLoudnessGM();
 
-        void loadSmoothingTimes(SMOOTHTIMES author);
+        void configureSmoothingTimes(const string& author);
         void setAttackTimeSTL(Real attackTimeSTL);
         void setReleaseTimeSTL(Real releaseTimeSTL);
         void setAttackTimeLTL(Real attackTimeLTL);
@@ -64,13 +64,10 @@ namespace loudness{
         virtual void processInternal(const SignalBank &input);
         virtual void resetInternal();
 
-        bool diotic_;
         Real cParam_;
         Real attackTimeSTL_, releaseTimeSTL_, attackTimeLTL_, releaseTimeLTL_;
         Real attackSTLCoef_, releaseSTLCoef_, attackLTLCoef_, releaseLTLCoef_;
         Real camStep_, timeStep_;
-        bool uniform_;
-        RealVec camDif_;
     };
 }
 #endif

@@ -77,9 +77,9 @@ namespace loudness{
         for(int ear=0; ear<input.getNEars(); ear++)
         {
             int smp, j;
-            int zIdx = ear * order_;
-            const Real *inputSignal = input.getSignalReadPointer(ear, 0);
-            Real *outputSignal = output_.getSignalWritePointer(ear, 0);
+            const Real* inputSignal = input.getSignalReadPointer(ear, 0);
+            Real* outputSignal = output_.getSignalWritePointer(ear, 0);
+            Real* z = &z_[ear * order_];
             Real x;
 
             for(smp=0; smp<input.getNSamples(); smp++)
@@ -88,17 +88,16 @@ namespace loudness{
                 x = inputSignal[smp] * gain_;
 
                 //output sample
-                outputSignal[smp] = bCoefs_[0] * x + z_[zIdx];
+                outputSignal[smp] = bCoefs_[0] * x + z[0];
 
                 //fill delay
                 for (j=1; j<order_; j++)
-                    z_[zIdx+j-1] = bCoefs_[j] * x + z_[zIdx+j];
-                z_[zIdx + orderMinus1_] = bCoefs_[order_] * x;
+                    z[j-1] = bCoefs_[j] * x + z[j];
+                z[orderMinus1_] = bCoefs_[order_] * x;
 
                 for (j=1; j<order_; j++)
-                    z_[zIdx+j-1] -= aCoefs_[j] * outputSignal[smp];
-                z_[zIdx + orderMinus1_] -= aCoefs_[order_] * outputSignal[smp];
-
+                    z[j-1] -= aCoefs_[j] * outputSignal[smp];
+                z[orderMinus1_] -= aCoefs_[order_] * outputSignal[smp];
             }
         }
     }

@@ -32,7 +32,8 @@ namespace loudness{
 
     bool FastRoexBank::initializeInternal(const SignalBank &input)
     {
-
+        LOUDNESS_ASSERT(input.getNChannels() > 1,
+                name_ << ": Insufficient number of input channels.");
 
         //Camstep limit is 0.1
         if(camStep_ <= 0.1)
@@ -109,7 +110,7 @@ namespace loudness{
         //initialize output SignalBank
         if(interp_)
         {
-            output_.initialize(372, 1, input.getFs());
+            output_.initialize(input.getNEars(), 372, 1, input.getFs());
             for(int i=0; i<372; i++)
             {
                 output_.setCentreFreq(i, camToFreq(1.8 + i*0.1));
@@ -119,7 +120,7 @@ namespace loudness{
         }
         else
         {
-            output_.initialize(nFilters_, 1, input.getFs());
+            output_.initialize(input.getNEars(), nFilters_, 1, input.getFs());
         }
         output_.setFrameRate(input.getFrameRate());
 
@@ -145,84 +146,88 @@ namespace loudness{
 
     void FastRoexBank::processInternal(const SignalBank &input)
     {
-        /*
-         * Part 1: Obtain the level per ERB about each input component
-         */
-        Real runningSum = 0;
-        int j = 0;
-        int k = rectBinIndices_[0][0];
-        int nChannels = input.getNChannels();
-        for(int i=0; i<nChannels; i++)
+        for (int ear = 0; ear < input.getNEars(); ear++)
         {
-            //running sum of component powers
-            while(j<rectBinIndices_[i][1])
-                runningSum += input.getSample(j++,0);
+            /*
+             * Part 1: Obtain the level per ERB about each input component
+             */
+            int nChannels = input.getNChannels();
+            const Real* inputPowerSpectrum = input.getSingleSampleReadPointer(ear, 0);
+            Real* outputExcitationPattern = output_.getSingleSampleWritePointer(ear, 0);
 
-            //subtract components outside the window
-            while(k<rectBinIndices_[i][0])
-                runningSum -= input.getSample(k++,0);
-
-            //convert to dB, subtract 51 here to save operations later
-            if (runningSum < 1e-10)
-                compLevel_[i] = -151.0;
-            else
-                compLevel_[i] = 10*log10(runningSum)-51;
-
-            LOUDNESS_DEBUG("FastRoexBank: ERB/dB : " << compLevel_[i]+1e-10);
-        }
-
-        /*
-         * Part 2: Complete roex filter response and compute excitation per ERB
-         */
-        Real g, p, pg, excitationLin;
-        int idx;
-        for(int i=0; i<nFilters_; i++)
-        {
-            excitationLin = 0;
-            j = 0;
-
-            while(j<nChannels)
+            Real runningSum = 0.0;
+            int j = 0;
+            int k = rectBinIndices_[0][0];
+            for (int i=0; i<nChannels; i++)
             {
-                //normalised deviation
-                g = (input.getCentreFreq(j)-fc_[i])/fc_[i];
+                //running sum of component powers
+                while (j < rectBinIndices_[i][1])
+                    runningSum += inputPowerSpectrum[j++];
 
-                if(g>2)
-                    break;
-                if(g<0) //lower skirt - level dependent
-                {
-                    p = pu_[i]-(pl_[i]*compLevel_[j]); //51dB subtracted above
-                    p = p < 0.1 ? 0.1 : p; //p can go negative for very high levels
-                    pg = -p*g; 
-                }
-                else //upper skirt
-                {
-                    pg = pu_[i]*g; 
-                }
-                
-                //excitation
-                idx = (int)(pg/step_ + 0.5);
-                idx = idx > roexIdxLimit_ ? roexIdxLimit_ : idx;
-                excitationLin += roexTable_[idx]*input.getSample(j++,0); 
+                //subtract components outside the window
+                while (k < rectBinIndices_[i][0])
+                    runningSum -= inputPowerSpectrum[k++];
+
+                //convert to dB, subtract 51 here to save operations later
+                if (runningSum < 1e-10)
+                    compLevel_[i] = -151.0;
+                else
+                    compLevel_[i] = 10*log10(runningSum)-51;
             }
 
-            //excitation level
-            if(interp_)
-                excitationLevel_[i] = log(excitationLin + 1e-10);
-            else
-                output_.setSample(i, 0, excitationLin);
-        }
-
-        /*
-         * Part 3: Interpolate to estimate 
-         * 0.1~Cam res excitation pattern
-         */
-        if(interp_)
-        {
-            spline_.set_points(cams_, excitationLevel_);
-            for(int i=0; i < 372; i++)
+            /*
+             * Part 2: Complete roex filter response and compute excitation per ERB
+             */
+            Real g, p, pg, excitationLin;
+            int idx;
+            for (int i = 0; i < nFilters_; i++)
             {
-                excitationLin = exp(spline_(1.8 + i*0.1));
-                output_.setSample(i, 0, excitationLin);
+                excitationLin = 0;
+                j = 0;
+
+                while (j < nChannels)
+                {
+                    //normalised deviation
+                    g = (input.getCentreFreq(j)-fc_[i])/fc_[i];
+
+                    if (g > 2)
+                        break;
+                    if (g < 0) //lower skirt - level dependent
+                    {
+                        p = pu_[i]-(pl_[i]*compLevel_[j]); //51dB subtracted above
+                        p = max(p, 0.1); //p can go negative for very high levels
+                        pg = -p*g; 
+                    }
+                    else //upper skirt
+                    {
+                        pg = pu_[i]*g; 
+                    }
+                    
+                    //excitation
+                    idx = (int)(pg/step_ + 0.5);
+                    idx = min(idx, roexIdxLimit_);
+                    excitationLin += roexTable_[idx] * inputPowerSpectrum[j++]; 
+                }
+
+                //excitation level
+                if (interp_)
+                    excitationLevel_[i] = log(excitationLin + 1e-10);
+                else
+                    outputExcitationPattern[i] = excitationLin;
+            }
+
+            /*
+             * Part 3: Interpolate to estimate 
+             * 0.1~Cam res excitation pattern
+             */
+            if(interp_)
+            {
+                spline_.set_points(cams_, excitationLevel_);
+                for(int i=0; i < 372; i++)
+                {
+                    excitationLin = exp(spline_(1.8 + i*0.1));
+                    outputExcitationPattern[i] = excitationLin;
+                }
             }
         }
     }
@@ -231,7 +236,7 @@ namespace loudness{
 
     void FastRoexBank::generateRoexTable(int size)
     {
-        size = size < 512 ? 512 : size;
+        size = max(size, 512);
         roexIdxLimit_ = size-1;
         roexTable_.resize(size);
 

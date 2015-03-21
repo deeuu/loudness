@@ -160,10 +160,10 @@ namespace loudness{
                 //Extract components from band and compute powers
                 Real re, im;
                 int bin = bandBinIndices_[chn][0];
-                while(bin++ <= bandBinIndices_[chn][1])
+                while(bin <= bandBinIndices_[chn][1])
                 {
                     re = ffts_[fftIdx] -> getReal(bin);
-                    im = ffts_[fftIdx] -> getImag(bin);
+                    im = ffts_[fftIdx] -> getImag(bin++);
                     *outputSignal++ = normFactor_[chn] * (re*re + im*im);
                 }
             }
