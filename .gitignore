@@ -1,4 +1,7 @@
 *~
 *.swp
 *.swo
+*.pyc
+*.so
+*.o
 Excluded
