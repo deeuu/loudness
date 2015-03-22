@@ -178,9 +178,15 @@ namespace loudness{
         }
     }
    
-    const RealVec &SignalBank::getCentreFreqs() const
+    const RealVec& SignalBank::getCentreFreqs() const
     {
         return centreFreqs_;
+    }
+
+    const Real* SignalBank::getCentreFreqsReadPointer(int channel) const
+    {
+        LOUDNESS_ASSERT(isPositiveAndLessThanUpper(channel, nChannels_));
+        return &centreFreqs_[channel];
     }
 
     int SignalBank::getFs() const

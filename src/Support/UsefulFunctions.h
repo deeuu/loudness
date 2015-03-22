@@ -21,6 +21,7 @@
 #define  USEFULFUNCTIONS_H
 
 #include <math.h>
+#include <vector>
 #define PI 3.14159265358979323846264338327
 #define LOW_LIMIT_POWER 1e-10
 #define LOW_LIMIT_DB -100
@@ -48,8 +49,8 @@ namespace loudness{
         return value>=0 && value<upper;
     }
 
-    template <typename Type>
-    bool anyAscendingValues(const Type* data, int length)
+    template <typename Type, typename Type2>
+    bool anyAscendingValues(const Type* data, Type2 length)
     {
         bool ascending = false;
         while(length-- > 1 && !ascending)

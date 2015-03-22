@@ -21,20 +21,6 @@ INCS=-I.
 
 SOURCES=../src/cnpy/cnpy.cpp \
 ../src/Support/SignalBank.cpp \
-../src/Support/Module.cpp \
-../src/Support/FFT.cpp \
-../src/Support/Filter.cpp \
-../src/Modules/FIR.cpp \
-../src/Modules/IIR.cpp \
-../src/Modules/Butter.cpp \
-../src/Modules/FrameGenerator.cpp \
-../src/Modules/Window.cpp \
-../src/Modules/PowerSpectrum.cpp \
-../src/Modules/RoexBankANSIS3407.cpp \
-../src/Modules/FastRoexBank.cpp \
-../src/Modules/SpecificLoudnessGM.cpp \
-../src/Modules/IntegratedLoudnessGM.cpp \
-../src/Modules/CompressSpectrum.cpp
 
 OBJECTS=$(SOURCES:.cpp=.o)
 

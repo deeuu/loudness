@@ -279,7 +279,9 @@ namespace loudness{
          *
          * @return Vector of centre frequencies in Hz.
          */
-        const RealVec &getCentreFreqs() const;
+        const RealVec& getCentreFreqs() const;
+
+        const Real* getCentreFreqsReadPointer(int channel) const;
 
         /**
          * @brief Returns the sampling frequency.
