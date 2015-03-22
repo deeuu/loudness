@@ -20,10 +20,19 @@
 %module loudness
 %{
 #define SWIG_FILE_WITH_INIT
+#include "../src/cnpy/cnpy.h"
 #include "../src/Support/Debug.h"
 #include "../src/Support/UsefulFunctions.h"
 #include "../src/Support/Common.h"
 #include "../src/Support/SignalBank.h"
+#include "../src/Support/Module.h"
+#include "../src/Support/FFT.h"
+#include "../src/Support/Filter.h"
+#include "../src/Modules/FIR.h"
+#include "../src/Modules/IIR.h"
+#include "../src/Modules/Butter.h"
+#include "../src/Modules/FrameGenerator.h"
+#include "../src/Modules/Window.h"
 %}
 
 //Required for integration with numpy arrays
@@ -130,3 +139,17 @@ public:
     }
 };
 }
+
+%include "../src/cnpy/cnpy.h"
+%include "../src/Support/Debug.h"
+%include "../src/Support/UsefulFunctions.h"
+%include "../src/Support/Common.h"
+%include "../src/Support/SignalBank.h"
+%include "../src/Support/Module.h"
+%include "../src/Support/FFT.h"
+%include "../src/Support/Filter.h"
+%include "../src/Modules/FIR.h"
+%include "../src/Modules/IIR.h"
+%include "../src/Modules/Butter.h"
+%include "../src/Modules/FrameGenerator.h"
+%include "../src/Modules/Window.h"

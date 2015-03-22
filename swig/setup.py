@@ -19,7 +19,16 @@ if __name__ == "__main__":
             ext_modules=[Extension("_loudness",
             [
                 "loudness.i",
-                "../src/Support/SignalBank.cpp"
+                "../src/cnpy/cnpy.cpp",
+                "../src/Support/SignalBank.cpp",
+                "../src/Support/Module.cpp",
+                "../src/Support/FFT.cpp",
+                "../src/Support/Filter.cpp",
+                "../src/Modules/FIR.cpp",
+                "../src/Modules/IIR.cpp",
+                "../src/Modules/Butter.cpp",
+                "../src/Modules/FrameGenerator.cpp",
+                "../src/Modules/Window.cpp"
             ],
             include_dirs = [numpy_include, "/usr/include"],
             library_dirs=['/usr/lib', '/usr/local/lib'],

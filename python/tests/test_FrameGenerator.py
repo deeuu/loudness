@@ -31,8 +31,8 @@ frameIndex = 0
 for block in range(nBlocks):
     #Update input bank
     idx = block*bufSize
-    for ear in range(nEars):
-        [inputBank.setSample(ear,0,i, smp) for i, smp in enumerate(x[idx:idx + bufSize])]
+    inputBank.setSignal(0, 0, x[idx:idx+bufSize])
+    inputBank.setSignal(1, 0, x[idx:idx+bufSize])
 
     #process it
     frameGen.process(inputBank)
@@ -41,6 +41,7 @@ for block in range(nBlocks):
     if(outputBank.getTrig()):
         for ear in range(nEars):
             frames[ear, frameIndex, :] = [outputBank.getSample(ear,0,i) for i in range(frameSize)]
+        frames[:, frameIndex, :] = outputBank.getSignals().reshape((2, frameSize))
         frameIndex += 1
 
 #Check frames are correct
