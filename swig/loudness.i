@@ -33,6 +33,7 @@
 #include "../src/Modules/Butter.h"
 #include "../src/Modules/FrameGenerator.h"
 #include "../src/Modules/Window.h"
+#include "../src/Modules/PowerSpectrum.h"
 %}
 
 //Required for integration with numpy arrays
@@ -111,7 +112,7 @@ public:
         PyObject* getCentreFreqs()
         {
             const Real* ptr = $self -> getCentreFreqsReadPointer(0);
-            npy_intp dims[1] = {$self -> getNSamples()}; 
+            npy_intp dims[1] = {$self -> getNChannels()}; 
             return PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, (void*)ptr);
         }
 
@@ -153,3 +154,4 @@ public:
 %include "../src/Modules/Butter.h"
 %include "../src/Modules/FrameGenerator.h"
 %include "../src/Modules/Window.h"
+%include "../src/Modules/PowerSpectrum.h"

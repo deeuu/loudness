@@ -49,7 +49,7 @@ namespace loudness{
          *
          * @param windowSize Number of samples in the sliding window.
          */
-        Window(const string &windowType, const IntVec& length, bool periodic, bool alignOutput);
+        Window(const string &windowType, const IntVec& length, bool periodic);
         Window(const string &windowType, int length, bool periodic);
         Window();
         virtual ~Window();

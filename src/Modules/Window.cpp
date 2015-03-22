@@ -21,12 +21,11 @@
 
 namespace loudness{
 
-    Window::Window(const string &windowType, const IntVec &length, bool periodic, bool alignOutput) :
+    Window::Window(const string &windowType, const IntVec &length, bool periodic) :
         Module("Window"),
         windowType_(windowType),
         length_(length),
         periodic_(periodic),
-        alignOutput_(alignOutput),
         normalisation_("energy"),
         ref_(2e-5)
     {}
@@ -34,7 +33,6 @@ namespace loudness{
         Module("Window"),
         windowType_(windowType),
         periodic_(periodic),
-        alignOutput_(false),
         normalisation_("energy"),
         ref_(2e-5)
     {
