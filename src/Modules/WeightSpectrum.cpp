@@ -66,7 +66,7 @@ namespace loudness{
         for (int ear = 0; ear < input.getNChannels(); ear++)
         {
             const Real* inputSpectrum = input.getSingleSampleReadPointer(ear, 0);
-            Real* outputSpectrum = input.getSingleSampleWritePointer(ear, 0);
+            Real* outputSpectrum = output_.getSingleSampleWritePointer(ear, 0);
 
             for (int chn = 0; chn < input.getNChannels(); chn++)
                 outputSpectrum[chn] = inputSpectrum[chn] * weights_[chn];

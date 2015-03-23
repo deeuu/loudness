@@ -25,7 +25,6 @@
 #include "../Modules/IIR.h"
 #include "../Modules/Window.h"
 #include "../Modules/PowerSpectrum.h"
-#include "../Modules/GoertzelPS.h"
 #include "../Modules/CompressSpectrum.h"
 #include "../Modules/WeightSpectrum.h"
 #include "../Modules/FastRoexBank.h"
@@ -36,11 +35,11 @@
 
 namespace loudness{
 
-    DynamicLoudnessGM::DynamicLoudnessGM(string pathToFilterCoefs) :
+    DynamicLoudnessGM::DynamicLoudnessGM(const string& pathToFilterCoefs) :
         Model("DynamicLoudnessGM", true),
         pathToFilterCoefs_(pathToFilterCoefs)
     {
-        loadParameterSet(FASTER1);
+        loadParameterSet("RecentAndFaster");
     }
     
 
@@ -56,10 +55,7 @@ namespace loudness{
     {
         diffuseField_ = diffuseField;
     }
-    void DynamicLoudnessGM::setGoertzel(bool goertzel)
-    {
-        goertzel_ = goertzel;
-    }
+
     void DynamicLoudnessGM::setDiotic(bool diotic)
     {
         diotic_ = diotic;
@@ -97,33 +93,52 @@ namespace loudness{
     {
         ansiSpecificLoudness_ = ansiSpecificLoudness;
     }
+
+    void DynamicLoudnessGM::setSmoothingType(const string& smoothingType)
+    {
+
+        if ((smoothingType != "GM2002") && (smoothingType != "GM2003"))
+            smoothingType_ = "GM2002";
+        else
+            smoothingType_ = smoothingType;
+    }
     
-    void DynamicLoudnessGM::loadParameterSet(ParameterSet set)
+    void DynamicLoudnessGM::loadParameterSet(const string& setName)
     {
         //common to all
         setTimeStep(0.001);
         setHpf(true);
         setDiffuseField(false);
-        setGoertzel(false);
-        setDiotic(true);
         setUniform(true);
         setInterpRoexBank(false);
         setFilterSpacing(0.25);
         setCompressionCriterion(0.0);
         setFastBank(false);
         setAnsiSpecificLoudness(false);
+        setSmoothingType("GM2002");
 
-        switch(set){
-            case GM02:
-                break;
-            case FASTER1:
+        if (setName != "GM2002")
+        {
+            if (setName == "Faster")
+            {
                 setFastBank(true);
                 setInterpRoexBank(true);
                 setCompressionCriterion(0.3);
-                break;
-            default:
+            }
+            else if (setName == "Recent")
+            {
+                setSmoothingType("GM2003");
+                setAnsiSpecificLoudness(true);
+            }
+
+            else if (setName == "RecentAndFaster")
+            {
+                setSmoothingType("GM2003");
+                setAnsiSpecificLoudness(true);
                 setFastBank(true);
+                setInterpRoexBank(true);
                 setCompressionCriterion(0.3);
+            }
         }
     }
 
@@ -209,35 +224,21 @@ namespace loudness{
             windowSizeSamples[w] += windowSizeSamples[w]%2;
         }
         
-        //create module
-        if(goertzel_)
-        {
-            modules_.push_back(unique_ptr<Module> 
-                    (new GoertzelPS(bandFreqsHz, windowSizeSecs, timeStep_))); 
-        }
-        else{
-            //windowing
-            modules_.push_back(unique_ptr<Module>
-                    (new Window("hann", windowSizeSamples, true)));
-            //now power spectrum
-            modules_.push_back(unique_ptr<Module> 
-                    (new PowerSpectrum(bandFreqsHz, uniform_))); 
-        }
+        //windowing
+        modules_.push_back(unique_ptr<Module>
+                (new Window("hann", windowSizeSamples, true)));
+
+        //power spectrum
+        modules_.push_back(unique_ptr<Module> 
+                (new PowerSpectrum(bandFreqsHz, uniform_))); 
 
         /*
          * Compression
          */
         if(compressionCriterion_ > 0)
         {
-            if(goertzel_)
-            {
-                LOUDNESS_WARNING(name_ << ": Compression cannot be used with bank of Goertzels");
-            }
-            else
-            {
-                modules_.push_back(unique_ptr<Module>
-                        (new CompressSpectrum(compressionCriterion_))); 
-            }
+            modules_.push_back(unique_ptr<Module>
+                    (new CompressSpectrum(compressionCriterion_))); 
         }
 
         /*
@@ -280,8 +281,7 @@ namespace loudness{
         * Loudness integration 
         */   
         modules_.push_back(unique_ptr<Module> (new
-                    IntegratedLoudnessGM(IntegratedLoudnessGM::GM02, diotic_,
-                        1.0)));
+                    IntegratedLoudnessGM(smoothingType_, 1.0)));
 
         return 1;
     }

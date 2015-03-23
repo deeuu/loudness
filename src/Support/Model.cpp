@@ -34,8 +34,7 @@ namespace loudness{
     {
         if(!initializeInternal(input))
         {
-            LOUDNESS_ERROR(name_ <<
-                    ": Not initialised!");
+            LOUDNESS_ERROR(name_ << ": Not initialised!");
             return 0;
         }
         else
@@ -44,13 +43,15 @@ namespace loudness{
 
             //set up the chain
             nModules_ = (int)modules_.size();
-            for(int i=0; i<nModules_-1; i++)
-                modules_[i]->setTargetModule(modules_[i+1]);
+
+            for (int i = 0; i < nModules_ - 1; i++)
+                modules_[i] -> setTargetModule(*modules_[i + 1]);
+
             //initialise all
-            modules_[0]->initialize(input);
+            modules_[0] -> initialize(input);
 
             LOUDNESS_DEBUG(name_ 
-                    << ": Targets set and all modules initialised.");
+                    << ": Module targets set and initialised.");
 
             initialized_ = 1;
             return 1;
@@ -59,38 +60,28 @@ namespace loudness{
 
     void Model::process(const SignalBank &input)
     {
-        if(initialized_)
-            modules_[0]->process(input);
+        if (initialized_)
+            modules_[0] -> process(input);
         else
             LOUDNESS_WARNING(name_ << ": Not initialised!");
     }
 
     void Model::reset()
     {
-        modules_[0]->reset();
+        if (initialized_)
+            modules_[0] -> reset();
     }
 
-    const SignalBank* Model::getModuleOutput(int module) const
+    const SignalBank& Model::getModuleOutput(int module) const
     {
-        if (module<nModules_)
-            return modules_[module]->getOutput();
-        else
-            return 0;
+        LOUDNESS_ASSERT(isPositiveAndLessThanUpper(module, nModules_));
+        return modules_[module] -> getOutput();
     }
 
-    /*
-     * Decided not to return const ref because of bounds checking.
-     * Just return copy instead.
-     */
-    string Model::getModuleName(int module) const
+    const string& Model::getModuleName(int module) const
     {
-        if(module < (int)modules_.size())
+        if(isPositiveAndLessThanUpper(module, nModules_))
             return modules_[module] -> getName();
-        else
-        {
-            LOUDNESS_ERROR(name_ << ": index out of bounds.");
-            return "";
-        }
     }
 
     const string& Model::getName() const

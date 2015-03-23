@@ -31,10 +31,10 @@ namespace loudness{
      *
      * At present, there are two parameter sets available:
      *
-     * 1. GM02 - The specification used by Glasberg and Moore (2002).
-     * 2. FASTER1 - Uses a compressed spectrum with a fast roex filterbank.
+     * 1. GM2002 - The specification used by Glasberg and Moore (2002).
+     * 2. Faster - Uses a compressed spectrum with a fast roex filterbank.
      *
-     * The default is FASTER1.
+     * The default is Faster.
      *
      * Use loadParameterSet() to select the model parameters.
      *
@@ -75,11 +75,6 @@ namespace loudness{
     {
         public:
 
-            enum ParameterSet{
-                GM02 = 0 /**< Glasberg and Moore 2002. */,
-                FASTER1 = 1 /**< Compressed spectrum and fast roex filterbank. */
-            };
-
             /**
              * @brief Constructs a model with a path to the '.npy' file holding
              * the pre-cochlear filter coefficients.
@@ -87,18 +82,17 @@ namespace loudness{
              * If no path is given, the hybrid filter will
              * perform the outer and middle ear filtering.
              */
-            DynamicLoudnessGM(string pathToFilterCoefs = "");
+            DynamicLoudnessGM(const string& pathToFilterCoefs);
 
             virtual ~DynamicLoudnessGM();
 
             /**
              * @brief Loads a parameter set.
              */
-            void loadParameterSet(ParameterSet set);
+            void loadParameterSet(const string& setName);
 
             void setHpf(bool hpf);
             void setDiffuseField(bool diffuseField);
-            void setGoertzel(bool goertzel);
             void setDiotic(bool diotic);
             void setUniform(bool uniform);
             void setInterpRoexBank(bool interpRoexBank);
@@ -108,6 +102,7 @@ namespace loudness{
             void setPathToFilterCoefs(string pathToFilterCoefs);
             void setFastBank(bool fastBank);
             void setAnsiSpecificLoudness(bool ansiSpecificLoudness);
+            void setSmoothingType(const string& smoothingType);
 
         private:
             virtual bool initializeInternal(const SignalBank &input);
@@ -116,7 +111,7 @@ namespace loudness{
             Real filterSpacing_, compressionCriterion_;
             bool ansiBank_, fastBank_, interpRoexBank_, uniform_, diotic_, goertzel_;
             bool hpf_, diffuseField_, ansiSpecificLoudness_;
-            string pathToFilterCoefs_;
+            string pathToFilterCoefs_, smoothingType_;
     }; 
 }
 

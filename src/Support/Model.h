@@ -107,7 +107,7 @@ namespace loudness{
          *
          * @return SignalBank pointer.
          */
-        const SignalBank* getModuleOutput(int module) const;
+        const SignalBank& getModuleOutput(int module) const;
         
         /**
          * @brief Returns the number of initialised modules comprising the
@@ -132,7 +132,7 @@ namespace loudness{
          *
          * @param module Module index.
          */
-        string getModuleName(int module) const;
+        const string& getModuleName(int module) const;
         
         /**
          * @brief Returns the name of the model.
