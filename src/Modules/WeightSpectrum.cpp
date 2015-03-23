@@ -55,18 +55,22 @@ namespace loudness{
         output_.initialize(input);
 
         //convert to linear power units for weighting power spectrum
-        for(int i=0; i<output_.getNChannels(); i++)
-        {
-            weights_[i] = pow(10, weights_[i]/10.0);
-        }
+        for (int chn = 0; chn < output_.getNChannels(); chn++)
+            weights_[chn] = pow(10, weights_[chn]/10.0);
 
         return 1;
     }
 
     void WeightSpectrum::processInternal(const SignalBank &input)
     {
-        for(int i=0; i<input.getNChannels(); i++)
-            output_.setSample(i, 0, input.getSample(i,0)*weights_[i]);
+        for (int ear = 0; ear < input.getNChannels(); ear++)
+        {
+            const Real* inputSpectrum = input.getSingleSampleReadPointer(ear, 0);
+            Real* outputSpectrum = input.getSingleSampleWritePointer(ear, 0);
+
+            for (int chn = 0; chn < input.getNChannels(); chn++)
+                outputSpectrum[chn] = inputSpectrum[chn] * weights_[chn];
+        }
     }
 
     void WeightSpectrum::setWeights(const RealVec &weights)
@@ -76,4 +80,3 @@ namespace loudness{
 
     void WeightSpectrum::resetInternal(){};
 }
-
