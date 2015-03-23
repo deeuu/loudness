@@ -29,7 +29,8 @@ namespace loudness{
         fs_ = 0;
         trig_ = 0;
         initialized_ = false;
-        frameRate_ =0;
+        frameRate_ = 0;
+        channelSpacingInCams_ = 0;
     }
 
     SignalBank::~SignalBank() {}
@@ -93,6 +94,16 @@ namespace loudness{
     void SignalBank::setFrameRate(Real frameRate)
     {
         frameRate_ = frameRate;
+    }
+
+    void SignalBank::setChannelSpacingInCams(Real channelSpacingInCams)
+    {
+        channelSpacingInCams_ = channelSpacingInCams;
+    }
+
+    const Real SignalBank::getChannelSpacingInCams() const
+    {
+        return channelSpacingInCams_;
     }
 
     void SignalBank::setCentreFreqs(const RealVec &centreFreqs)

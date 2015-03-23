@@ -58,16 +58,19 @@ namespace loudness{
         void setReleaseTimeSTL(Real releaseTimeSTL);
         void setAttackTimeLTL(Real attackTimeLTL);
         void setReleaseTimeLTL(Real releaseTimeLTL);
+        Real getAttackTimeSTL() const;
+        Real getReleaseTimeSTL() const;
+        Real getAttackTimeLTL() const;
+        Real getReleaseTimeLTL() const;
 
     private:
         virtual bool initializeInternal(const SignalBank &input);
         virtual void processInternal(const SignalBank &input);
         virtual void resetInternal();
 
-        Real cParam_;
+        Real cParam_, timeStep_;
         Real attackTimeSTL_, releaseTimeSTL_, attackTimeLTL_, releaseTimeLTL_;
         Real attackSTLCoef_, releaseSTLCoef_, attackLTLCoef_, releaseLTLCoef_;
-        Real camStep_, timeStep_;
     };
 }
 #endif

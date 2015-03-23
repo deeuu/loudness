@@ -92,6 +92,9 @@ namespace loudness{
          */
         void setFrameRate(Real frameRate);
 
+        void setChannelSpacingInCams(Real channelSpacingInCams);
+        const Real getChannelSpacingInCams() const;
+
         /**
          * @brief Sets the centre frequencies of all channels in all ears.
          *
@@ -315,7 +318,7 @@ namespace loudness{
         int nEars_, nChannels_, nSamples_, nTotalSamples_;
         bool trig_, initialized_;
         int fs_;
-        Real frameRate_;
+        Real frameRate_, channelSpacingInCams_;
         RealVec signals_;
         RealVec centreFreqs_;
         IntVec effectiveSignalLengths_;

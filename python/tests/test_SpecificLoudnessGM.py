@@ -1,3 +1,5 @@
+import numpy as np
+import matplotlib.pyplot as plt
 import loudness as ln
 
 #centre frequencies to test

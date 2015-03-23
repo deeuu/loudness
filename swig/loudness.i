@@ -97,6 +97,9 @@ public:
     inline Real getCentreFreq(int channel) const;
     inline bool getTrig();
     inline void setTrig(bool trig);
+    void setFrameRate(Real frameRate);
+    void getFrameRate() const;
+    void setChannelSpacingInCams(Real channelSpacingInCams);
     %extend {
 
         PyObject* getSignal(int ear, int channel)

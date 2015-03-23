@@ -47,6 +47,7 @@ namespace loudness{
         //initialize output SignalBank
         output_.initialize(input.getNEars(), nFilters_, 1, input.getFs());
         output_.setFrameRate(input.getFrameRate());
+        output_.setChannelSpacingInCams(camStep_);
 
         const Real p51_1k = 4000 / freqToERB(1000.0);
 

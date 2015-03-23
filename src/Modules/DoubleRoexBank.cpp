@@ -41,6 +41,7 @@ namespace loudness{
         //initialize output SignalBank
         output_.initialize(nFilters_, 1, input.getFs());
         output_.setFrameRate(input.getFrameRate());
+        output_.setChannelSpacingInCams(camStep_);
 
         //filter variables
         wPassive_.resize(nFilters_);

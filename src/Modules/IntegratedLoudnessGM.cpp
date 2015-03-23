@@ -84,16 +84,36 @@ namespace loudness{
         releaseTimeLTL_ = releaseTimeLTL;
     }
 
+    Real IntegratedLoudnessGM::getAttackTimeSTL() const
+    {
+        return attackTimeSTL_;
+    }
+
+    Real IntegratedLoudnessGM::getReleaseTimeSTL() const
+    {
+        return releaseTimeSTL_;
+    }
+
+    Real IntegratedLoudnessGM::getAttackTimeLTL() const
+    {
+        return attackTimeLTL_;
+    }
+
+    Real IntegratedLoudnessGM::getReleaseTimeLTL() const
+    {
+        return releaseTimeLTL_;
+    }
+
     bool IntegratedLoudnessGM::initializeInternal(const SignalBank &input)
     {
-        LOUDNESS_ASSERT(input.getNChannels() > 1,
-                name_ << ": Insufficient number of input channels.");
-        LOUDNESS_ASSERT(input.getNEars() > 2,
-                name_ << ": A human has no more than two ears");
+        LOUDNESS_ASSERT(input.getNChannels() > 1, name_ << ": Insufficient number of input channels.");
+        LOUDNESS_ASSERT(isPositiveAndLessThanUpper(input.getNEars(), 3),
+                name_ << ": A human has no more than two ears.");
 
         //assumes uniformly spaced ERB filters
-        camStep_ = freqToCam(input.getCentreFreq(1)) - freqToCam(input.getCentreFreq(0));
-        LOUDNESS_DEBUG(name_ << ": Filter spacing (Cams): " << camStep_);
+        Real camStep = input.getChannelSpacingInCams(); 
+        LOUDNESS_ASSERT(camStep>0, name_ << ": Channel spacing (in Cam units) not set.");
+        LOUDNESS_DEBUG(name_ << ": Filter spacing (Cams): " << camStep);
 
         //if diotic presentation, multiply total loudness by 2
         if (input.getNEars() == 1)
@@ -103,7 +123,7 @@ namespace loudness{
         }
 
         //update scaling factor
-        cParam_ *= camStep_;
+        cParam_ *= camStep;
 
         //coefficient configuration
         timeStep_ = 1.0/input.getFrameRate();
@@ -115,8 +135,8 @@ namespace loudness{
         attackLTLCoef_ = 1 - exp(-timeStep_ / attackTimeLTL_);
         releaseLTLCoef_ = 1 - exp(-timeStep_ / releaseTimeLTL_);
 
-        //output SignalBank
-        output_.initialize(input.getNEars(), 3, 1, input.getFs());
+        //output SignalBank - back to 'one ear' for overall loudness
+        output_.initialize(1, 3, 1, input.getFs());
         output_.setFrameRate(input.getFrameRate());
 
         return 1;
@@ -124,42 +144,44 @@ namespace loudness{
 
     void IntegratedLoudnessGM::processInternal(const SignalBank &input)
     {       
+        //Sum specific loudness patterns over both ears
+        Real il = 0.0; //instantaneous loudness
         for (int ear = 0; ear < input.getNEars(); ear++)
         {
             const Real* inputSpecificLoudness = input.getSingleSampleReadPointer(ear, 0);
-            Real* outputIntegratedLoudness = output_.getSingleSampleWritePointer(ear, 0);
 
-            //instantaneous loudness
-            Real il = 0.0;
             for (int chn = 0; chn < input.getNChannels(); chn++)
                 il += inputSpecificLoudness[chn];
-
-            //apply scaling factor
-            il *= cParam_;
-
-            //short-term loudness
-            Real prevSTL = outputIntegratedLoudness[1];
-            Real stl = 0.0;
-
-            if (il > prevSTL)
-                stl = attackSTLCoef_ * (il - prevSTL) + prevSTL;
-            else
-                stl = releaseSTLCoef_ * (il - prevSTL) + prevSTL;
-
-            //long-term loudness
-            Real prevLTL = outputIntegratedLoudness[2];
-            Real ltl = 0.0;
-
-            if (stl > prevLTL)
-                ltl = attackLTLCoef_ * (stl - prevLTL) + prevLTL;
-            else
-                ltl = releaseLTLCoef_ * (stl - prevLTL) + prevLTL;
-            
-            //fill output SignalBank
-            outputIntegratedLoudness[0] = il;
-            outputIntegratedLoudness[1] = stl;
-            outputIntegratedLoudness[2] = ltl;
         }
+
+        //apply scaling factor
+        il *= cParam_;
+
+        //pointer to output
+        Real* outputIntegratedLoudness = output_.getSingleSampleWritePointer(0, 0);
+
+        //short-term loudness
+        Real prevSTL = outputIntegratedLoudness[1];
+        Real stl = 0.0;
+
+        if (il > prevSTL)
+            stl = attackSTLCoef_ * (il - prevSTL) + prevSTL;
+        else
+            stl = releaseSTLCoef_ * (il - prevSTL) + prevSTL;
+
+        //long-term loudness
+        Real prevLTL = outputIntegratedLoudness[2];
+        Real ltl = 0.0;
+
+        if (stl > prevLTL)
+            ltl = attackLTLCoef_ * (stl - prevLTL) + prevLTL;
+        else
+            ltl = releaseLTLCoef_ * (stl - prevLTL) + prevLTL;
+        
+        //fill output SignalBank
+        outputIntegratedLoudness[0] = il;
+        outputIntegratedLoudness[1] = stl;
+        outputIntegratedLoudness[2] = ltl;
     }
 
     //output SignalBanks are cleared so not to worry about filter state
@@ -167,4 +189,3 @@ namespace loudness{
     {
     }
 }
-
