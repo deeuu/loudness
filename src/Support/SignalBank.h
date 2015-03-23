@@ -105,7 +105,10 @@ namespace loudness{
          * @param channel Channel index.
          * @param freq The centre frequency (Hz).
          */
-        void setCentreFreq(int channel, Real freq);
+        inline void setCentreFreq(int channel, Real freq)
+        {
+            centreFreqs_[channel] = freq;
+        }
 
        /**
          * @brief Sets the value of an individual sample in a specified channel.
@@ -282,6 +285,7 @@ namespace loudness{
         const RealVec& getCentreFreqs() const;
 
         const Real* getCentreFreqsReadPointer(int channel) const;
+        Real* getCentreFreqsWritePointer(int channel);
 
         /**
          * @brief Returns the sampling frequency.

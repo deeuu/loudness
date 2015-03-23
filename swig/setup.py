@@ -20,6 +20,8 @@ if __name__ == "__main__":
             [
                 "loudness.i",
                 "../src/cnpy/cnpy.cpp",
+                "../src/Support/AuditoryTools.cpp",
+                "../src/Support/Spline.cpp",
                 "../src/Support/SignalBank.cpp",
                 "../src/Support/Module.cpp",
                 "../src/Support/FFT.cpp",
@@ -29,7 +31,11 @@ if __name__ == "__main__":
                 "../src/Modules/Butter.cpp",
                 "../src/Modules/FrameGenerator.cpp",
                 "../src/Modules/Window.cpp",
-                "../src/Modules/PowerSpectrum.cpp"
+                "../src/Modules/PowerSpectrum.cpp",
+                "../src/Modules/RoexBankANSIS3407.cpp",
+                "../src/Modules/FastRoexBank.cpp",
+                "../src/Modules/SpecificLoudnessGM.cpp",
+                "../src/Modules/IntegratedLoudnessGM.cpp"
             ],
             include_dirs = [numpy_include, "/usr/include"],
             library_dirs=['/usr/lib', '/usr/local/lib'],

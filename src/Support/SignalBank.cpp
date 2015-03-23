@@ -100,12 +100,6 @@ namespace loudness{
         centreFreqs_ = centreFreqs;
     }
 
-    void SignalBank::setCentreFreq(int channel, Real freq)
-    {
-        if (channel<nChannels_)
-           centreFreqs_[channel] = freq;
-    }
-
     void SignalBank::setEffectiveSignalLengths(const IntVec& effectiveSignalLengths)
     {
         LOUDNESS_ASSERT(nChannels_ == (int)effectiveSignalLengths.size());
@@ -184,6 +178,12 @@ namespace loudness{
     }
 
     const Real* SignalBank::getCentreFreqsReadPointer(int channel) const
+    {
+        LOUDNESS_ASSERT(isPositiveAndLessThanUpper(channel, nChannels_));
+        return &centreFreqs_[channel];
+    }
+
+    Real* SignalBank::getCentreFreqsWritePointer(int channel)
     {
         LOUDNESS_ASSERT(isPositiveAndLessThanUpper(channel, nChannels_));
         return &centreFreqs_[channel];

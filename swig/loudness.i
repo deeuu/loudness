@@ -22,8 +22,10 @@
 #define SWIG_FILE_WITH_INIT
 #include "../src/cnpy/cnpy.h"
 #include "../src/Support/Debug.h"
-#include "../src/Support/UsefulFunctions.h"
 #include "../src/Support/Common.h"
+#include "../src/Support/UsefulFunctions.h"
+#include "../src/Support/Spline.h"
+#include "../src/Support/AuditoryTools.h"
 #include "../src/Support/SignalBank.h"
 #include "../src/Support/Module.h"
 #include "../src/Support/FFT.h"
@@ -34,6 +36,10 @@
 #include "../src/Modules/FrameGenerator.h"
 #include "../src/Modules/Window.h"
 #include "../src/Modules/PowerSpectrum.h"
+#include "../src/Modules/RoexBankANSIS3407.h"
+#include "../src/Modules/FastRoexBank.h"
+#include "../src/Modules/SpecificLoudnessGM.h"
+#include "../src/Modules/IntegratedLoudnessGM.h"
 %}
 
 //Required for integration with numpy arrays
@@ -63,6 +69,7 @@ namespace std {
 using namespace std;
 
 %apply (double* IN_ARRAY1, int DIM1) {(Real* data, int nSamples)}; 
+%apply (double* IN_ARRAY1, int DIM1) {(Real* data, int nChannels)}; 
 %apply (double* IN_ARRAY3, int DIM1, int DIM2, int DIM3) {(Real* data, int nEars, int nChannels, int nSamples)};
 
 namespace loudness{
@@ -86,6 +93,8 @@ public:
     inline int getNTotalSamples();
     inline void setSample(int ear, int channel, int sample, Real value);
     inline Real getSample(int ear, int channel, int sample) const;
+    inline void setCentreFreq(int channel, Real freq);
+    inline Real getCentreFreq(int channel) const;
     inline bool getTrig();
     inline void setTrig(bool trig);
     %extend {
@@ -137,14 +146,23 @@ public:
                 ptr[i] = data[i];
         }
 
+        void setCentreFreqs(Real* data, int nChannels)
+        {
+            Real* ptr = $self -> getCentreFreqsWritePointer(0);
+            int nFreqsToCopy = loudness::min(nChannels, $self -> getNChannels());
+            for (int i = 0; i < nFreqsToCopy; i++)
+                ptr[i] = data[i];
+        }
     }
 };
 }
 
 %include "../src/cnpy/cnpy.h"
 %include "../src/Support/Debug.h"
-%include "../src/Support/UsefulFunctions.h"
 %include "../src/Support/Common.h"
+%include "../src/Support/UsefulFunctions.h"
+%include "../src/Support/Spline.h"
+%include "../src/Support/AuditoryTools.h"
 %include "../src/Support/SignalBank.h"
 %include "../src/Support/Module.h"
 %include "../src/Support/FFT.h"
@@ -155,3 +173,7 @@ public:
 %include "../src/Modules/FrameGenerator.h"
 %include "../src/Modules/Window.h"
 %include "../src/Modules/PowerSpectrum.h"
+%include "../src/Modules/RoexBankANSIS3407.h"
+%include "../src/Modules/FastRoexBank.h"
+%include "../src/Modules/SpecificLoudnessGM.h"
+%include "../src/Modules/IntegratedLoudnessGM.h"

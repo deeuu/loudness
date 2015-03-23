@@ -20,11 +20,11 @@ LIBS=-lfftw3 -lsndfile #-lrt
 INCS=-I.
 
 SOURCES=../src/cnpy/cnpy.cpp \
+../src/Support/AuditoryTools.cpp \
 ../src/Support/SignalBank.cpp \
 ../src/Support/Module.cpp \
 ../src/Support/Filter.cpp \
 ../src/Support/FFT.cpp \
-../src/Support/AuditoryTools.cpp \
 ../src/Support/Spline.cpp \
 ../src/Modules/FIR.cpp \
 ../src/Modules/IIR.cpp \
