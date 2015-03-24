@@ -56,6 +56,14 @@ def loudness1kHz(model, fs=32e3):
 
     return outputSones, relativeError
 
+def loudness3kHz(model, fs):
+
+def loudness100Hz(model, fs):
+
+def loudnessWhiteNoise(model, fs):
+
+
+
 if __name__ == '__main__':
 
     fs = 32000

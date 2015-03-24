@@ -27,10 +27,11 @@ namespace loudness{
     /**
      * @class SignalBank
      * 
-     * @brief A bank of signals used as inputs and outputs of processing modules.
+     * @brief An object to store a bank of signals used as inputs and outputs of processing modules.
      *
      * A SignalBank consists of a number of ears, each with the same number of
-     * signal channels. Every signal must have the same number of samples.
+     * signal channels and samples. Every signal must have the same number of samples. 
+     * The sample data is therefore store as a 3D array.
      * SignalBanks carry metadata, such as the sampling frequency and the centre
      * frequencies of the channels; this is useful for sharing information
      * between processing modules. After instantiating a SignalBank, it must be
@@ -38,7 +39,7 @@ namespace loudness{
      *
      * SignalBank triggers are used to instruct modules when to process their
      * data. A trigger must be true (default) for a module to process the
-     * SignalBank, otherwise the output is not updated. This is useful for
+     * SignalBank, otherwise the output will not updated. This is useful for
      * modules that process inputs at a rate lower than the host rate.
      * 
      * @author Dominic Ward
@@ -49,61 +50,46 @@ namespace loudness{
         SignalBank();
         ~SignalBank();
 
-        /**
-         * @brief Initialises the SignalBank with input arguments.
+        /** Initialises the SignalBank with input arguments.
          *
          * @param nEars Number of ears.
-         * @param n_channels Number of channels.
-         * @param n_samples Number of samples per channel.
+         * @param nChannels Number of channels.
+         * @param nSamples Number of samples per channel.
          * @param fs Sampling frequency.
          */
         void initialize(int nEars, int nChannels, int nSamples, int fs);
 
-        /**
-         * @brief Initialises the SignalBank with the same parameters as the 
-         * input.
-         *
-         * @param input The input SignalBank whose structure will be copied.
+        /** Initialises the SignalBank with the same parameters as the 
+         * input SignalBank. The signals are initialised with zeros - the data
+         * is not copied.
          */
         void initialize(const SignalBank &input);
 
-        /**
-         * @brief Clears the contents of SignalBank and sets trig to 1.
-         */
+        /**Clears the contents of SignalBank and sets trig to true.*/
         void clear();
 
-        /*
-         * setters
-         */
-
-        /**
-         * @brief Sets the sampling frequency of Signal.
-         *
-         * @param fs The sampling frequency in Hz.
-         */
+        /** Sets the sampling frequency.*/
         void setFs(int fs);
  
-        /**
-         * @brief Sets the frame rate of the Signal.
-         *
-         * Default is fs_ / nSamples_
-         *
-         * @param frameRate The frame rate.
+        /** Sets the frame rate of the Signal.
+         * The default is equal to the sampling frequency divided by the number
+         * of samples comprising each signal.
          */
         void setFrameRate(Real frameRate);
 
+        /** Sets the spacing between auditory channels in Cam units.
+         * This can be useful for modules operating on auditory filterbanks.
+         */
         void setChannelSpacingInCams(Real channelSpacingInCams);
-        const Real getChannelSpacingInCams() const;
 
-        /**
-         * @brief Sets the centre frequencies of all channels in all ears.
+        /** Sets the centre frequencies of all channels. The same frequencies
+         * are used for *all* ears.
          *
          * @param centreFreqs A vector of centre frequencies in Hz.
          */
         void setCentreFreqs(const RealVec &centreFreqs);
 
-        /**
-         * @brief Sets the centre frequency of a single channel.
+        /** Sets the centre frequency of a single channel.
          *
          * @param channel Channel index.
          * @param freq The centre frequency (Hz).
@@ -113,12 +99,13 @@ namespace loudness{
             centreFreqs_[channel] = freq;
         }
 
-       /**
-         * @brief Sets the value of an individual sample in a specified channel.
+       /** Sets the value of an individual sample in a specified ear and
+        * channel.
          *
+         * @param ear Ear index.
          * @param channel Channel index.
-         * @param index Sample index.
-         * @param sample Value of the sample.
+         * @param sample Sample index.
+         * @param value Value of the sample.
          */
 
         inline void setSample(int ear, int channel, int sample, Real value) 
@@ -129,27 +116,27 @@ namespace loudness{
             signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + sample] = value;
         }
 
-        /**
-         * @brief Fills a single signal at a given sample index with nSamples
-         * worth of samples taken from an input vector starting from
-         * readSampleIndex. The ear and channel must be specified, along with
-         * the number of samples to copy.
+        /** Fills one signal with nSamples of data pointed by source. 
+         * The ear, channel and sample index to write to must be specified,
+         * along with the number of samples to copy. Watch your bounds.
          */
         void copySignal(int ear, int channel, int writeSampleIndex, const Real* source, int nSamples);
 
-        /**
-         * @brief Fills the entire SignalBank with contents of another. Both the
-         * destination sample index and source sample index must be specified,
-         * along with the number of samples to copy.
+        /** Fills all signals of the current SignalBank with the contents
+         * of another. Both the destination sample index and source sample index
+         * must be specified, along with the number of samples to copy.
+         * Watch your bounds.
          */
         void copyAllSignals(int writeSampleIndex, const SignalBank& input, int readSampleIndex, int nSamples);
+        /** Fills all signals of the current SignalBank with the contents of
+         * another. Watch your bounds.
+         */
         void copyAllSignals(const SignalBank& input);
 
+        /** Pull all signals back by nSamples. */
         void pullBack(int nSamples);
-        /**
-         * @brief Sets the trigger state of the SignalBank.
-         *
-         * This function is mainly for use with PowerSpectrum.
+
+        /** Sets the trigger state of the SignalBank.
          *
          * @param true if active, false otherwise.
          */
@@ -158,21 +145,27 @@ namespace loudness{
             trig_ = trig;
         }
 
-        /** Sets the effective length of each channel signals, i.e.
-         * the number of non-zero samples in a given channel on average. This
-         * can be useful for some modules that process a subset of the total
-         * nSamples_ depending on the channel.  
+        /** Sets the effective lengths of the signals, i.e.
+         * the number of non-zero samples in each channel. This
+         * can be useful for modules that process a subset of the total
+         * nSamples_ in a channel dependent manner.
+         *
+         * @param effectiveSignalLengths A vector of effective signal lengths.
+         * Size must be nChannels_.
          */
         void setEffectiveSignalLengths(const IntVec& effectiveSignalLengths);
-        const vector<int>& getEffectiveSignalLengths() const;
 
         /*
          * Getters
          */
 
-        /**
-         * @brief Returns the trigger of the SignalBank.
-         *
+        /** Return a reference to a vector of effective signal lengths. */
+        const vector<int>& getEffectiveSignalLengths() const;
+
+        /** Returns the channel spacing in Cam units. */
+        const Real getChannelSpacingInCams() const;
+
+        /** Returns the trigger of the SignalBank.
          * @return true if active, false otherwise.
          */
         inline bool getTrig() const
@@ -180,36 +173,35 @@ namespace loudness{
             return trig_;
         }
 
+        /** Returns the number of ears in the SignalBank. */
         inline int getNEars() const
         {
             return nEars_;
         }
 
-        /**
-         * @brief Returns the number of channels in the SignalBank.
-         *
-         * @return Number of channels.
-         */
+        /** Returns the number of channels in the SignalBank. */
         inline int getNChannels() const
         {
             return nChannels_;
         }
 
-        /**
-         * @brief Returns the number of samples per channel.
-         *
-         * @return Number of samples.
-         */
+        /** Returns the number of samples per channel. */
         inline int getNSamples() const
         {
             return nSamples_;
         }
 
+        /** Returns the total number of samples held by the SignalBank.
+         * This value is equal to nEars * nChannels_ * nSamples_. 
+         */
         inline int getNTotalSamples() const
         {
             return nTotalSamples_;
         }
 
+        /** Get the value of a single sample in a given ear and channel. 
+         * watch your bounds.
+         */
         inline Real getSample(int ear, int channel, int sample) const
         {
              LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
@@ -218,6 +210,9 @@ namespace loudness{
             return signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + sample];
         }
 
+        /** Get a pointer to the first sample in the signal indexed by ear and
+         * channel. Use this for writing to the SignalBank. Watch your bounds.
+         */
         Real* getSignalWritePointer(int ear, int channel)
         {
             LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
@@ -225,6 +220,10 @@ namespace loudness{
             return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_];
         }
 
+        /** Get a pointer to the signal indexed by ear, channel and sample. Use
+         * this for writing to the SignalBank starting from a specific sample
+         * index. Watch your bounds.
+         */
         Real* getSignalWritePointer(int ear, int channel, int sample)
         {
              LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
@@ -233,20 +232,9 @@ namespace loudness{
             return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + sample];
         }
 
-        Real* getSingleSampleWritePointer(int ear, int channel)
-        {
-            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
-                     isPositiveAndLessThanUpper(channel, nChannels_));
-            return &signals_[ear * nChannels_ * nSamples_ + channel];
-        }
-        
-        const Real* getSingleSampleReadPointer(int ear, int channel) const
-        {
-            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
-                     isPositiveAndLessThanUpper(channel, nChannels_));
-            return &signals_[ear * nChannels_ * nSamples_ + channel];
-        }
-
+        /** Get a pointer to the first sample in the read-only signal indexed by ear and
+         * channel. Use this for reading samples only. Watch your bounds.
+         */
         const Real* getSignalReadPointer(int ear, int channel) const
         {
             LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
@@ -254,6 +242,10 @@ namespace loudness{
             return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_];
         }
 
+        /** Get a pointer to the read-only signal indexed by ear,
+         * channel and sample. Use this for reading samples of a signal from a
+         * specific sample index. Watch your bounds.
+         */
         const Real* getSignalReadPointer(int ear, int channel, int sample) const
         {
             LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
@@ -262,52 +254,70 @@ namespace loudness{
             return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + sample];
         }
 
+        /** Get a pointer to the first sample of a one sample read-only signal indexed
+         * by ear and channel. Incrementing this pointer will move you to the
+         * sample zero of the next channel in a given ear. This is often used by
+         * modules that process single frames of spectral data e.g. the
+         * SignalBank's output by PowerSpectrum. Watch your bounds.
+         */
+        Real* getSingleSampleWritePointer(int ear, int channel)
+        {
+            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
+                     isPositiveAndLessThanUpper(channel, nChannels_));
+            return &signals_[ear * nChannels_ * nSamples_ + channel];
+        }
+
+        /** Get a pointer to the first sample of a one sample signal indexed
+         * by ear and channel. Incrementing this pointer will move you to the
+         * sample zero of the next channel in a given ear. This is often used by
+         * modules that process single frames of spectral data e.g. the
+         * SignalBank's output by PowerSpectrum. Watch your bounds.
+         */
+        const Real* getSingleSampleReadPointer(int ear, int channel) const
+        {
+            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
+                     isPositiveAndLessThanUpper(channel, nChannels_));
+            return &signals_[ear * nChannels_ * nSamples_ + channel];
+        }
+
+        /** Returns a reference to all signals (as a flattened vector). */
         const RealVec& getSignals() const
         {
             return signals_;
         }
 
-        /**
-         * @brief Returns the centre frequency of a channel.
-         *
-         * @param channel Channel index.
-         *
-         * @return The centre frequency (Hz).
+        /** Returns the centre frequency in Hz of a specific channel. Watch your
+         * bounds.
          */
         inline Real getCentreFreq(int channel) const
         {
+            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(channel, nChannels_));
             return centreFreqs_[channel];
         }
 
-        /**
-         * @brief Returns a vector of centre frequencies corresponding to each
+        /** Returns a reference to a vector of centre frequencies corresponding to each
          * channel.
-         *
-         * @return Vector of centre frequencies in Hz.
          */
         const RealVec& getCentreFreqs() const;
 
+        /** Get a pointer to the read-only centre frequencies of all channels. */
         const Real* getCentreFreqsReadPointer(int channel) const;
+
+        /** Get a pointer to the centre frequency of a specific channel. Use
+         * this for modifying the centre frequencies via a pointer. 
+         */
         Real* getCentreFreqsWritePointer(int channel);
 
-        /**
-         * @brief Returns the sampling frequency.
-         *
-         * @return The sampling frequency in Hz.
-         */
+        /** Returns the sampling frequency in Hz. */
         int getFs() const;
 
-        /**
-         * @brief Returns the frame rate of the SignalBank.
+        /** Returns the frame rate in Hz.
          *
-         * Default is fs_ / nSamples_
-         *
-         * @return The frame rate (Hz).
+         * Default is fs_ / nSamples_ .
          */
         Real getFrameRate() const;
         
-        /**
-         * @brief Returns the state of the SignalBank.
+        /** Returns the state of the SignalBank.
          *
          * @return true if initialised, false otherwise.
          */

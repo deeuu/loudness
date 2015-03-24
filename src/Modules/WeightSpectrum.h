@@ -26,7 +26,7 @@
 namespace loudness{
 
     /**
-     * @class SignalBank
+     * @class WeightSpectrum
      * @brief Filters an input SignalBank by applying a set of weights.
      *
      * This algorithm scales an input SignalBank using the set of weights. The
