@@ -1,13 +1,13 @@
 import numpy as np
 import loudness as ln
 
-fs = 44100
+fs = 32000
 
 windowSizeSeconds = np.array([0.064, 0.032, 0.016, 0.008, 0.004, 0.002])
 windowSize = np.round(windowSizeSeconds * fs).astype('int')
 windowSize += windowSize%2 #Force even
 
-window = ln.Window("hann", windowSize, True, True)
+window = ln.Window("hann", windowSize, True)
 
 bank = ln.SignalBank()
 bank.initialize(2, 1, windowSize[0], fs)

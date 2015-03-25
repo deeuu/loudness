@@ -3,9 +3,8 @@ import numpy as np
 import loudness as ln
 
 #Audio loader
-fs = 32000
 hopSize = 32
-audio = ln.AudioFileCutter("../../wavs/tone1kHz40dBSPL.wav", hopSize)
+audio = ln.AudioFileCutter("../../wavs/pureTones/pureTone_1000Hz_40dBSPL_32000Hz.wav", hopSize)
 audio.initialize()
 audioBank = audio.getOutput()
 nFrames = audio.getNFrames()
@@ -13,7 +12,7 @@ nFrames = audio.getNFrames()
 #Create the loudness model
 model = ln.DynamicLoudnessCH()
 model.initialize(audioBank)
-loudnessBank = model.getModuleOutput(model.getNModules()-1)
+loudnessBank = model.getModuleOutput("IntegratedLoudnessGM")
 nChannels = loudnessBank.getNChannels()
 
 #storage

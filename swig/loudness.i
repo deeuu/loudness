@@ -111,17 +111,24 @@ public:
         {
             if (! loudness::isPositiveAndLessThanUpper(ear, $self -> getNEars()))
                 ear = 0;
-            if (! loudness::isPositiveAndLessThanUpper(channel, $self ->
-                getNChannels()))
+            if (! loudness::isPositiveAndLessThanUpper(channel, $self -> getNChannels()))
                 channel = 0;
-            const Real* ptr = $self -> getSignalReadPointer(ear, channel, 0);
+            const Real* ptr;
+            if (($self -> getNSamples()) == 1)
+                ptr = $self -> getSingleSampleReadPointer(ear, channel);
+            else
+                ptr = $self -> getSignalReadPointer(ear, channel, 0);
             npy_intp dims[1] = {$self -> getNSamples()}; 
             return PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, (void*)ptr);
         }
 
         PyObject* getSignals()
         {
-            const Real* ptr = $self -> getSignalReadPointer(0, 0, 0);
+            const Real* ptr;
+            if (($self -> getNSamples()) == 1)
+                ptr = $self -> getSingleSampleReadPointer(0, 0);
+            else
+                ptr = $self -> getSignalReadPointer(0, 0, 0);
             npy_intp dims[3] = {$self -> getNEars(), $self -> getNChannels(), $self -> getNSamples()}; 
             return PyArray_SimpleNewFromData(3, dims, NPY_DOUBLE, (void*)ptr);
         }
@@ -137,10 +144,13 @@ public:
         {
             if (! loudness::isPositiveAndLessThanUpper(ear, $self -> getNEars()))
                 ear = 0;
-            if (! loudness::isPositiveAndLessThanUpper(channel, $self ->
-                getNChannels()))
+            if (! loudness::isPositiveAndLessThanUpper(channel, $self -> getNChannels()))
                 channel = 0;
-            Real* ptr = $self -> getSignalWritePointer(ear, channel, 0);
+            Real* ptr;
+            if (($self -> getNSamples()) == 1)
+                ptr = $self -> getSingleSampleWritePointer(ear, channel);
+            else
+                ptr = $self -> getSignalWritePointer(ear, channel, 0);
             int nSamplesToCopy = loudness::min(nSamples, $self -> getNSamples());
             for (int i = 0; i < nSamplesToCopy; i++)
                 ptr[i] = data[i];
@@ -148,7 +158,11 @@ public:
 
         void setSignals(Real* data, int nEars, int nChannels, int nSamples)
         {  
-            Real* ptr = $self -> getSignalWritePointer(0, 0, 0);
+            Real* ptr;
+            if (($self -> getNSamples()) == 1)
+                ptr = $self -> getSingleSampleWritePointer(0, 0);
+            else
+                ptr = $self -> getSignalWritePointer(0, 0, 0);
             int nSamplesToCopy = loudness::min(nEars*nChannels*nSamples, $self -> getNTotalSamples());
             for (int i = 0; i < nSamplesToCopy; i++)
                 ptr[i] = data[i];

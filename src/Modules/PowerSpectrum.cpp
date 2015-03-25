@@ -21,9 +21,10 @@
 
 namespace loudness{
 
-    PowerSpectrum::PowerSpectrum(const RealVec& bandFreqsHz, bool uniform):
+    PowerSpectrum::PowerSpectrum(const RealVec& bandFreqsHz, const vector<int>& windowSizes, bool uniform):
         Module("PowerSpectrum"),
         bandFreqsHz_(bandFreqsHz),
+        windowSizes_(windowSizes),
         uniform_(uniform),
         normalisation_("averageEnergy")
     {}
@@ -35,22 +36,12 @@ namespace loudness{
     {
         
         //number of windows
-        int nWindows = input.getNChannels();
-
-        //If passed in by Window module, the window lengths are given here
-        windowSize_ = input.getEffectiveSignalLengths();
-
-        //Fix conditions where this module is used independently of Window.cpp
-        if((int)windowSize_.size() != nWindows)
-        {
-            windowSize_.assign(nWindows, input.getNSamples());
-            uniform_ = true;
-        }
-
-        //some checks
+        int nWindows = (int)windowSizes_.size();
+        LOUDNESS_ASSERT(input.getNChannels() == nWindows,
+                name_ << ": Number of channels do not match number of windows");
         LOUDNESS_ASSERT((int)bandFreqsHz_.size() == (nWindows + 1),
                 name_ << ": Number of frequency bands should equal number of input channels + 1.");
-        LOUDNESS_ASSERT(!anyAscendingValues(windowSize_),
+        LOUDNESS_ASSERT(!anyAscendingValues(windowSizes_),
                     name_ << ": Window lengths must be in descending order.");
 
         //work out FFT configuration (constrain to power of 2)
@@ -65,7 +56,7 @@ namespace loudness{
         {
             for(int w=0; w<nWindows; w++)
             {
-                fftSize[w] = nextPowerOfTwo(windowSize_[w]);
+                fftSize[w] = nextPowerOfTwo(windowSizes_[w]);
                 ffts_.push_back(unique_ptr<FFT> (new FFT(fftSize[w]))); 
                 ffts_[w] -> initialize();
             }
@@ -104,7 +95,7 @@ namespace loudness{
 
             //Power spectrum normalisation
             if(normalisation_ == "averageEnergy")
-                normFactor_[i] = 2.0/(fftSize[i] * windowSize_[i]);
+                normFactor_[i] = 2.0/(fftSize[i] * windowSizes_[i]);
             else
                 normFactor_[i] = 2.0/fftSize[i];
             LOUDNESS_DEBUG(name_ << ": Normalisation factor : " << normFactor_[i]);
@@ -143,8 +134,8 @@ namespace loudness{
     void PowerSpectrum::processInternal(const SignalBank &input)
     {
         int fftIdx = 0;
-        int nWindows = windowSize_.size();
-        for(int ear=0; ear<input.getNEars(); ear++)
+        int nWindows = windowSizes_.size();
+        for (int ear = 0; ear < input.getNEars(); ear++)
         {
             //get a single sample pointer for moving through channels
             Real* outputSignal = output_.getSingleSampleWritePointer(ear,0);
@@ -155,7 +146,7 @@ namespace loudness{
                     fftIdx = chn;
 
                 //Do the FFT
-                ffts_[fftIdx] -> process(input.getSignalReadPointer(ear, chn, 0), windowSize_[chn]);
+                ffts_[fftIdx] -> process(input.getSignalReadPointer(ear, chn, 0), windowSizes_[chn]);
 
                 //Extract components from band and compute powers
                 Real re, im;

@@ -149,7 +149,7 @@ namespace loudness{
 
         //power spectrum
         modules_.push_back(unique_ptr<Module> 
-                (new PowerSpectrum(bandFreqsHz, uniform_))); 
+                (new PowerSpectrum(bandFreqsHz, windowSizeSamples, uniform_))); 
 
         /*
          * Compression
@@ -166,9 +166,9 @@ namespace loudness{
         if(pathToFilterCoefs_.empty())
         {
              string middleEar = "CHEN_ETAL";
-            string outerEar = "ANSI_FREE";
+            string outerEar = "ANSI_FREEFIELD";
             if(diffuseField_)
-                outerEar = "ANSI_DIFFUSE";
+                outerEar = "ANSI_DIFFUSEFIELD";
 
             modules_.push_back(unique_ptr<Module> 
                     (new WeightSpectrum(middleEar, outerEar))); 

@@ -1,17 +1,19 @@
 import matplotlib.pylab as plt
 import numpy as np
 import loudness as ln
+import sys 
+sys.path.append('../tools/')
+from sound import Sound
 
 #Audio loader
-fs = 32000
 hopSize = 32
-audio = ln.AudioFileCutter("../../wavs/tone1kHz40dBSPL.wav", hopSize)
+audio = ln.AudioFileCutter("../../wavs/pureTones/pureTone_1000Hz_40dBSPL_32000Hz.wav", hopSize)
 audio.initialize()
 audioBank = audio.getOutput()
 nFrames = audio.getNFrames()
 
 #Create the loudness model
-#model = ln.DynamicLoudnessGM("../../filterCoefs/32000_IIR_23_freemid.npy")
+model = ln.DynamicLoudnessGM("../../filterCoefs/32000_IIR_23_freemid.npy")
 model = ln.DynamicLoudnessGM()
 model.initialize(audioBank)
 loudnessBank = model.getModuleOutput("IntegratedLoudnessGM")
@@ -22,8 +24,10 @@ out = np.zeros((nFrames, nChannels))
 
 #processing
 frame = 0
+i = 0
 while frame < nFrames:
     audio.process()
+    i += 1
     model.process(audioBank)
 
     if loudnessBank.getTrig():

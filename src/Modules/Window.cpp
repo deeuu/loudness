@@ -45,7 +45,6 @@ namespace loudness{
     Window::~Window()
     {
     }
-    
    
     bool Window::initializeInternal(const SignalBank &input)
     {
@@ -101,7 +100,6 @@ namespace loudness{
         //initialise the output signal
         output_.initialize(input.getNEars(), nOutputChannels, largestWindowSize_, input.getFs());
         output_.setFrameRate(input.getFrameRate());
-        output_.setEffectiveSignalLengths(length_);
 
         return 1;
     }

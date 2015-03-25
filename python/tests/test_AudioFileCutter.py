@@ -5,7 +5,7 @@ from audiolab import wavread
 
 #Audio loader
 fs = 32000
-frameSize = 23
+frameSize = 32
 fileToLoad = "../../wavs/tone1kHz40dBSPL.wav"
 audio = ln.AudioFileCutter(fileToLoad, frameSize)
 audio.initialize()
@@ -19,7 +19,6 @@ for frame in range(nFrames):
         out[ear, frame] = audioBank.getSignal(ear,0)
 
 x, fs, enc = wavread(fileToLoad)
-
 y = out.flatten()[0:x.size]
 
 if np.allclose(x, y):

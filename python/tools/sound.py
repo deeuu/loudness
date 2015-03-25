@@ -43,7 +43,7 @@ class Sound:
         self.filepath = file_path
 
     @staticmethod
-    def loadAudioFile(file_path, mono=True):
+    def readFromAudioFile(file_path, mono=True):
         '''
         Calls audiolab to generate Sound object from wav and aiff files.
         If mono is true, returns the left channel only.
@@ -97,7 +97,7 @@ class Sound:
     def getDuration(self):
         return self.nSamples / float(self.fs)
 
-    def writeAudioFile(self, file_path, enc='pcm16'):
+    def writeToAudioFile(self, file_path, enc='float32'):
         if ".wav" in file_path:
             wavwrite(self.data, file_path, self.fs, enc)
         elif ".aiff" in file_path:

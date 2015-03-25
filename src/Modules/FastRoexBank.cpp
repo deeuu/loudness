@@ -111,6 +111,7 @@ namespace loudness{
         if(interp_)
         {
             output_.initialize(input.getNEars(), 372, 1, input.getFs());
+            output_.setChannelSpacingInCams(0.1);
             for(int i=0; i<372; i++)
             {
                 output_.setCentreFreq(i, camToFreq(1.8 + i*0.1));
@@ -121,9 +122,9 @@ namespace loudness{
         else
         {
             output_.initialize(input.getNEars(), nFilters_, 1, input.getFs());
+            output_.setChannelSpacingInCams(camStep_);
         }
         output_.setFrameRate(input.getFrameRate());
-        output_.setChannelSpacingInCams(camStep_);
 
         //fill the above arrays and calculate roex filter response for upper skirt
         Real erb;
