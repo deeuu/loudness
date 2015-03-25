@@ -40,7 +40,8 @@ SOURCES=../src/cnpy/cnpy.cpp \
 ../src/Modules/FastRoexBank.cpp \
 ../src/Modules/SpecificLoudnessGM.cpp \
 ../src/Modules/IntegratedLoudnessGM.cpp \
-../src/Models/DynamicLoudnessGM.cpp
+../src/Models/DynamicLoudnessGM.cpp \
+../src/Models/DynamicLoudnessCH.cpp
 
 OBJECTS=$(SOURCES:.cpp=.o)
 

@@ -87,8 +87,13 @@ namespace loudness{
         int idx = std::find(moduleNames_.begin(), moduleNames_.end(), moduleName)
             - moduleNames_.begin();
 
-        LOUDNESS_ASSERT(isPositiveAndLessThanUpper(idx, nModules_));
-
+        if (!isPositiveAndLessThanUpper(idx, nModules_))
+        {
+            LOUDNESS_WARNING(name_ << ": Invalid Module name. Options are:");
+            for (int i = 0; i < nModules_; i++)
+                std::cerr << moduleNames_[i] << std::endl;
+            LOUDNESS_ASSERT(false);
+        }
         return modules_[idx] -> getOutput();
     }
 

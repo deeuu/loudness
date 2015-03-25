@@ -45,6 +45,7 @@
 #include "../src/Modules/SpecificLoudnessGM.h"
 #include "../src/Modules/IntegratedLoudnessGM.h"
 #include "../src/Models/DynamicLoudnessGM.h"
+#include "../src/Models/DynamicLoudnessCH.h"
 %}
 
 //Required for integration with numpy arrays
@@ -204,3 +205,4 @@ public:
 %include "../src/Modules/SpecificLoudnessGM.h"
 %include "../src/Modules/IntegratedLoudnessGM.h"
 %include "../src/Models/DynamicLoudnessGM.h"
+%include "../src/Models/DynamicLoudnessCH.h"

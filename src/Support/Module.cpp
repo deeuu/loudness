@@ -109,8 +109,6 @@ namespace loudness{
         return output_;
     }
 
-
-
     const std::string& Module::getName() const
     {
         return name_;
