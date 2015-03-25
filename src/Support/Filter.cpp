@@ -87,9 +87,9 @@ namespace loudness{
 
     void Filter::normaliseCoefs()
     {
-        if(aCoefs_.size()>0)
+        if (aCoefs_.size() > 0)
         {
-            if(aCoefs_[0]!=1.0)
+            if (aCoefs_[0] != 1)
             {
                 LOUDNESS_DEBUG("Filter: Normalising filter coeffients.");
                 for(int i=(int)bCoefs_.size()-1; i>-1; i--)
@@ -98,7 +98,7 @@ namespace loudness{
                     aCoefs_[i] /= aCoefs_[0];
             }
             else
-                LOUDNESS_WARNING("Filter: Coefficient a[0] == 0.");
+                LOUDNESS_DEBUG("Filter: Coefficient a[0] == 1, normalisation not required.");
         }
     }
 

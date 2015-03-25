@@ -41,8 +41,14 @@ namespace loudness{
     {
         loadParameterSet("RecentAndFaster");
     }
-    
 
+    DynamicLoudnessGM::DynamicLoudnessGM() :
+        Model("DynamicLoudnessGM", true),
+        pathToFilterCoefs_("")
+    {
+        loadParameterSet("RecentAndFaster");
+    }
+    
     DynamicLoudnessGM::~DynamicLoudnessGM()
     {
     }
@@ -124,13 +130,16 @@ namespace loudness{
                 setFastBank(true);
                 setInterpRoexBank(true);
                 setCompressionCriterion(0.3);
+                LOUDNESS_DEBUG(name_ << ": Using faster params for Glasberg and Moore's 2002 model.");
             }
             else if (setName == "Recent")
             {
                 setSmoothingType("GM2003");
                 setAnsiSpecificLoudness(true);
+                LOUDNESS_DEBUG(name_ << ": Using updated " <<
+                        "time-constants from 2003 paper and high-level specific " << 
+                        "loudness equation (2007)."); 
             }
-
             else if (setName == "RecentAndFaster")
             {
                 setSmoothingType("GM2003");
@@ -138,6 +147,13 @@ namespace loudness{
                 setFastBank(true);
                 setInterpRoexBank(true);
                 setCompressionCriterion(0.3);
+                LOUDNESS_DEBUG(name_ << ": Using faster params and " << 
+                        "updated time-constants from 2003 paper and " << 
+                        "high-level specific loudness equation (2007).");
+            }
+            else
+            {
+                LOUDNESS_DEBUG(name_ << ": Using original params from Glasberg and Moore 2002.");
             }
         }
     }
@@ -161,8 +177,8 @@ namespace loudness{
             //should we use for HPF for low freqs? default is true
             if(hpf_)
             {
-                LOUDNESS_DEBUG(name_ << ": Using HPF.");
                 modules_.push_back(unique_ptr<Module> (new Butter(3, 0, 50.0))); 
+                LOUDNESS_DEBUG(name_ << ": Using HPF.");
             }
         }
         else { //otherwise, load them
@@ -198,17 +214,6 @@ namespace loudness{
         }
 
         /*
-         * Frame generator for spectrogram
-         */
-        int windowSize = round(0.064*input.getFs());
-        if(!goertzel_)
-        {
-            int hopSize = round(timeStep_*input.getFs());
-            modules_.push_back(unique_ptr<Module> 
-                    (new FrameGenerator(windowSize, hopSize, false)));
-        }
-
-        /*
          * Multi-resolution spectrogram
          */
         RealVec bandFreqsHz {10, 80, 500, 1250, 2540, 4050, 15001};
@@ -218,13 +223,18 @@ namespace loudness{
         vector<int> windowSizeSamples(6,0);
         //round to nearest sample and force to be even such that centre samples
         //are aligned.
-        for(int w=0; w<6; w++)
+        for (int w = 0; w < 6; w++)
         {
             windowSizeSamples[w] = (int)round(windowSizeSecs[w] * input.getFs());
             windowSizeSamples[w] += windowSizeSamples[w]%2;
         }
-        
-        //windowing
+
+        //Frame generator
+        int hopSize = round(timeStep_ * input.getFs());
+        modules_.push_back(unique_ptr<Module> 
+                (new FrameGenerator(windowSizeSamples[0], hopSize, true)));
+
+        //windowing: Periodic hann window
         modules_.push_back(unique_ptr<Module>
                 (new Window("hann", windowSizeSamples, true)));
 
@@ -285,6 +295,5 @@ namespace loudness{
 
         return 1;
     }
-
 }
 

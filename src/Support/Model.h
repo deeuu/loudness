@@ -100,14 +100,15 @@ namespace loudness{
          */
         bool isDynamicModel() const;
 
-        /**
-         * @brief Returns a pointer to the output SignalBank of @a module.
-         *
-         * @param module Module index.
-         *
-         * @return SignalBank pointer.
+        /** Returns a reference to the output SignalBank of a module specified
+         * by it's index.
          */
         const SignalBank& getModuleOutput(int module) const;
+
+        /** Returns a reference to the output SignalBank of a module specified
+         * by it's name.
+         */
+        const SignalBank& getModuleOutput(const string& moduleName) const;
         
         /**
          * @brief Returns the number of initialised modules comprising the
@@ -147,6 +148,7 @@ namespace loudness{
         int nModules_;
         Real timeStep_ = 0;
         vector<unique_ptr<Module>> modules_;
+        vector<string> moduleNames_;
     };
 }
 

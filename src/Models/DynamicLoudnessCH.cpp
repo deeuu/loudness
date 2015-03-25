@@ -24,7 +24,6 @@
 #include "../Modules/IIR.h"
 #include "../Modules/Window.h"
 #include "../Modules/PowerSpectrum.h"
-#include "../Modules/GoertzelPS.h"
 #include "../Modules/CompressSpectrum.h"
 #include "../Modules/WeightSpectrum.h"
 #include "../Modules/DoubleRoexBank.h"
@@ -48,10 +47,7 @@ namespace loudness{
     {
         diffuseField_ = diffuseField;
     }
-    void DynamicLoudnessCH::setGoertzel(bool goertzel)
-    {
-        goertzel_ = goertzel;
-    }
+
     void DynamicLoudnessCH::setDiotic(bool diotic)
     {
         diotic_ = diotic;
@@ -75,7 +71,6 @@ namespace loudness{
         //common to all
         setTimeStep(0.001);
         setDiffuseField(false);
-        setGoertzel(false);
         setDiotic(true);
         setUniform(true);
         setFilterSpacing(0.1);
@@ -128,17 +123,6 @@ namespace loudness{
         }
 
         /*
-         * Frame generator for spectrogram
-         */
-        int windowSize = round(0.128*input.getFs());
-        if(!goertzel_)
-        {
-            int hopSize = round(timeStep_*input.getFs());
-            modules_.push_back(unique_ptr<Module> 
-                    (new FrameGenerator(windowSize, hopSize, false)));
-        }
-
-        /*
          * Multi-resolution spectrogram
          */
         RealVec bandFreqsHz {10, 80, 500, 1250, 2540, 4050, 16001};
@@ -154,35 +138,26 @@ namespace loudness{
             windowSizeSamples[w] += windowSizeSamples[w]%2;
         }
         
-        //create module
-        if(goertzel_)
-        {
-            modules_.push_back(unique_ptr<Module> 
-                    (new GoertzelPS(bandFreqsHz, windowSizeSecs, timeStep_))); 
-        }
-        else{
-            //configure windowing
-            modules_.push_back(unique_ptr<Module>
-                    (new Window("hann", windowSizeSamples, true)));
-            //power spectrum
-            modules_.push_back(unique_ptr<Module> 
-                    (new PowerSpectrum(bandFreqsHz, uniform_))); 
-        }
+        //Frame generator
+        int hopSize = round(timeStep_ * input.getFs());
+        modules_.push_back(unique_ptr<Module> 
+                (new FrameGenerator(windowSizeSamples[0], hopSize, false)));
+        
+        //configure windowing: Periodic hann window
+        modules_.push_back(unique_ptr<Module>
+                (new Window("hann", windowSizeSamples, true)));
+
+        //power spectrum
+        modules_.push_back(unique_ptr<Module> 
+                (new PowerSpectrum(bandFreqsHz, uniform_))); 
 
         /*
          * Compression
          */
         if(compressionCriterion_ > 0)
         {
-            if(goertzel_)
-            {
-                LOUDNESS_WARNING(name_ << ": Compression cannot be used with bank of Goertzels");
-            }
-            else
-            {
-                modules_.push_back(unique_ptr<Module>
-                        (new CompressSpectrum(compressionCriterion_))); 
-            }
+            modules_.push_back(unique_ptr<Module>
+                    (new CompressSpectrum(compressionCriterion_))); 
         }
 
         /*

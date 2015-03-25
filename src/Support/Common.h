@@ -23,6 +23,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <algorithm>
 #include "Debug.h"
 #include "UsefulFunctions.h"
 

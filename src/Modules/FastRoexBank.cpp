@@ -156,6 +156,7 @@ namespace loudness{
             const Real* inputPowerSpectrum = input.getSingleSampleReadPointer(ear, 0);
             Real* outputExcitationPattern = output_.getSingleSampleWritePointer(ear, 0);
 
+
             Real runningSum = 0.0;
             int j = 0;
             int k = rectBinIndices_[0][0];

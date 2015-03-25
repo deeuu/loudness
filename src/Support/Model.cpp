@@ -44,8 +44,12 @@ namespace loudness{
             //set up the chain
             nModules_ = (int)modules_.size();
 
-            for (int i = 0; i < nModules_ - 1; i++)
-                modules_[i] -> setTargetModule(*modules_[i + 1]);
+            for (int i = 0; i < nModules_; i++)
+            {
+                if (i < (nModules_ - 1))
+                    modules_[i] -> setTargetModule(*modules_[i + 1]);
+                moduleNames_.push_back(modules_[i] -> getName());
+            }
 
             //initialise all
             modules_[0] -> initialize(input);
@@ -78,10 +82,20 @@ namespace loudness{
         return modules_[module] -> getOutput();
     }
 
+    const SignalBank& Model::getModuleOutput(const string& moduleName) const
+    {
+        int idx = std::find(moduleNames_.begin(), moduleNames_.end(), moduleName)
+            - moduleNames_.begin();
+
+        LOUDNESS_ASSERT(isPositiveAndLessThanUpper(idx, nModules_));
+
+        return modules_[idx] -> getOutput();
+    }
+
     const string& Model::getModuleName(int module) const
     {
-        if(isPositiveAndLessThanUpper(module, nModules_))
-            return modules_[module] -> getName();
+        LOUDNESS_ASSERT(isPositiveAndLessThanUpper(module, nModules_));
+        return moduleNames_[module];
     }
 
     const string& Model::getName() const

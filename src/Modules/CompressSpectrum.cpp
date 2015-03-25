@@ -24,7 +24,7 @@
 namespace loudness{
 
     CompressSpectrum::CompressSpectrum(Real alpha) : 
-        Module("AudioFileCutter"),
+        Module("CompressSpectrum"),
         alpha_(alpha)
     {}
 
@@ -32,11 +32,7 @@ namespace loudness{
 
     bool CompressSpectrum::initializeInternal(const SignalBank &input)
     {
-        if(input.getNChannels()<2)
-        {
-            LOUDNESS_ERROR("CompressSpectrum: Insufficient number of channels.");
-            return 0;
-        }
+        LOUDNESS_ASSERT(input.getNChannels() > 1, name_ << ": Insufficient number of channels.");
 
         /*
          * This code is sloppy due to along time spent figuring how 

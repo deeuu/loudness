@@ -70,7 +70,6 @@ namespace loudness{
         {
             output_.setTrig(true);
             processInternal(input);
-            LOUDNESS_DEBUG(name_ << " Trig: " << output_.getTrig());
         }
         else
             output_.setTrig(false);

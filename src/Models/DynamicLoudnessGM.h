@@ -83,6 +83,7 @@ namespace loudness{
              * perform the outer and middle ear filtering.
              */
             DynamicLoudnessGM(const string& pathToFilterCoefs);
+            DynamicLoudnessGM();
 
             virtual ~DynamicLoudnessGM();
 

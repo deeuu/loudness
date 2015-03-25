@@ -72,6 +72,7 @@ namespace loudness{
             trig_ = input.getTrig();
             initialized_ = true;
             centreFreqs_ = input.getCentreFreqs();
+            channelSpacingInCams_ = input.getChannelSpacingInCams();
             signals_.assign(input.getNTotalSamples(), 0.0);
         }
         else

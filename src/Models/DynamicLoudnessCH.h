@@ -85,7 +85,6 @@ namespace loudness{
              */
             void loadParameterSet(ParameterSet set);
             void setDiffuseField(bool diffuseField);
-            void setGoertzel(bool goertzel);
             void setDiotic(bool diotic);
             void setUniform(bool uniform);
             void setFilterSpacing(Real filterSpacing);
@@ -97,7 +96,7 @@ namespace loudness{
             string pathToFilterCoefs_;
             int outerEarType_;
             Real filterSpacing_, compressionCriterion_;
-            bool uniform_, diotic_, goertzel_, diffuseField_;
+            bool uniform_, diotic_, diffuseField_;
     }; 
 }
 
