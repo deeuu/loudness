@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
     if modelToEvaluate == "glasbergAndMoore2002":
         model = ln.DynamicLoudnessGM("../../filterCoefs/32000_FIR_4096_freemid.npy")
-        model.loadParameterSet(0)
+        model.loadParameterSet("GM2002")
         model.setAnsiSpecificLoudness(True)
     elif modelToEvaluate == "steadyLoudnessANSIS3407":
         model = ln.SteadyLoudnessANSIS3407()
