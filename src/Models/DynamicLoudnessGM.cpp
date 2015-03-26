@@ -52,6 +52,11 @@ namespace loudness{
     DynamicLoudnessGM::~DynamicLoudnessGM()
     {
     }
+
+    void DynamicLoudnessGM::setStartAtWindowCentre(bool startAtWindowCentre)
+    {
+        startAtWindowCentre_ = startAtWindowCentre;
+    }
     
     void DynamicLoudnessGM::setHpf(bool hpf)
     {
@@ -62,10 +67,6 @@ namespace loudness{
         diffuseField_ = diffuseField;
     }
 
-    void DynamicLoudnessGM::setDiotic(bool diotic)
-    {
-        diotic_ = diotic;
-    }
     void DynamicLoudnessGM::setUniform(bool uniform)
     {
         uniform_ = uniform;
@@ -122,6 +123,7 @@ namespace loudness{
         setFastBank(false);
         setAnsiSpecificLoudness(false);
         setSmoothingType("GM2002");
+        setStartAtWindowCentre(true);
 
         if (setName != "GM2002")
         {
@@ -232,7 +234,7 @@ namespace loudness{
         //Frame generator
         int hopSize = round(timeStep_ * input.getFs());
         modules_.push_back(unique_ptr<Module> 
-                (new FrameGenerator(windowSizeSamples[0], hopSize, true)));
+                (new FrameGenerator(windowSizeSamples[0], hopSize, startAtWindowCentre_)));
 
         //windowing: Periodic hann window
         modules_.push_back(unique_ptr<Module>

@@ -50,7 +50,7 @@ namespace loudness{
          * @param frameSize Number of samples in the frame.
          * @param hopSize Number of samples to hop forward.
          */
-        FrameGenerator(int frameSize = 1024, int hopSize = 512, bool startAtZero=false);
+        FrameGenerator(int frameSize = 1024, int hopSize = 512, bool startAtWindowCentre = false);
         virtual ~FrameGenerator();
 
         /**
@@ -64,9 +64,10 @@ namespace loudness{
         int getHopSize() const;
 
         /**
-         * @brief Returns the startAtZero state.
+         * @brief Returns true if the data begins at the centre of the analysis
+         * window.
          */
-        bool getStartAtZero() const;
+        bool getStartAtWindowCentre() const;
 
     private:
 
@@ -76,7 +77,7 @@ namespace loudness{
 
         int frameSize_, hopSize_, audioBufferSize_, inputBufferSize_;
         int writeIdx_, overlap_, remainingSamples_;
-        bool startAtZero_;
+        bool startAtWindowCentre_;
         SignalBank audioBufferBank_;
     };
 }

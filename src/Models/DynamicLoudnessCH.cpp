@@ -32,12 +32,19 @@
 
 namespace loudness{
 
-    DynamicLoudnessCH::DynamicLoudnessCH(string pathToFilterCoefs) :
-        Model("DynamicLoudnessCH", true)
+    DynamicLoudnessCH::DynamicLoudnessCH(const string& pathToFilterCoefs) :
+        Model("DynamicLoudnessCH", true),
+        pathToFilterCoefs_(pathToFilterCoefs)
     {
-        loadParameterSet(FASTER1);
+        loadParameterSet("Faster");
     }
-    
+
+    DynamicLoudnessCH::DynamicLoudnessCH() :
+        Model("DynamicLoudnessCH", true),
+        pathToFilterCoefs_("")
+    {
+        loadParameterSet("Faster");
+    }
 
     DynamicLoudnessCH::~DynamicLoudnessCH()
     {
@@ -48,10 +55,11 @@ namespace loudness{
         diffuseField_ = diffuseField;
     }
 
-    void DynamicLoudnessCH::setDiotic(bool diotic)
+    void DynamicLoudnessCH::setStartAtWindowCentre(bool startAtWindowCentre)
     {
-        diotic_ = diotic;
+        startAtWindowCentre_ = startAtWindowCentre;
     }
+
     void DynamicLoudnessCH::setUniform(bool uniform)
     {
         uniform_ = uniform;
@@ -61,28 +69,31 @@ namespace loudness{
     {
         filterSpacing_ = filterSpacing;
     }
+
     void DynamicLoudnessCH::setCompressionCriterion(Real compressionCriterion)
     {
         compressionCriterion_ = compressionCriterion;
     }
 
-    void DynamicLoudnessCH::loadParameterSet(ParameterSet set)
+    void DynamicLoudnessCH::loadParameterSet(const string& setName)
     {
         //common to all
         setTimeStep(0.001);
         setDiffuseField(false);
-        setDiotic(true);
         setUniform(true);
         setFilterSpacing(0.1);
         setCompressionCriterion(0.0);
+        setStartAtWindowCentre(true);
 
-        switch(set){
-            case CH02:
-                break;
-            case FASTER1:
-                setFilterSpacing(0.25);
-                setCompressionCriterion(0.3);
-                break;
+        if (setName == "Faster")
+        {
+            setFilterSpacing(0.25);
+            setCompressionCriterion(0.3);
+            LOUDNESS_DEBUG(name_ << ": using a filter spacing of 0.25 Cams"
+                   << " with 0.3 Cam spectral compression criterion.");
+        }
+        else{
+            LOUDNESS_DEBUG(name_ << "Using Settings from Chen and Hu 2012 paper.");
         }
     }
 
@@ -141,7 +152,7 @@ namespace loudness{
         //Frame generator
         int hopSize = round(timeStep_ * input.getFs());
         modules_.push_back(unique_ptr<Module> 
-                (new FrameGenerator(windowSizeSamples[0], hopSize, false)));
+                (new FrameGenerator(windowSizeSamples[0], hopSize, startAtWindowCentre_)));
         
         //configure windowing: Periodic hann window
         modules_.push_back(unique_ptr<Module>
@@ -188,4 +199,3 @@ namespace loudness{
         return 1;
     }
 }
-

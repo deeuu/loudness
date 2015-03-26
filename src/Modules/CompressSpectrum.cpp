@@ -163,6 +163,8 @@ namespace loudness{
         output_.initialize(input.getNEars(), cfs.size(), 1, input.getFs());
         output_.setCentreFreqs(cfs);
         output_.setFrameRate(input.getFrameRate());
+        LOUDNESS_DEBUG(name_ << ": Number of bins comprising the compressed spectrum: "
+                << output_.getNChannels());
 
         return 1;
     }

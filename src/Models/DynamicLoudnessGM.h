@@ -87,14 +87,12 @@ namespace loudness{
 
             virtual ~DynamicLoudnessGM();
 
-            /**
-             * @brief Loads a parameter set.
-             */
+            /** Loads a parameter set.*/
             void loadParameterSet(const string& setName);
 
+            void setStartAtWindowCentre(bool startAtWindowCentre);
             void setHpf(bool hpf);
             void setDiffuseField(bool diffuseField);
-            void setDiotic(bool diotic);
             void setUniform(bool uniform);
             void setInterpRoexBank(bool interpRoexBank);
             void setFilterSpacing(Real filterSpacing);
@@ -111,10 +109,9 @@ namespace loudness{
             int outerEarType_;
             Real filterSpacing_, compressionCriterion_;
             bool ansiBank_, fastBank_, interpRoexBank_, uniform_, diotic_, goertzel_;
-            bool hpf_, diffuseField_, ansiSpecificLoudness_;
+            bool hpf_, diffuseField_, ansiSpecificLoudness_, startAtWindowCentre_;
             string pathToFilterCoefs_, smoothingType_;
     }; 
 }
 
 #endif
-
