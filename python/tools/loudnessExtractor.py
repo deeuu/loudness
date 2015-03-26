@@ -8,6 +8,13 @@ class LoudnessExtractor:
     dynamic loudness model.
     The input model should be configured but not initialised. Model
     initialisation will take place internally.
+
+    Processing assumes that the analysis window is centred at time zero. If this
+    is not the case, then the frame times used for plotting and exporting data
+    will be incorrect. Use 'nSamplesToPadStart' (default 0) to correct for this
+    situation, e.g., pad the start of the input signal such that the first frame
+    is centred at time zero. Alternatively, you can offset the frame times in
+    seconds using 'frameTimeOffset' (default 0).
     '''
 
     def __init__(self, model, fs = 32000, nInputEars = 1):
@@ -20,13 +27,13 @@ class LoudnessExtractor:
         self.nInputEars = nInputEars
         self.timeStep = model.getTimeStep()
         self.hopSize = int(fs * self.timeStep)
-        self.sampleDelay = 0
+        self.frameTimeOffset = 0
         self.inputBuf = ln.SignalBank()
         self.inputBuf.initialize(self.nInputEars, 1, self.hopSize, self.fs)
         if not self.model.initialize(self.inputBuf):
             raise ValueError("Problem initialising the model!")
 
-        #Assume signal bank containing loudness is final module
+        #Assume (it should be) signal bank containing loudness is final module
         self.outputBank = self.model.getModelOutput()
         self.nChannels = self.outputBank.getNChannels()
         self.nOutputEars = self.outputBank.getNEars()
@@ -55,6 +62,8 @@ class LoudnessExtractor:
 
         #configure the number of output frames needed
         nOutputFrames = int(np.ceil(self.nSamples / float(self.hopSize)))
+        self.frameTimes = np.arange(nOutputFrames) * self.hopSize /\
+                float(self.fs) + self.frameTimeOffset
 
         #output loudness
         self.loudness = np.zeros((self.nOutputEars, nOutputFrames, self.nChannels))
@@ -96,14 +105,13 @@ class LoudnessExtractor:
     def plotLoudness(self):
         if self.processed:
             time = np.arange(self.nSamples) / float(self.fs)
-            frameTime = np.arange(self.loudness.shape[1]) * self.timeStep
             fig, (ax1, ax2) = plt.subplots(2, 1, sharex = True)
             for ear in range(self.nInputEars):
                 ax1.plot(time,\
                         self.inputSignal[ear, 0, self.nSamplesToPadStart:self.nSamplesToPadStart+self.nSamples])
             ax1.set_ylabel("Amplitude")
             for ear in range(self.nOutputEars):
-                ax2.plot(frameTime, self.loudness[ear])
+                ax2.plot(self.frameTimes, self.loudness[ear])
             ax2.set_ylabel("Loudness")
             ax2.set_xlabel("Time, seconds")
             plt.tight_layout()
@@ -137,12 +145,11 @@ class LoudnessExtractor:
         ''' Saves the loudness vectors to a csv file.
         If multiple ears, seperate csv files are written.'''
         if self.processed:
-            frameTime = np.arange(self.loudness.shape[1]) * self.timeStep
-            frameTime = frameTime.reshape((frameTime.size, 1))
+            frameTimes = self.frameTimes.reshape((self.frameTimes.size, 1))
             for ear in range(self.nOutputEars):
                 for chn in range(self.nChannels):
                     np.savetxt(filename+'_ear'+str(ear)+'.csv', \
-                            np.hstack((frameTime, self.loudness[ear])),\
+                            np.hstack((frameTimes, self.loudness[ear])),\
                             delimiter = ',')
 
     def saveGlobalLoudnessToCSVFile(self, filename):

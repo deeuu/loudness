@@ -1,5 +1,4 @@
-from numpy import *
-from numpy import max, round
+import numpy as np
 from scipy.signal import lfilter
 from audiolab import aiffread, wavread, wavwrite
 import matplotlib.pyplot as plt
@@ -20,12 +19,12 @@ TODO(dominic.ward@bcu.ac.uk):
 
 class Sound:
 
-    def __init__(self, data, fs, file_path=None):
+    def __init__(self, data, fs, filename=None):
         '''
         Default constructor. 
         Allows numpy arrays to be used as audio data.
         Samples are stored in data which is of shape (nSamples x nChannels).
-        file_path_ for loading and saving audio files.
+        filename_ for loading and saving audio files.
         '''
         sh = len(data.shape)
         if sh==1:
@@ -34,74 +33,75 @@ class Sound:
             if min(data.shape)>2:
                 raise ValueError("Only 1 and 2 channels supported")
             else:
-                self.data = data.reshape((max(data.shape), min(data.shape)))
+                self.data = data.reshape((np.max(data.shape), np.min(data.shape)))
         self.fs = fs;
         self.nSamples, self.nChannels = self.data.shape
-        if file_path:
-            self.file_path_ = file_path
-        self.ref = 1
-        self.filepath = file_path
+        if filename:
+            self.filename_ = filename
+        self.ref = 1.0
+        self.filepath = filename
 
     @staticmethod
-    def readFromAudioFile(file_path, mono=True):
+    def readFromAudioFile(filename, mono=True):
         '''
         Calls audiolab to generate Sound object from wav and aiff files.
         If mono is true, returns the left channel only.
         '''
-        if ".wav" in file_path:
-            data,fs,enc= wavread(file_path)
-        elif ".aiff" in file_path:
-            data,fs,enc= aiffread(file_path)
+        if ".wav" in filename:
+            data,fs,enc = wavread(filename)
+        elif ".aiff" in filename:
+            data,fs,enc = aiffread(filename)
         else: 
             raise ValueError("File extension not .wav or .aiff")
         if (len(data.shape)==2 and mono):
-            return Sound(data[:,0],fs,file_path)
+            return Sound(data[:,0],fs,filename)
         else:
-            return Sound(data,fs,file_path)
+            return Sound(data,fs,filename)
 
     @staticmethod
-    def tone(freq=[440], phase=[0], dur=0.1, fs=48e3):
+    def tone(freq = 440, phase = 0, dur = 0.1, fs = 48e3):
         '''
         Generate a sinusoid with specified frequency, phase, duration and sampling frequency.
-        Length of arguments must be 1 or 2 and matching.
+        'freq' and 'phase' can be lists holding up to two values.
         '''
-        t = arange(0, dur,1.0/fs)
+        time = np.arange(0, dur, 1.0/fs)
         if not isinstance(freq, list):
             freq = [freq]
         if not isinstance(phase, list):
             phase = [phase]
         if len(freq)>2:
             raise ValueError("Only 1 and 2 channels supported")
-        if len(freq)!=len(phase):
-            raise TypeError("arguments freq and phase do not have same length")
+        if len(freq) > len(phase):
+            phase = phase * len(freq)
             
-        data = zeros((t.size, len(freq)))
+        data = np.zeros((time.size, len(freq)))
         for chn, f in enumerate(freq):
-            data[:, chn]= sin(2*pi*freq[chn]*t+phase[chn])
+            data[:, chn]= np.sin(2 * np.pi * freq[chn] * time + phase[chn])
+
         return Sound(data, fs)
 
     @staticmethod
-    def whiteNoise(dur=0.1, fs=48e3, channels=1):
+    def whiteNoise(dur = 0.1, fs = 48e3, channels = 1):
         '''
         Generate a whitenoise with specified duration.
-        For two channels of noise set channels=2.
+        For two channels of noise set channels = 2.
         Noise is peak normalised according to max |value| in either channel.
         '''
         if channels!=1 and channels!=2:
             raise ValueError("Only 1 and 2 channels supported")
-        dur    = dur*fs
-        data   = random.randn(round(dur), channels)
-        data   = data/max(abs(data))
+        dur    = int(np.round(dur*fs))
+        data   = np.random.randn(dur, channels)
+        data   = data/np.max(np.abs(data))
         return Sound(data,fs)
 
     def getDuration(self):
         return self.nSamples / float(self.fs)
 
-    def writeToAudioFile(self, file_path, enc='float32'):
-        if ".wav" in file_path:
-            wavwrite(self.data, file_path, self.fs, enc)
-        elif ".aiff" in file_path:
-            aiffwrite(self.data, file_path, self.fs, enc)
+    def writeToAudioFile(self, filename, enc='float32'):
+        if ".wav" in filename:
+            wavwrite(self.data, filename, self.fs, enc)
+        elif ".aiff" in filename:
+            aiffwrite(self.data, filename, self.fs, enc)
         else: 
             raise TypeError("File extension not .wav or .aiff")
 
@@ -112,9 +112,9 @@ class Sound:
         If 'RMS', data is normalised by computing the rms acrodd both channels.
         '''
         gain_db = 0
-        if norm_type is 'PEAK':
+        if norm_type in ['PEAK', 'peak', 'pk']:
             gain_db = target_db - self.computePeak(start, end)
-        elif norm_type is 'RMS':
+        elif norm_type in ['RMS', 'rms']:
             gain_db = target_db - self.computeRMS(start, end)
         gain_lin = 10**(gain_db/20.0)
         self.data *= gain_lin
@@ -125,7 +125,7 @@ class Sound:
         from the specified sample index start to end.
         Value in decibels relative to the reference value.
         '''
-        return 20*log10(max(abs(self.data[start:end]))/self.ref)
+        return 20*np.log10(np.max(np.abs(self.data[start:end]))/self.ref)
     
     def computeRMS(self,start=0, end=None):
         '''
@@ -133,7 +133,7 @@ class Sound:
         from the specified sample index start to end.
         Value in decibels relative to the reference value.
         '''
-        rms = 10*log10((mean(self.data[start:end,:].flatten()**2,0))/\
+        rms = 10*np.log10((np.mean(self.data[start:end,:].flatten()**2,0))/\
                 self.ref**2)
         return rms
 
@@ -142,7 +142,7 @@ class Sound:
         Return the crest factor (peak-rms) of the data across both channels (if two)
         from the specified sample index start to end.
         '''
-        return self.computePeak(start,end)-self.computeRMS(start, end)
+        return self.computePeak(start,end) - self.computeRMS(start, end)
     
     def applyGain(self, gain_db, start=0, end=None):
         '''
@@ -155,24 +155,29 @@ class Sound:
         '''
         Apply a cosine ramp of a specified duration to the onset and offset of the data.
         '''
-        d = round(dur*self.fs)
-        theta = pi*0.5*(arange(d)/float(d))
-        nSamplesmiddle = self.nSamples - 2*d
+        d = np.round(dur*self.fs)
+        theta = np.pi * 0.5 * np.arange(d) / float(d)
+        nSamplesmiddle = self.nSamples - 2 * d
         if nSamplesmiddle<0:
             print "Duration too large"
         else:
-            self.data *= concatenate((cos(theta+pi*1.5), ones(nSamplesmiddle),cos(theta))).reshape((self.nSamples,1))
+            self.data *= np.concatenate((\
+                np.cos(theta + np.pi * 1.5),\
+                np.ones(nSamplesmiddle),\
+                np.cos(theta))).reshape((self.nSamples,1))
 
-    def modulateAmplitude(self, freq=1, phase=0, min_val=0, max_val=1, linear= True):
+    def modulateAmplitude(self, freq=1, phase=0, minVal=0, maxVal=1, linear= True):
         '''
         Multiplies the data with a sinusoid.
         Modulation can be linear (default) or logarithmic.
         '''
-        min_val = min(max_val, min_val)
-        amp = (max_val-min_val)*0.5
-        offset = min_val+amp
+        minVal = np.min(maxVal, minVal)
+        amp = (maxVal-minVal)*0.5
+        offset = minVal+amp
         
-        mod = offset+amp*sin(phase + 2*pi*freq*arange(self.nSamples)/self.fs).reshape((self.nSamples, 1))
+        mod = offset + amp *\
+            np.sin(phase + 2*np.pi*freq*np.arange(self.nSamples)/\
+                    self.fs).reshape((self.nSamples, 1))
         if linear:
             self.data *= mod
         else:
@@ -193,16 +198,16 @@ class Sound:
         Pad the data with zeros.
         '''
         if end:
-            self.data = vstack((self.data, zeros((samps, self.nChannels))))
+            self.data = np.vstack((self.data, zeros((samps, self.nChannels))))
         else:
-            self.data = vstack((zeros((samps, self.nChannels)), self.data))
+            self.data = np.vstack((np.zeros((samps, self.nChannels)), self.data))
         self.nSamples, self.nChannels = self.data.shape
 
     def stackSound(self, sound):
         '''
         Stack another sounds data after this sounds data.
         '''
-        self.data = vstack((self.data, sound.data))
+        self.data = np.vstack((self.data, sound.data))
         self.nSamples, self.nChannels = self.data.shape
 
     def plot(self):
@@ -210,7 +215,7 @@ class Sound:
         Plot the data as amplitude vs time.
         '''
         for chn in xrange(self.nChannels):
-            plt.plot(arange(self.nSamples, dtype='float32')/self.fs, self.data[:,chn])
+            plt.plot(np.arange(self.nSamples)/float(self.fs), self.data[:,chn])
         plt.xlabel("Time, s")
         plt.ylabel("Amplitude, linear")
 
