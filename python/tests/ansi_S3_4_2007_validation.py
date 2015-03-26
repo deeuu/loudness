@@ -18,7 +18,7 @@ def loudnessOfPureTone(model, fs = 32e3, levels = 40, freq = 1000, dBSPL = True)
 
     #For dynamic models, we use LoudnessExtractor
     if(model.isDynamicModel()):
-        extractor = LoudnessExtractor(model)
+        extractor = LoudnessExtractor(model, fs, 1)
     else:
         #Configure input spectrum for single pure tone
         buf = ln.SignalBank()
@@ -29,6 +29,7 @@ def loudnessOfPureTone(model, fs = 32e3, levels = 40, freq = 1000, dBSPL = True)
         outputBank = model.getModelOutput()
 
     #output loudness - could be multiple channels but definitely single sample
+    #Global loudness -> one ear
     outputLoudness = np.zeros((levels.size, outputBank.getNChannels()))
 
     for i, level in enumerate(levels):
@@ -39,7 +40,8 @@ def loudnessOfPureTone(model, fs = 32e3, levels = 40, freq = 1000, dBSPL = True)
             tone.normalise(level, "RMS")
             tone.applyRamp(0.1) 
             extractor.process(tone.data[:,0])
-            outputLoudness[i] = extractor.computeGlobalLoudness(0.2,2.2,'MEAN')
+            outputLoudness[i] =\
+                extractor.computeGlobalLoudness(0.2,2.2,'MEAN')[0]
         else:
             buf.setSample(0, 0, 10**(level/10.0))
             model.process(buf)

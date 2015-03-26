@@ -35,13 +35,15 @@ class LoudnessExtractor:
         self.x = None
         self.processed = False
         self.loudness = None
+        self.globalLoudness = None
 
     def process(self, inputSignal):
         ''' Process the numpy array 'inputSignal' using a dynamic loudness
         model.  For stereo signals, the input signal must have two dimensions
         with shape (nSamples x 2).  For monophonic signals, the input signal can
-        be (nSamples x 1) or one dimensional.  
+        be 2D, i.e. (nSamples x 1), or one dimensional.  
         '''
+        #Input checks
         self.nSamples = inputSignal.shape[0]
         if inputSignal.ndim > 1:
             if self.nInputEars != inputSignal.shape[1]:
@@ -57,10 +59,11 @@ class LoudnessExtractor:
         #output loudness
         self.loudness = np.zeros((self.nOutputEars, nOutputFrames, self.nChannels))
 
-        #Format for SignalBank
+        #Format input for SignalBank
         self.inputSignal = inputSignal.reshape((self.nInputEars, 1, self.nSamples))
 
-        #Pad end so that we can obtain analysis over the last sample, 0.2ms is more than enough
+        '''Pad end so that we can obtain analysis over the last sample, 
+        No neat way to do this at the moment so assume 0.2ms is enough.'''
         self.inputSignal = np.concatenate((\
             np.zeros((self.nInputEars, 1, self.nSamplesToPadStart)), \
             self.inputSignal,\
@@ -71,8 +74,8 @@ class LoudnessExtractor:
         #One process call every hop samples
         while(outputFrame < nOutputFrames):
 
-            #Any overlap is generated c++ side, so just fill the input
-            #SignalBank with new blocks
+            '''Any overlap is generated c++ side, so just fill the input
+            SignalBank with new blocks'''
             startIdx = processingFrame*self.hopSize
             endIdx = startIdx + self.hopSize
             self.inputBuf.setSignals(self.inputSignal[:, :, startIdx:endIdx])
@@ -86,16 +89,15 @@ class LoudnessExtractor:
                 outputFrame += 1
             processingFrame += 1
 
-        #Full processing so clear internal states
+        #Processing complete so clear internal states
         self.model.reset()
-        #Processing flag
         self.processed = True
 
     def plotLoudness(self):
         if self.processed:
             time = np.arange(self.nSamples) / float(self.fs)
             frameTime = np.arange(self.loudness.shape[1]) * self.timeStep
-            fig, (ax1, ax2) = plt.subplots(2,1, sharex = True)
+            fig, (ax1, ax2) = plt.subplots(2, 1, sharex = True)
             for ear in range(self.nInputEars):
                 ax1.plot(time,\
                         self.inputSignal[ear, 0, self.nSamplesToPadStart:self.nSamplesToPadStart+self.nSamples])
@@ -120,13 +122,35 @@ class LoudnessExtractor:
             if end is not None:
                 end = int(np.round(endSeconds/self.timeStep)+1)
             if feature=='MEAN':
-                globalLoudness = np.mean(self.loudness[:,start:end], 1)
+                self.globalLoudness = np.mean(self.loudness[:,start:end], 1)
             elif feature=='MAX':
-                globalLoudness = np.max(self.loudness[:,start:end], 1)
+                self.globalLoudness = np.max(self.loudness[:,start:end], 1)
             elif feature=='N5':
-                globalLoudness = np.percentile(self.loudness[:,start:end],0.95, axis=1)
+                self.globalLoudness = np.percentile(self.loudness[:,start:end],0.95, axis=1)
             else:
-                globalLoudness = feature(self.loudness[:,start:end], axis=1)
+                self.globalLoudness = feature(self.loudness[:,start:end], axis=1)
             if inPhons:
-                globalLoudness = np.array([ln.soneToPhon(x,True) for x in globalLoudness])
-            return globalLoudness
+                self.globalLoudness = np.array([ln.soneToPhon(x,True) for x in globalLoudness])
+            return self.globalLoudness
+
+    def saveLoudnessToCSVFile(self, filename):
+        ''' Saves the loudness vectors to a csv file.
+        If multiple ears, seperate csv files are written.'''
+        if self.processed:
+            frameTime = np.arange(self.loudness.shape[1]) * self.timeStep
+            frameTime = frameTime.reshape((frameTime.size, 1))
+            for ear in range(self.nOutputEars):
+                for chn in range(self.nChannels):
+                    np.savetxt(filename+'_ear'+str(ear)+'.csv', \
+                            np.hstack((frameTime, self.loudness[ear])),\
+                            delimiter = ',')
+
+    def saveGlobalLoudnessToCSVFile(self, filename):
+        ''' Saves the computed global loudness to a csv file.
+        If multiple ears, seperate files are written. '''
+
+        if self.globalLoudness is not None:
+            for ear in range(self.nOutputEars):
+                np.savetxt(filename + '_ear' + str(ear) + '.csv',\
+                        self.globalLoudness,
+                        delimiter = ',')
