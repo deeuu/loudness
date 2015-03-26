@@ -43,13 +43,9 @@ namespace loudness{
     class IntegratedLoudnessGM : public Module
     {
     public:
-        enum SMOOTHTIMES{
-            GM02 = 0,
-            GM03 = 1,
-            CH12 = 2
-        };
  
         IntegratedLoudnessGM(const string& author, Real cParam);
+        IntegratedLoudnessGM(const string& author);
 
         virtual ~IntegratedLoudnessGM();
 

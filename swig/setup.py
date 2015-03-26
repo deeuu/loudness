@@ -42,7 +42,8 @@ if __name__ == "__main__":
                 "../src/Modules/SpecificLoudnessGM.cpp",
                 "../src/Modules/IntegratedLoudnessGM.cpp",
                 "../src/Models/DynamicLoudnessGM.cpp",
-                "../src/Models/DynamicLoudnessCH.cpp"
+                "../src/Models/DynamicLoudnessCH.cpp",
+                "../src/Models/SteadyLoudnessANSIS3407.cpp"
             ],
             include_dirs = [numpy_include, "/usr/include"],
             library_dirs=['/usr/lib', '/usr/local/lib'],

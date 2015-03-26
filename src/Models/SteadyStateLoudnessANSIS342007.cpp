@@ -21,12 +21,12 @@
 #include "../Modules/RoexBankANSIS3407.h"
 #include "../Modules/SpecificLoudnessGM.h"
 #include "../Modules/IntegratedLoudnessGM.h"
-#include "SteadyLoudnessANSIS3407.h"
+#include "SteadyStateLoudnessANSIS342007.h"
 
 namespace loudness{
 
-    SteadyLoudnessANSIS3407::SteadyLoudnessANSIS3407() :
-        Model("SteadyLoudnessANSIS3407", false)
+    SteadyStateLoudnessANSIS342007::SteadyStateLoudnessANSIS342007() :
+        Model("SteadyStateLoudnessANSIS342007", false)
     {
         //Default parameters
         setDiotic(true);
@@ -34,26 +34,26 @@ namespace loudness{
         setFilterSpacing(0.1);
     }
 
-    SteadyLoudnessANSIS3407::~SteadyLoudnessANSIS3407()
+    SteadyStateLoudnessANSIS342007::~SteadyStateLoudnessANSIS342007()
     {
     }
 
-    void SteadyLoudnessANSIS3407::setDiotic(bool diotic)
+    void SteadyStateLoudnessANSIS342007::setDiotic(bool diotic)
     {
         diotic_ = diotic;
     }
 
-    void SteadyLoudnessANSIS3407::setDiffuseField(bool diffuseField)
+    void SteadyStateLoudnessANSIS342007::setDiffuseField(bool diffuseField)
     {
         diffuseField_ = diffuseField;
     }
 
-    void SteadyLoudnessANSIS3407::setFilterSpacing(Real filterSpacing)
+    void SteadyStateLoudnessANSIS342007::setFilterSpacing(Real filterSpacing)
     {
         filterSpacing_ = filterSpacing;
     }
 
-    bool SteadyLoudnessANSIS3407::initializeInternal(const SignalBank &input)
+    bool SteadyStateLoudnessANSIS342007::initializeInternal(const SignalBank &input)
     {
 
         /*
@@ -83,7 +83,7 @@ namespace loudness{
         * Loudness integration 
         */   
         modules_.push_back(unique_ptr<Module>
-                (new IntegratedLoudnessGM("SteadyState"));
+                (new IntegratedLoudnessGM("SteadyState")));
 
         return 1;
     }

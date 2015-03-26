@@ -32,9 +32,6 @@ namespace loudness{
 
     bool FastRoexBank::initializeInternal(const SignalBank &input)
     {
-        LOUDNESS_ASSERT(input.getNChannels() > 1,
-                name_ << ": Insufficient number of input channels.");
-
         //Camstep limit is 0.1
         if(camStep_ <= 0.1)
             interp_ = false;

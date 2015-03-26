@@ -35,9 +35,6 @@ namespace loudness{
 
     bool RoexBankANSIS3407::initializeInternal(const SignalBank &input)
     {
-        LOUDNESS_ASSERT(input.getNChannels() > 1,
-                name_ << ": Insufficient number of input channels.");
-
         //number of input components
         int nChannels = input.getNChannels();
 

@@ -6,14 +6,14 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),'../'))
 from sound import Sound
 from loudnessExtractor import LoudnessExtractor
 
-def loudnessOfPureTone(model, fs = 32e3, levels = 40, freq = 1000, dBSPL = True):
+def pureToneLoudness(model, fs = 32e3, levels = 40, freq = 1000, dBSPL = True):
     '''
     Computes the loudness of a pure tone at a speified frequency and level. 
     If levels is a list, the loudness will be computed for each level.
     Model can be dynamic or steady-state.
     '''
 
-    if type(levels) is not list:
+    if type(levels) in [int, float]:
         levels = [levels]
 
     #For dynamic models, we use LoudnessExtractor
@@ -23,6 +23,7 @@ def loudnessOfPureTone(model, fs = 32e3, levels = 40, freq = 1000, dBSPL = True)
         #Configure input spectrum for single pure tone
         buf = ln.SignalBank()
         buf.initialize(1, 1, 1, fs)
+        buf.setCentreFreq(0, freq)
         #initialise model
         model.initialize(buf)
         #final output should be integrated loudness
@@ -30,7 +31,7 @@ def loudnessOfPureTone(model, fs = 32e3, levels = 40, freq = 1000, dBSPL = True)
 
     #output loudness - could be multiple channels but definitely single sample
     #Global loudness -> one ear
-    outputLoudness = np.zeros((levels.size, outputBank.getNChannels()))
+    outputLoudness = np.zeros((len(levels), outputBank.getNChannels()))
 
     for i, level in enumerate(levels):
         if(model.isDynamicModel()):
@@ -43,9 +44,9 @@ def loudnessOfPureTone(model, fs = 32e3, levels = 40, freq = 1000, dBSPL = True)
             outputLoudness[i] =\
                 extractor.computeGlobalLoudness(0.2,2.2,'MEAN')[0]
         else:
-            buf.setSample(0, 0, 10**(level/10.0))
+            buf.setSample(0, 0, 0, 10**(level/10.0))
             model.process(buf)
-            outputLoudness[i] = outputBank.getSample(0,0)
+            outputLoudness[i] = outputBank.getSample(0, 0, 0)
             #reset model state 
             model.reset()
         print "Input level (dB SPL):", level
@@ -56,16 +57,19 @@ def loudnessOfPureTone(model, fs = 32e3, levels = 40, freq = 1000, dBSPL = True)
 
 if __name__ == '__main__':
 
-    modelToEvaluate = "steadyLoudnessANSIS3407"
+    modelToEvaluate = "steadyStateLoudnessANSIS342007"
     fs = 32000
 
     if modelToEvaluate == "glasbergAndMoore2002":
         model = ln.DynamicLoudnessGM("../../filterCoefs/32000_FIR_4096_freemid.npy")
         model.loadParameterSet("GM2002")
         model.setAnsiSpecificLoudness(True)
-    elif modelToEvaluate == "steadyLoudnessANSIS3407":
+    elif modelToEvaluate == "steadyStateLoudnessANSIS342007":
         model = ln.SteadyLoudnessANSIS3407()
 
+    '''
+    Values to test
+    '''
     #Table 7
     phons = np.array([0,1,2,3,4,5,7.5])
     phons = np.append(phons, np.arange(10, 125, 5))
@@ -75,4 +79,12 @@ if __name__ == '__main__':
         4.166, 5.813, 8.102, 11.326, 15.980, 22.929, 33.216, 48.242, 70.362,
         103.274, 152.776, 227.855, 341.982])
 
-    loudnessToneTest(model, fs, phons, 1000);
+    #Pure tones Example 2
+    levels3kHz = [20, 40, 60, 80];
+
+    #Pure tones Example 4 
+    levels100Hz = [50]
+
+    pureToneLoudness(model, fs, phons, 1000);
+    pureToneLoudness(model, fs levels3kHz, 3000);
+    pureToneLoudness(model, fs levels100Hz, 100);

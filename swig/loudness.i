@@ -47,6 +47,7 @@
 #include "../src/Modules/IntegratedLoudnessGM.h"
 #include "../src/Models/DynamicLoudnessGM.h"
 #include "../src/Models/DynamicLoudnessCH.h"
+#include "../src/Models/SteadyStateLoudnessANSIS342007.h"
 %}
 
 //Required for integration with numpy arrays
@@ -110,3 +111,4 @@ using std::vector;
 %include "../src/Modules/IntegratedLoudnessGM.h"
 %include "../src/Models/DynamicLoudnessGM.h"
 %include "../src/Models/DynamicLoudnessCH.h"
+%include "../src/Models/SteadyStateLoudnessANSIS342007.h"
