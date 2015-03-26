@@ -109,6 +109,12 @@ namespace loudness{
          * by it's name.
          */
         const SignalBank& getModuleOutput(const string& moduleName) const;
+
+        /** Returns a reference to the output SignalBank of the final module
+         * used by the model. For most models, this will be the integrated
+         * loudness.
+         */
+        const SignalBank& getModelOutput() const;
         
         /**
          * @brief Returns the number of initialised modules comprising the

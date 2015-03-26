@@ -97,6 +97,12 @@ namespace loudness{
         return modules_[idx] -> getOutput();
     }
 
+    const SignalBank& Model::getModelOutput() const
+    {
+        LOUDNESS_ASSERT(initialized_);
+        return modules_[nModules_ - 1] -> getOutput();
+    }
+
     const string& Model::getModuleName(int module) const
     {
         LOUDNESS_ASSERT(isPositiveAndLessThanUpper(module, nModules_));

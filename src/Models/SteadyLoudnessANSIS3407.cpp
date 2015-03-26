@@ -60,9 +60,9 @@ namespace loudness{
          * Weighting filter
          */
         string middleEar = "ANSI";
-        string outerEar = "ANSI_FREE";
+        string outerEar = "ANSI_FREEFIELD";
         if(diffuseField_)
-            outerEar = "ANSI_DIFFUSE";
+            outerEar = "ANSI_DIFFUSEFIELD";
 
         modules_.push_back(unique_ptr<Module>
                 (new WeightSpectrum(middleEar, outerEar))); 
@@ -83,9 +83,8 @@ namespace loudness{
         * Loudness integration 
         */   
         modules_.push_back(unique_ptr<Module>
-                (new IntegratedLoudnessGM));
+                (new IntegratedLoudnessGM("SteadyState"));
 
         return 1;
     }
-
 }

@@ -3,61 +3,89 @@ import loudness as ln
 import matplotlib.pyplot as plt
 
 class LoudnessExtractor:
-    '''Convienience class for processing numpy arrays'''
+    '''Convienience class for processing numpy arrays.
+    This class can be used to extract the loudness of an input array using a
+    dynamic loudness model.
+    The input model should be configured but not initialised. Model
+    initialisation will take place internally.
+    '''
 
-    def __init__(self, model, fs=32000):
+    def __init__(self, model, fs = 32000, nInputEars = 1):
 
         if not model.isDynamicModel():
             raise ValueError("Model must be dynamic.")
 
         self.model = model
         self.fs = int(fs)
+        self.nInputEars = nInputEars
         self.timeStep = model.getTimeStep()
-        self.hopSize = int(fs*self.timeStep)
+        self.hopSize = int(fs * self.timeStep)
         self.sampleDelay = 0
         self.inputBuf = ln.SignalBank()
-        self.inputBuf.initialize(1, self.hopSize, self.fs)
+        self.inputBuf.initialize(self.nInputEars, 1, self.hopSize, self.fs)
         if not self.model.initialize(self.inputBuf):
             raise ValueError("Problem initialising the model!")
+
         #Assume signal bank containing loudness is final module
-        moduleIndex = None
-        if moduleIndex is None:
-            moduleIndex = self.model.getNModules()-1
-        self.outputBank = self.model.getModuleOutput(moduleIndex)
-        self.numChannels = self.outputBank.getNChannels()
-        self.numSamplesToPadStart = 0
-        self.numSamplesToPadEnd = int(0.2*self.fs)#see below
+        self.outputBank = self.model.getModelOutput()
+        self.nChannels = self.outputBank.getNChannels()
+        self.nOutputEars = self.outputBank.getNEars()
+        self.nSamplesToPadStart = 0
+        self.nSamplesToPadEnd = int(0.2*self.fs)#see below
         self.x = None
         self.processed = False
         self.loudness = None
 
-    def process(self, signal):
+    def process(self, inputSignal):
+        ''' Process the numpy array 'inputSignal' using a dynamic loudness
+        model.  For stereo signals, the input signal must have two dimensions
+        with shape (nSamples x 2).  For monophonic signals, the input signal can
+        be (nSamples x 1) or one dimensional.  
+        '''
+        self.nSamples = inputSignal.shape[0]
+        if inputSignal.ndim > 1:
+            if self.nInputEars != inputSignal.shape[1]:
+                raise ValueError("Input signal does not have " + str(self.nInputEars) \
+                    + " dimensions")
+        elif self.nInputEars > 1:
+            raise ValueError("Input should have " \
+                + str(self.nInputEars) + " columns");
 
-        numOutputFrames = int(np.ceil(signal.size/float(self.hopSize)))
-        self.loudness = np.zeros((self.numChannels, numOutputFrames))
-        outputFrame = 0
+        #configure the number of output frames needed
+        nOutputFrames = int(np.ceil(self.nSamples / float(self.hopSize)))
 
-        #FrameGenerator will place data in centre of the analysis window
-        #So only need to padd end, 0.2ms is more than enough
-        self.x = np.hstack((np.zeros(self.numSamplesToPadStart), signal,
-            np.zeros(self.numSamplesToPadEnd)))
-        self.signalSize = signal.size
+        #output loudness
+        self.loudness = np.zeros((self.nOutputEars, nOutputFrames, self.nChannels))
+
+        #Format for SignalBank
+        self.inputSignal = inputSignal.reshape((self.nInputEars, 1, self.nSamples))
+
+        #Pad end so that we can obtain analysis over the last sample, 0.2ms is more than enough
+        self.inputSignal = np.concatenate((\
+            np.zeros((self.nInputEars, 1, self.nSamplesToPadStart)), \
+            self.inputSignal,\
+            np.zeros((self.nInputEars, 1, self.nSamplesToPadEnd))), 2)
+
         processingFrame = 0
-
+        outputFrame = 0
         #One process call every hop samples
-        while(outputFrame < numOutputFrames):
-            #Overlap is generated c++ side, so just fill with new blocks
+        while(outputFrame < nOutputFrames):
+
+            #Any overlap is generated c++ side, so just fill the input
+            #SignalBank with new blocks
             startIdx = processingFrame*self.hopSize
             endIdx = startIdx + self.hopSize
-            self.inputBuf.setSignal(0, self.x[startIdx:endIdx])
+            self.inputBuf.setSignals(self.inputSignal[:, :, startIdx:endIdx])
+
+            #Process the input buffer
             self.model.process(self.inputBuf)
 
-            #get output if bank is ready
+            #get output if output buffer is ready
             if self.outputBank.getTrig():
-                for chn in range(self.numChannels):
-                    self.loudness[chn, outputFrame] = self.outputBank.getSample(chn, 0)
+                self.loudness[:,outputFrame,:] = self.outputBank.getSignals()[:,:,0]
                 outputFrame += 1
             processingFrame += 1
+
         #Full processing so clear internal states
         self.model.reset()
         #Processing flag
@@ -65,14 +93,16 @@ class LoudnessExtractor:
 
     def plotLoudness(self):
         if self.processed:
-            time = np.arange(self.signalSize) / float(self.fs)
+            time = np.arange(self.nSamples) / float(self.fs)
             frameTime = np.arange(self.loudness.shape[1]) * self.timeStep
             fig, (ax1, ax2) = plt.subplots(2,1, sharex = True)
-            ax1.plot(time,\
-                    self.x[self.numSamplesToPadStart:self.numSamplesToPadStart+self.signalSize])
-            ax1.set_ylabel("Amplitude, pa")
-            ax2.plot(frameTime, self.loudness.T)
-            ax2.set_ylabel("Loudness, sones")
+            for ear in range(self.nInputEars):
+                ax1.plot(time,\
+                        self.inputSignal[ear, 0, self.nSamplesToPadStart:self.nSamplesToPadStart+self.nSamples])
+            ax1.set_ylabel("Amplitude")
+            for ear in range(self.nOutputEars):
+                ax2.plot(frameTime, self.loudness[ear])
+            ax2.set_ylabel("Loudness")
             ax2.set_xlabel("Time, seconds")
             plt.tight_layout()
             plt.xlim(0, time[-1])

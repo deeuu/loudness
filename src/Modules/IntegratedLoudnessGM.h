@@ -71,6 +71,7 @@ namespace loudness{
         Real cParam_, timeStep_;
         Real attackTimeSTL_, releaseTimeSTL_, attackTimeLTL_, releaseTimeLTL_;
         Real attackSTLCoef_, releaseSTLCoef_, attackLTLCoef_, releaseLTLCoef_;
+        bool steadyState_;
     };
 }
 #endif

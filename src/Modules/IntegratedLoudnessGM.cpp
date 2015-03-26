@@ -26,37 +26,43 @@ namespace loudness{
         Module("IntegratedLoudnessGM"),
         cParam_(cParam)
     {
-        configureSmoothingTimes(author);
+        if(author == "SteadyState")
+            steadyState_ = true;
+        else
+            configureSmoothingTimes(author);
         LOUDNESS_DEBUG(name_ << ": Constructed.");
     }
 
     void IntegratedLoudnessGM::configureSmoothingTimes(const string& author)
     {
-        if (author == "GM2002")
+        if (!steadyState_)
         {
-            setAttackTimeSTL(-0.001/log(1-0.045));    
-            setReleaseTimeSTL(-0.001/log(1-0.02));
-            setAttackTimeLTL(-0.001/log(1-0.01));
-            setReleaseTimeLTL(-0.001/log(1-0.0005));
-        }
-        else if (author == "GM2003")
-        {
-            setAttackTimeSTL(-0.001/log(1-0.045));    
-            setReleaseTimeSTL(-0.001/log(1-0.02));
-            setAttackTimeLTL(-0.001/log(1-0.01));
-            setReleaseTimeLTL(-0.001/log(1-0.005));
-        }
-        else if (author == "CH2012")
-        {
-            setAttackTimeSTL(0.016);    
-            setReleaseTimeSTL(0.032);
-            setAttackTimeLTL(0.1);
-            setReleaseTimeLTL(2.0);
-        }
-        else
-        {
-            LOUDNESS_WARNING(name_ << ": Using smoothing times given by Glasberg and Moore (2002).");
-            configureSmoothingTimes("GM2002");
+            if (author == "GM2002")
+            {
+                setAttackTimeSTL(-0.001/log(1-0.045));    
+                setReleaseTimeSTL(-0.001/log(1-0.02));
+                setAttackTimeLTL(-0.001/log(1-0.01));
+                setReleaseTimeLTL(-0.001/log(1-0.0005));
+            }
+            else if (author == "GM2003")
+            {
+                setAttackTimeSTL(-0.001/log(1-0.045));    
+                setReleaseTimeSTL(-0.001/log(1-0.02));
+                setAttackTimeLTL(-0.001/log(1-0.01));
+                setReleaseTimeLTL(-0.001/log(1-0.005));
+            }
+            else if (author == "CH2012")
+            {
+                setAttackTimeSTL(0.016);    
+                setReleaseTimeSTL(0.032);
+                setAttackTimeLTL(0.1);
+                setReleaseTimeLTL(2.0);
+            }
+            else
+            {
+                LOUDNESS_WARNING(name_ << ": Using smoothing times given by Glasberg and Moore (2002).");
+                configureSmoothingTimes("GM2002");
+            }
         }
     }
 
@@ -125,19 +131,26 @@ namespace loudness{
         //update scaling factor
         cParam_ *= camStep;
 
-        //coefficient configuration
-        timeStep_ = 1.0/input.getFrameRate();
-        LOUDNESS_DEBUG(name_ << ": Time step: " << timeStep_);
-        
-        //short-term loudness time-constants (alpha from paper)
-        attackSTLCoef_ = 1 - exp(-timeStep_ / attackTimeSTL_);
-        releaseSTLCoef_ = 1 - exp(-timeStep_ / releaseTimeSTL_);
-        attackLTLCoef_ = 1 - exp(-timeStep_ / attackTimeLTL_);
-        releaseLTLCoef_ = 1 - exp(-timeStep_ / releaseTimeLTL_);
+        if (! steadyState_)
+        {
+            //coefficient configuration
+            timeStep_ = 1.0/input.getFrameRate();
+            LOUDNESS_DEBUG(name_ << ": Time step: " << timeStep_);
+            
+            //short-term loudness time-constants (alpha from paper)
+            attackSTLCoef_ = 1 - exp(-timeStep_ / attackTimeSTL_);
+            releaseSTLCoef_ = 1 - exp(-timeStep_ / releaseTimeSTL_);
+            attackLTLCoef_ = 1 - exp(-timeStep_ / attackTimeLTL_);
+            releaseLTLCoef_ = 1 - exp(-timeStep_ / releaseTimeLTL_);
 
-        //output SignalBank - back to 'one ear' for overall loudness
-        output_.initialize(1, 3, 1, input.getFs());
-        output_.setFrameRate(input.getFrameRate());
+            //output SignalBank - back to 'one ear' for overall loudness
+            output_.initialize(1, 3, 1, input.getFs());
+            output_.setFrameRate(input.getFrameRate());
+        }
+        else{
+            output_.initialize(1, 1, 1, input.getFs());
+            LOUDNESS_DEBUG(name_ << "No temporal integration applied to the instantaneous loudness.");
+        }
 
         return 1;
     }
@@ -157,31 +170,41 @@ namespace loudness{
         //apply scaling factor
         il *= cParam_;
 
-        //pointer to output
-        Real* outputIntegratedLoudness = output_.getSingleSampleWritePointer(0, 0);
 
-        //short-term loudness
-        Real prevSTL = outputIntegratedLoudness[1];
-        Real stl = 0.0;
-
-        if (il > prevSTL)
-            stl = attackSTLCoef_ * (il - prevSTL) + prevSTL;
+        if (steadyState_)
+        {
+            output_.setSample(0, 0, 0, il);
+        }
         else
-            stl = releaseSTLCoef_ * (il - prevSTL) + prevSTL;
+        {
 
-        //long-term loudness
-        Real prevLTL = outputIntegratedLoudness[2];
-        Real ltl = 0.0;
+            //pointer to output
+            Real* outputIntegratedLoudness = output_.getSingleSampleWritePointer(0, 0);
 
-        if (stl > prevLTL)
-            ltl = attackLTLCoef_ * (stl - prevLTL) + prevLTL;
-        else
-            ltl = releaseLTLCoef_ * (stl - prevLTL) + prevLTL;
-        
-        //fill output SignalBank
-        outputIntegratedLoudness[0] = il;
-        outputIntegratedLoudness[1] = stl;
-        outputIntegratedLoudness[2] = ltl;
+
+            //short-term loudness
+            Real prevSTL = outputIntegratedLoudness[1];
+            Real stl = 0.0;
+
+            if (il > prevSTL)
+                stl = attackSTLCoef_ * (il - prevSTL) + prevSTL;
+            else
+                stl = releaseSTLCoef_ * (il - prevSTL) + prevSTL;
+
+            //long-term loudness
+            Real prevLTL = outputIntegratedLoudness[2];
+            Real ltl = 0.0;
+
+            if (stl > prevLTL)
+                ltl = attackLTLCoef_ * (stl - prevLTL) + prevLTL;
+            else
+                ltl = releaseLTLCoef_ * (stl - prevLTL) + prevLTL;
+            
+            //fill output SignalBank
+            outputIntegratedLoudness[0] = il;
+            outputIntegratedLoudness[1] = stl;
+            outputIntegratedLoudness[2] = ltl;
+        }
     }
 
     //output SignalBanks are cleared so not to worry about filter state
