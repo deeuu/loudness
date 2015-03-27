@@ -23,7 +23,7 @@
 #include <iostream>
 #include <iomanip>
 
-#define DEBUG
+//#define DEBUG
 
 #if defined(DEBUG)
 #define LOUDNESS_DEBUG(msg) do {std::cerr << msg << std::endl;} while (false)

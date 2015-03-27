@@ -10,7 +10,7 @@ model.setRate(500)
 extractor = LoudnessExtractor(model, 32000, 1)
 
 signal = Sound.tone(1000, dur = 2.5, fs = 32e3)
-signal.ref = 2e-5
+signal.useDBSPL()
 signal.normalise(40, "RMS")
 signal.applyRamp(0.1)
 

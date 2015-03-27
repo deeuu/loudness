@@ -26,7 +26,7 @@ class LoudnessExtractor:
         self.nInputEars = nInputEars
         self.rate = model.getRate() #desired rate in Hz
         self.hopSize = int(round(fs / self.rate))
-        self.timeStep = self.fs / float(self.hopSize) #true time step
+        self.timeStep = float(self.hopSize) / fs
         self.inputBuf = ln.SignalBank()
         self.inputBuf.initialize(self.nInputEars, 1, self.hopSize, self.fs)
         if not self.model.initialize(self.inputBuf):

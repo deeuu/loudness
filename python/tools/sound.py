@@ -105,6 +105,16 @@ class Sound:
         else: 
             raise TypeError("File extension not .wav or .aiff")
 
+    def useDBSPL(self):
+        '''Sets the reference value used in dB computations to 2e-5.
+        '''
+        self.ref = 2e-5
+
+    def useDBFS(self):
+        '''Sets the reference value used in dB computations to 1.0.
+        '''
+        self.ref = 1.0
+
     def normalise(self, target_db = 0, norm_type = 'RMS', start=0, end=None):
         '''
         Peak or rms normalise the data to a target value in decibels.
