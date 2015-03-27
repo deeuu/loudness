@@ -18,7 +18,7 @@
  */
 
 #include "../Modules/WeightSpectrum.h"
-#include "../Modules/RoexBankANSIS3407.h"
+#include "../Modules/RoexBankANSIS342007.h"
 #include "../Modules/SpecificLoudnessGM.h"
 #include "../Modules/IntegratedLoudnessGM.h"
 #include "SteadyStateLoudnessANSIS342007.h"
@@ -71,7 +71,7 @@ namespace loudness{
          * Roex filters
          */
         modules_.push_back(unique_ptr<Module>
-                (new RoexBankANSIS3407(1.8, 38.9, filterSpacing_)));
+                (new RoexBankANSIS342007(1.8, 38.9, filterSpacing_)));
         
         /*
          * Specific loudness using high level modification

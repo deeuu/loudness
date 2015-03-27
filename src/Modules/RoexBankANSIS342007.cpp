@@ -17,23 +17,23 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#include "RoexBankANSIS3407.h"
+#include "RoexBankANSIS342007.h"
 #include "../Support/AuditoryTools.h"
 
 namespace loudness{
 
-    RoexBankANSIS3407::RoexBankANSIS3407(Real camLo, Real camHi, Real camStep) : 
-        Module("RoexBankANSIS3407"),
+    RoexBankANSIS342007::RoexBankANSIS342007(Real camLo, Real camHi, Real camStep) : 
+        Module("RoexBankANSIS342007"),
         camLo_(camLo), 
         camHi_(camHi),
         camStep_(camStep)
     {}
 
-    RoexBankANSIS3407::~RoexBankANSIS3407()
+    RoexBankANSIS342007::~RoexBankANSIS342007()
     {
     }
 
-    bool RoexBankANSIS3407::initializeInternal(const SignalBank &input)
+    bool RoexBankANSIS342007::initializeInternal(const SignalBank &input)
     {
         //number of input components
         int nChannels = input.getNChannels();
@@ -82,7 +82,7 @@ namespace loudness{
     }
 
 
-    void RoexBankANSIS3407::processInternal(const SignalBank &input)
+    void RoexBankANSIS342007::processInternal(const SignalBank &input)
     {
 
         for (int ear = 0; ear < input.getNEars(); ear++)
@@ -157,5 +157,5 @@ namespace loudness{
         }
     }
 
-    void RoexBankANSIS3407::resetInternal(){};
+    void RoexBankANSIS342007::resetInternal(){};
 }

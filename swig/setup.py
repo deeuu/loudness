@@ -36,7 +36,7 @@ if __name__ == "__main__":
                 "../src/Modules/PowerSpectrum.cpp",
                 "../src/Modules/WeightSpectrum.cpp",
                 "../src/Modules/CompressSpectrum.cpp",
-                "../src/Modules/RoexBankANSIS3407.cpp",
+                "../src/Modules/RoexBankANSIS342007.cpp",
                 "../src/Modules/FastRoexBank.cpp",
                 "../src/Modules/DoubleRoexBank.cpp",
                 "../src/Modules/SpecificLoudnessGM.cpp",

@@ -17,15 +17,15 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#ifndef ROEXBANKANSIS3407_H
-#define ROEXBANKANSIS3407_H
+#ifndef ROEXBANKANSIS342007_H
+#define ROEXBANKANSIS342007_H
 
 #include "../Support/Module.h"
 
 namespace loudness{
 
     /**
-     * @class RoexBankANSIS3407
+     * @class RoexBankANSIS342007
      * @brief Applies a set of level dependent rounded exponential (roex)
      * filters to an input power spectrum. 
      *
@@ -34,14 +34,14 @@ namespace loudness{
      * ANSI S3.4-2007. (2007).  Procedure for the Computation of Loudness of
      * Steady Sounds.
      */
-    class RoexBankANSIS3407 : public Module
+    class RoexBankANSIS342007 : public Module
     {
 
     public:
 
-        RoexBankANSIS3407(Real camLo = 1.8, Real camHi = 38.9, Real camStep = 0.1);
+        RoexBankANSIS342007(Real camLo = 1.8, Real camHi = 38.9, Real camStep = 0.1);
 
-        virtual ~RoexBankANSIS3407();
+        virtual ~RoexBankANSIS342007();
 
     private:
 
