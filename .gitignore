@@ -3,5 +3,6 @@
 *.swo
 *.pyc
 *.so
+*.csv
 *.o
 Excluded
