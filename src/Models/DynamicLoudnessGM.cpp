@@ -113,7 +113,7 @@ namespace loudness{
     void DynamicLoudnessGM::loadParameterSet(const string& setName)
     {
         //common to all
-        setTimeStep(0.001);
+        setRate(1000);
         setHpf(true);
         setDiffuseField(false);
         setUniform(true);
@@ -232,7 +232,7 @@ namespace loudness{
         }
 
         //Frame generator
-        int hopSize = round(timeStep_ * input.getFs());
+        int hopSize = int(input.getFs() / rate_);
         modules_.push_back(unique_ptr<Module> 
                 (new FrameGenerator(windowSizeSamples[0], hopSize, startAtWindowCentre_)));
 

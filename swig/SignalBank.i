@@ -14,6 +14,7 @@ public:
     inline int getNSamples();
     inline int getNEars();
     inline int getNTotalSamples();
+    int getFs();
     inline void setSample(int ear, int channel, int sample, Real value);
     inline Real getSample(int ear, int channel, int sample) const;
     inline void setCentreFreq(int channel, Real freq);

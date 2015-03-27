@@ -122,17 +122,17 @@ namespace loudness{
          */
         int getNModules() const;
 
-        /**
-         * @brief Sets the time step (hop size in secs) for a dynamic loudness
-         * model.
+        /** Sets the processing rate in Hz for a dynamic loudness
+         * model. Note that after initialisation, the true processing rate will
+         * be dependent on the sampling frequency and the input buffer size.
          */
-        void setTimeStep(Real timeStep);
+        void setRate(Real rate);
 
-        /**
-         * @brief Returns the time step (hop size in secs) for a dynamic
-         * loudness model.
+        /** Returns processing rate in Hz. Note that after
+         * initialisation, the true processing rate will be dependent on the
+         * sampling frequency and the input buffer size.
          */
-        Real getTimeStep() const;
+        Real getRate() const;
 
         /**
          * @brief Returns the name of a module residing within the model.
@@ -152,7 +152,7 @@ namespace loudness{
         string name_;
         bool dynamicModel_, initialized_;
         int nModules_;
-        Real timeStep_ = 0;
+        Real rate_;
         vector<unique_ptr<Module>> modules_;
         vector<string> moduleNames_;
     };

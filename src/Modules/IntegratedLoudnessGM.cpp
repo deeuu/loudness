@@ -26,10 +26,7 @@ namespace loudness{
         Module("IntegratedLoudnessGM"),
         cParam_(cParam)
     {
-        if(author == "SteadyState")
-            steadyState_ = true;
-        else
-            configureSmoothingTimes(author);
+        configureSmoothingTimes(author);
         LOUDNESS_DEBUG(name_ << ": Constructed.");
     }
     IntegratedLoudnessGM::IntegratedLoudnessGM(const string& author) :
@@ -45,8 +42,12 @@ namespace loudness{
 
     void IntegratedLoudnessGM::configureSmoothingTimes(const string& author)
     {
-        if (!steadyState_)
+        if (author == "SteadyState")
         {
+            steadyState_ = true;
+        }
+        else{
+            steadyState_ = false;
             if (author == "GM2002")
             {
                 setAttackTimeSTL(-0.001/log(1-0.045));    

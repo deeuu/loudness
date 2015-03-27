@@ -11,11 +11,10 @@ class LoudnessExtractor:
 
     Processing assumes that the analysis window is centred at time zero. If this
     is not the case, then the frame times used for plotting and exporting data
-    will be incorrect. Use 'nSamplesToPadStart' (default 0) to correct for this
-    situation, e.g., pad the start of the input signal such that the first frame
-    is centred at time zero. Alternatively, you can offset the frame times in
-    seconds using 'frameTimeOffset' (default 0).
-    '''
+    will be incorrect. For Numpy arrays you can use 'nSamplesToPadStart'
+    (default 0) to correct for this situation, e.g., pad the start of the input
+    signal such that the first frame is centred at time zero. Alternatively,
+    modify self.frameTimes and self.loudness as needed. '''
 
     def __init__(self, model, fs = 32000, nInputEars = 1):
 
@@ -25,9 +24,9 @@ class LoudnessExtractor:
         self.model = model
         self.fs = int(fs)
         self.nInputEars = nInputEars
-        self.timeStep = model.getTimeStep()
-        self.hopSize = int(fs * self.timeStep)
-        self.frameTimeOffset = 0
+        self.rate = model.getRate() #desired rate in Hz
+        self.hopSize = int(round(fs / self.rate))
+        self.timeStep = self.fs / float(self.hopSize) #true time step
         self.inputBuf = ln.SignalBank()
         self.inputBuf.initialize(self.nInputEars, 1, self.hopSize, self.fs)
         if not self.model.initialize(self.inputBuf):
@@ -62,8 +61,7 @@ class LoudnessExtractor:
 
         #configure the number of output frames needed
         nOutputFrames = int(np.ceil(self.nSamples / float(self.hopSize)))
-        self.frameTimes = np.arange(nOutputFrames) * self.hopSize /\
-                float(self.fs) + self.frameTimeOffset
+        self.frameTimes = np.arange(nOutputFrames) * self.hopSize / float(self.fs)
 
         #output loudness
         self.loudness = np.zeros((self.nOutputEars, nOutputFrames, self.nChannels))
@@ -103,6 +101,8 @@ class LoudnessExtractor:
         self.processed = True
 
     def plotLoudness(self):
+        ''' Plots the input waveform and loudness time-series output by the
+        model.'''
         if self.processed:
             time = np.arange(self.nSamples) / float(self.fs)
             fig, (ax1, ax2) = plt.subplots(2, 1, sharex = True)

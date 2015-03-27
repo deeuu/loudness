@@ -23,7 +23,8 @@ namespace loudness{
 
     Model::Model(string name, bool dynamicModel) :
         name_(name),
-        dynamicModel_(dynamicModel)
+        dynamicModel_(dynamicModel),
+        rate_(0)
     {
         LOUDNESS_DEBUG(name_ << ": Constructed.");
     }
@@ -129,14 +130,14 @@ namespace loudness{
         return nModules_;
     }            
     
-    void Model::setTimeStep(Real timeStep)
+    void Model::setRate(Real rate)
     {
-        timeStep_ = timeStep;
+        rate_ = rate;
     }
 
-    Real Model::getTimeStep() const
+    Real Model::getRate() const
     {
-        return timeStep_;
+        return rate_;
     }
 
 }
