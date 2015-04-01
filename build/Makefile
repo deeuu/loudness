@@ -23,7 +23,6 @@ SOURCES=../src/cnpy/cnpy.cpp \
 ../src/Support/AuditoryTools.cpp \
 ../src/Support/SignalBank.cpp \
 ../src/Support/Module.cpp \
-../src/Support/Model.cpp \
 ../src/Support/Filter.cpp \
 ../src/Support/FFT.cpp \
 ../src/Support/Spline.cpp \
@@ -41,9 +40,6 @@ SOURCES=../src/cnpy/cnpy.cpp \
 ../src/Modules/DoubleRoexBank.cpp \
 ../src/Modules/SpecificLoudnessGM.cpp \
 ../src/Modules/IntegratedLoudnessGM.cpp \
-../src/Models/DynamicLoudnessGM.cpp \
-../src/Models/DynamicLoudnessCH.cpp \
-../src/Models/SteadyStateLoudnessANSIS342007.cpp
 
 OBJECTS=$(SOURCES:.cpp=.o)
 

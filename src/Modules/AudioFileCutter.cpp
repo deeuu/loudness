@@ -45,8 +45,8 @@ namespace loudness{
             LOUDNESS_DEBUG("Module: Module initialized.");
             if(output_.isInitialized())
             {
-                if(targetModule_)
-                    targetModule_ -> initialize(output_);
+                for (uint i = 0; i < targetModules_.size(); i++)
+                    targetModules_[i] -> initialize(output_);
             }
             initialized_ = 1;
             return 1;
@@ -192,8 +192,8 @@ namespace loudness{
             bufferIdx_ += output_.getNSamples() * nEars;
 
             //push through processing pipeline if necessary
-            if(targetModule_)
-                targetModule_->process(output_);
+            for (uint i = 0; i < targetModules_.size(); i++)
+                targetModules_[i] -> process(output_);
         }
     }
 

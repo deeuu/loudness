@@ -113,21 +113,23 @@ namespace loudness{
         void reset();
 
         /**
-         * @brief Adds a single target module to the object.  
+         * @brief Adds a new target module to the object.  
          *
          * Once processed, the output SignalBank is passed as input to the
          * target module for processing. Note that the target module must
          * continue to exist for the lifetime of the aggregate object when
-         * initialize(), process() or reset() are called.
+         * initialize(), process() or reset() are called. This Module does not
+         * own the target module.
          *
          * @param targetModule A reference to the target module.
          */
-        void setTargetModule(Module& targetModule);
+        void addTargetModule(Module& targetModule);
         
         /**
-         * @brief Removes the target module.
+         * @brief Removes the most recent target module added. Removing a module
+         * will not destroy the module pointed to.
          */
-        void removeTargetModule();
+        void removeLastTargetModule();
 
         /**
          * @brief Returns the module initialisation state.
@@ -158,7 +160,7 @@ namespace loudness{
 
         //members
         bool initialized_;
-        Module *targetModule_;
+        vector<Module*> targetModules_;
         SignalBank output_;
         string name_;
     };

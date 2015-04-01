@@ -151,32 +151,35 @@ namespace loudness{
 
     void Window::normaliseWindow(RealVec &window, const string &normalisation, double ref)
     {
-        double x = 0.0;
-        double sum = 0.0, sumSquares = 0.0;
-        double normFactor = 1.0;
-        uint wSize = window.size();
-        for(uint i=0; i < wSize; i++)
+        if(!normalisation.empty())
         {
-             x = window[i];
-             sum += x;
-             sumSquares += x*x;
+            double x = 0.0;
+            double sum = 0.0, sumSquares = 0.0;
+            double normFactor = 1.0;
+            uint wSize = window.size();
+            for(uint i=0; i < wSize; i++)
+            {
+                 x = window[i];
+                 sum += x;
+                 sumSquares += x*x;
+            }
+            if (normalisation == "energy")
+            {
+                normFactor = sqrt(wSize/sumSquares);
+            }
+            else if (normalisation == "amplitude")
+            {
+                normFactor = wSize/sum;
+            }
+            else 
+            {
+                LOUDNESS_WARNING(name_ << ": Normalisation must be 'energy' or 'amplitude', using 'energy'");
+                normFactor = sqrt(wSize/sumSquares);
+            }
+            normFactor /= ref;
+            for(uint i=0; i < wSize; i++)
+                window[i] *= normFactor;
         }
-        if (normalisation == "energy")
-        {
-            normFactor = sqrt(wSize/sumSquares);
-        }
-        else if (normalisation == "amplitude")
-        {
-            normFactor = wSize/sum;
-        }
-        else 
-        {
-            LOUDNESS_WARNING(name_ << ": Normalisation must be 'energy' or 'amplitude', using 'energy'");
-            normFactor = sqrt(wSize/sumSquares);
-        }
-        normFactor /= ref;
-        for(uint i=0; i < wSize; i++)
-            window[i] *= normFactor;
     }
  
 

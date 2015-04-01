@@ -18,6 +18,7 @@ def pureToneLoudness(levels = 40, freq = 1000):
     pathToFilterCoefs = '../../../filterCoefs/32000_FIR_4096_freemid.npy'
     model = ln.DynamicLoudnessGM(pathToFilterCoefs)
     model.loadParameterSet("GM2002")
+    model.setRate(250)
     fs = 32000
     #Use LoudnessExtractor to compute the global loudness
     extractor = LoudnessExtractor(model, fs, 1)
@@ -72,7 +73,3 @@ if __name__ == '__main__':
     writeToCSVFile(expected3kHz, loudness, './data/DynamicLoudnessGM_3kHz.csv')
     loudness = pureToneLoudness(levels100Hz, 100)
     writeToCSVFile(expected100Hz, loudness, './data/DynamicLoudnessGM_100Hz.csv')
-
-    '''
-    Absolute threshold tests
-    '''

@@ -67,7 +67,6 @@ if __name__ == '__main__':
     '''
     Pure tone tests
     '''
-    '''
     #Table 7
     levels1kHz = np.array([0,1,2,3,4,5,7.5])
     levels1kHz = np.append(levels1kHz, np.arange(10, 125, 5))
@@ -90,8 +89,6 @@ if __name__ == '__main__':
     expected100Hz = np.array([0.345])
     loudness = pureToneLoudness(levels100Hz, 100)
     writeToCSVFile(expected100Hz, loudness, './data/SteadyStateLoudnessANSIS342007_100Hz.csv')
-
-    '''
 
     '''
     Filtered noise tests

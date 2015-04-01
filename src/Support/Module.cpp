@@ -24,7 +24,6 @@ namespace loudness{
     Module::Module(string name):
         name_(name)
     {
-        targetModule_ = nullptr;
         initialized_ = 0;
         LOUDNESS_DEBUG(name_ << ": Constructed.");
     };
@@ -53,8 +52,8 @@ namespace loudness{
             LOUDNESS_DEBUG(name_ << ": Initialised.");
             if(output_.isInitialized())
             {
-                if(targetModule_)
-                    targetModule_->initialize(output_);
+                for (uint i = 0; i < targetModules_.size(); i++)
+                    targetModules_[i] -> initialize(output_);
             }
 
             initialized_ = 1;
@@ -73,8 +72,9 @@ namespace loudness{
         }
         else
             output_.setTrig(false);
-        if(targetModule_)
-            targetModule_->process(output_);
+
+        for (uint i = 0; i < targetModules_.size(); i++)
+            targetModules_[i] -> process(output_);
     }
 
     void Module::reset()
@@ -84,19 +84,18 @@ namespace loudness{
             output_.clear();
 
         //clear internal parameters
-        resetInternal();
-        if(targetModule_)
-            targetModule_->reset();
+        for (uint i = 0; i < targetModules_.size(); i++)
+            targetModules_[i] -> reset();
     }
 
-    void Module::setTargetModule(Module& targetModule)
+    void Module::addTargetModule(Module& targetModule)
     {
-        targetModule_ = &targetModule;
+        targetModules_.push_back(&targetModule);
     }
 
-    void Module::removeTargetModule()
+    void Module::removeLastTargetModule()
     {
-        targetModule_ = nullptr;
+        targetModules_.pop_back();
     }
 
     bool Module::isInitialized() const
