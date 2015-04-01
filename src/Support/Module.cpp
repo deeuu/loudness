@@ -67,6 +67,7 @@ namespace loudness{
     {
         if(initialized_ && input.getTrig())
         {
+            //LOUDNESS_DEBUG(name_ << ": processing SignalBank ...");
             output_.setTrig(true);
             processInternal(input);
         }
@@ -90,6 +91,7 @@ namespace loudness{
 
     void Module::addTargetModule(Module& targetModule)
     {
+        LOUDNESS_DEBUG(name_ << ": Adding " << targetModule.getName() << " as target.");
         targetModules_.push_back(&targetModule);
     }
 
@@ -103,7 +105,7 @@ namespace loudness{
         return initialized_;
     }
 
-    const SignalBank& Module::getOutput() const
+    const SignalBank& Module::getOutputSignalBank() const
     {
         return output_;
     }

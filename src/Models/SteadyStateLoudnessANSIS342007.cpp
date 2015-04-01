@@ -20,7 +20,7 @@
 #include "../Modules/WeightSpectrum.h"
 #include "../Modules/RoexBankANSIS342007.h"
 #include "../Modules/SpecificLoudnessGM.h"
-#include "../Modules/IntegratedLoudnessGM.h"
+#include "../Modules/InstantaneousLoudnessGM.h"
 #include "SteadyStateLoudnessANSIS342007.h"
 
 namespace loudness{
@@ -66,24 +66,31 @@ namespace loudness{
 
         modules_.push_back(unique_ptr<Module>
                 (new WeightSpectrum(middleEar, outerEar))); 
+        outputNames_.push_back("WeightedPowerSpectrum");
 
         /*
          * Roex filters
          */
         modules_.push_back(unique_ptr<Module>
                 (new RoexBankANSIS342007(1.8, 38.9, filterSpacing_)));
+        outputNames_.push_back("ExcitationPattern");
         
         /*
          * Specific loudness using high level modification
          */
         modules_.push_back(unique_ptr<Module>
                 (new SpecificLoudnessGM(true)));
+        outputNames_.push_back("SpecificLoudnessPattern");
 
         /*
         * Loudness integration 
         */   
         modules_.push_back(unique_ptr<Module>
-                (new IntegratedLoudnessGM("SteadyState")));
+                (new InstantaneousLoudnessGM(1.0, true)));
+        outputNames_.push_back("InstantaneousLoudness");
+
+        //configure targets
+        setUpLinearTargetModuleChain();
 
         return 1;
     }

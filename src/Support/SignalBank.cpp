@@ -49,7 +49,7 @@ namespace loudness{
             nSamples_ = nSamples;
             nTotalSamples_ = nEars_ * nChannels_ * nSamples_;
             fs_ = fs;
-            frameRate_ = fs_/(Real)nSamples_;
+            frameRate_ = fs_;
             trig_ = 1;
             initialized_ = true;
 

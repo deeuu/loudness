@@ -86,6 +86,10 @@ namespace loudness{
         */
         void reset();
 
+        /** Sets each modules in the chain to be the target of it's
+         * predecessor. */
+        void setUpLinearTargetModuleChain();
+
         /**
          * @brief Returns the initialisation state.
          *
@@ -103,19 +107,14 @@ namespace loudness{
         /** Returns a reference to the output SignalBank of a module specified
          * by it's index.
          */
-        const SignalBank& getModuleOutput(int module) const;
+        const SignalBank& getOutputSignalBank(int module) const;
 
         /** Returns a reference to the output SignalBank of a module specified
-         * by it's name.
+         * by name. The name does not necessarily correspond to the name of the
+         * module class but the one given by the model upon instantiation.
          */
-        const SignalBank& getModuleOutput(const string& moduleName) const;
+        const SignalBank& getOutputSignalBank(const string& outputName) const;
 
-        /** Returns a reference to the output SignalBank of the final module
-         * used by the model. For most models, this will be the integrated
-         * loudness.
-         */
-        const SignalBank& getModelOutput() const;
-        
         /**
          * @brief Returns the number of initialised modules comprising the
          * model.
@@ -135,12 +134,16 @@ namespace loudness{
         Real getRate() const;
 
         /**
-         * @brief Returns the name of a module residing within the model.
+         * @brief Returns the name of a module residing within the model.  
+         * The name does not necessarily correspond to the name of the module
+         * class but the one given by the model upon instantiation.
          *
          * @param module Module index.
          */
-        const string& getModuleName(int module) const;
-        
+        const string& getOutputName(int module) const;
+
+        const vector<string>& getOutputNames() const;
+
         /**
          * @brief Returns the name of the model.
          */
@@ -154,7 +157,7 @@ namespace loudness{
         int nModules_;
         Real rate_;
         vector<unique_ptr<Module>> modules_;
-        vector<string> moduleNames_;
+        vector<string> outputNames_;
     };
 }
 

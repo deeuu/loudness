@@ -71,9 +71,10 @@ namespace loudness{
         /** Sets the sampling frequency.*/
         void setFs(int fs);
  
-        /** Sets the frame rate of the Signal.
-         * The default is equal to the sampling frequency divided by the number
-         * of samples comprising each signal.
+        /** Sets the frame rate of the SignalBank.
+         * The default is equal to the sampling frequency. This is typically
+         * modified by modules that operate at a rate lower than the sampling
+         * frequency, e.g. fs / hopSize.
          */
         void setFrameRate(Real frameRate);
 
@@ -195,55 +196,53 @@ namespace loudness{
 
         /** Get a pointer to the first sample in the signal indexed by ear and
          * channel. Use this for writing to the SignalBank. If the the number of
-         * samples is one, then use getSingleSampleWritePointer. Watch your
-         * bounds.
+         * samples is one and your iterating through channels, then use
+         * getSingleSampleWritePointer. Watch your bounds.
          */
         Real* getSignalWritePointer(int ear, int channel)
         {
             LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
-                    isPositiveAndLessThanUpper(channel, nChannels_) && 
-                    (nSamples_ > 1));
+                    isPositiveAndLessThanUpper(channel, nChannels_));
             return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_];
         }
 
         /** Get a pointer to the signal indexed by ear, channel and sample. Use
          * this for writing to the SignalBank starting from a specific sample
-         * index. If the the number of samples is one, then use
-         * getSingleSampleWritePointer. Watch your bounds.
+         * index. If the the number of samples is one and your iterating through
+         * channels, then use getSingleSampleWritePointer. Watch your bounds.
          */
         Real* getSignalWritePointer(int ear, int channel, int sample)
         {
              LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
                      isPositiveAndLessThanUpper(channel, nChannels_) &&
-                     isPositiveAndLessThanUpper(sample, nSamples_) &&
-                     (nSamples_ > 1));
+                     isPositiveAndLessThanUpper(sample, nSamples_));
             return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + sample];
         }
 
         /** Get a pointer to the first sample in the read-only signal indexed by
          * ear and channel. Use this for reading SignalBank's with more than one
-         * sample only. If the the number of samples is one, then use
-         * getSingleSampleReadPointer.  Watch your bounds.
+         * sample only. If the the number of samples is one and your iterating
+         * through channels, then use getSingleSampleReadPointer. Watch your
+         * bounds.
          */
         const Real* getSignalReadPointer(int ear, int channel) const
         {
             LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
-                    isPositiveAndLessThanUpper(channel, nChannels_) &&
-                    (nSamples_ > 1));
+                    isPositiveAndLessThanUpper(channel, nChannels_));
             return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_];
         }
 
         /** Get a pointer to the read-only signal indexed by ear,
          * channel and sample. Use this for reading samples of a signal from a
-         * specific sample index. If the the number of samples is one, then use
-         * getSingleSampleReadPointer. Watch your bounds.
+         * specific sample index. If the the number of samples is one and your
+         * iterating through channels, then use getSingleSampleReadPointer.
+         * Watch your bounds.
          */
         const Real* getSignalReadPointer(int ear, int channel, int sample) const
         {
             LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
                     isPositiveAndLessThanUpper(channel, nChannels_) &&
-                    isPositiveAndLessThanUpper(sample, nSamples_) &&
-                    (nSamples_ > 1));
+                    isPositiveAndLessThanUpper(sample, nSamples_));
             return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + sample];
         }
 

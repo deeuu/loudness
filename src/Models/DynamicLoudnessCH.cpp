@@ -27,7 +27,8 @@
 #include "../Modules/CompressSpectrum.h"
 #include "../Modules/WeightSpectrum.h"
 #include "../Modules/DoubleRoexBank.h"
-#include "../Modules/IntegratedLoudnessGM.h"
+#include "../Modules/InstantaneousLoudnessGM.h"
+#include "../Modules/ARAverager.h"
 #include "DynamicLoudnessCH.h"
 
 namespace loudness{
@@ -84,6 +85,10 @@ namespace loudness{
         setFilterSpacing(0.1);
         setCompressionCriterion(0.0);
         setStartAtWindowCentre(true);
+        attackTimeSTL_ = 0.016;
+        releaseTimeLTL_ = 0.032;
+        attackTimeLTL_ = 0.01;
+        releaseTimeLTL_ = 2.0;
 
         if (setName == "Faster")
         {
@@ -123,11 +128,17 @@ namespace loudness{
             
             //create module
             if(iir)
+            {
                 modules_.push_back(unique_ptr<Module> 
                         (new IIR(bCoefs, aCoefs))); 
+                outputNames_.push_back("IIR");
+            }
             else
+            {
                 modules_.push_back(unique_ptr<Module>
                         (new FIR(bCoefs))); 
+                outputNames_.push_back("FIR");
+            }
 
             //clean up
             delete [] data;
@@ -153,14 +164,17 @@ namespace loudness{
         int hopSize = round(input.getFs() / rate_);
         modules_.push_back(unique_ptr<Module> 
                 (new FrameGenerator(windowSizeSamples[0], hopSize, startAtWindowCentre_)));
+        outputNames_.push_back("FrameGenerator");
         
         //configure windowing: Periodic hann window
         modules_.push_back(unique_ptr<Module>
                 (new Window("hann", windowSizeSamples, true)));
+        outputNames_.push_back("HannWindows");
 
         //power spectrum
         modules_.push_back(unique_ptr<Module> 
                 (new PowerSpectrum(bandFreqsHz, windowSizeSamples, uniform_))); 
+        outputNames_.push_back("PowerSpectrum");
 
         /*
          * Compression
@@ -169,6 +183,7 @@ namespace loudness{
         {
             modules_.push_back(unique_ptr<Module>
                     (new CompressSpectrum(compressionCriterion_))); 
+            outputNames_.push_back("CompressedPowerSpectrum");
         }
 
         /*
@@ -183,6 +198,7 @@ namespace loudness{
 
             modules_.push_back(unique_ptr<Module> 
                     (new WeightSpectrum(middleEar, outerEar))); 
+            outputNames_.push_back("WeightedPowerSpectrum");
         }
 
         /*
@@ -190,12 +206,32 @@ namespace loudness{
          */
         modules_.push_back(unique_ptr<Module> (new DoubleRoexBank(1.5, 40.2,
                         filterSpacing_)));
+        outputNames_.push_back("ExcitationPattern");
         
         /*
-        * Loudness integration 
+        * Instantaneous loudness
         */   
-        modules_.push_back(unique_ptr<Module> (new
-                    IntegratedLoudnessGM("CH2012", 1.53e-8)));
+        modules_.push_back(unique_ptr<Module>
+                (new InstantaneousLoudnessGM(1.53e-8, true)));
+        outputNames_.push_back("InstantaneousLoudness");
+
+        /*
+         * Short-term loudness
+         */
+        modules_.push_back(unique_ptr<Module>
+                (new ARAverager(attackTimeSTL_, releaseTimeSTL_)));
+        outputNames_.push_back("ShortTermLoudness");
+
+        /*
+         * Long-term loudness
+         */
+        modules_.push_back(unique_ptr<Module>
+                (new ARAverager(attackTimeLTL_, releaseTimeLTL_)));
+        outputNames_.push_back("LongTermLoudness");
+        
+        //configure targets
+        setUpLinearTargetModuleChain();
+
         return 1;
     }
 }

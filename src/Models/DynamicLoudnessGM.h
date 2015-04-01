@@ -101,13 +101,15 @@ namespace loudness{
             void setPathToFilterCoefs(string pathToFilterCoefs);
             void setFastBank(bool fastBank);
             void setAnsiSpecificLoudness(bool ansiSpecificLoudness);
-            void setSmoothingType(const string& smoothingType);
+            void setSmoothingTimes(const string& author);
 
         private:
             virtual bool initializeInternal(const SignalBank &input);
 
             int outerEarType_;
             Real filterSpacing_, compressionCriterion_;
+            Real attackTimeSTL_, releaseTimeSTL_;
+            Real attackTimeLTL_, releaseTimeLTL_;
             bool ansiBank_, fastBank_, interpRoexBank_, uniform_, diotic_, goertzel_;
             bool hpf_, diffuseField_, ansiSpecificLoudness_, startAtWindowCentre_;
             string pathToFilterCoefs_, smoothingType_;

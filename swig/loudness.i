@@ -44,10 +44,11 @@
 #include "../src/Modules/FastRoexBank.h"
 #include "../src/Modules/DoubleRoexBank.h"
 #include "../src/Modules/SpecificLoudnessGM.h"
-#include "../src/Modules/IntegratedLoudnessGM.h"
+#include "../src/Modules/InstantaneousLoudnessGM.h"
+#include "../src/Modules/ARAverager.h"
+#include "../src/Models/SteadyStateLoudnessANSIS342007.h"
 #include "../src/Models/DynamicLoudnessGM.h"
 #include "../src/Models/DynamicLoudnessCH.h"
-#include "../src/Models/SteadyStateLoudnessANSIS342007.h"
 %}
 
 //Required for integration with numpy arrays
@@ -108,7 +109,8 @@ using std::vector;
 %include "../src/Modules/FastRoexBank.h"
 %include "../src/Modules/DoubleRoexBank.h"
 %include "../src/Modules/SpecificLoudnessGM.h"
-%include "../src/Modules/IntegratedLoudnessGM.h"
+%include "../src/Modules/InstantaneousLoudnessGM.h"
+%include "../src/Modules/ARAverager.h"
+%include "../src/Models/SteadyStateLoudnessANSIS342007.h"
 %include "../src/Models/DynamicLoudnessGM.h"
 %include "../src/Models/DynamicLoudnessCH.h"
-%include "../src/Models/SteadyStateLoudnessANSIS342007.h"

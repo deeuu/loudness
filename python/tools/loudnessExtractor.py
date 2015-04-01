@@ -16,7 +16,7 @@ class LoudnessExtractor:
     signal such that the first frame is centred at time zero. Alternatively,
     modify self.frameTimes and self.loudness as needed. '''
 
-    def __init__(self, model, fs = 32000, nInputEars = 1):
+    def __init__(self, model, fs = 32000, nInputEars = 1, modelOutputsToExtract = []):
 
         if not model.isDynamicModel():
             raise ValueError("Model must be dynamic.")
@@ -32,10 +32,11 @@ class LoudnessExtractor:
         if not self.model.initialize(self.inputBuf):
             raise ValueError("Problem initialising the model!")
 
-        #Assume (it should be) signal bank containing loudness is final module
-        self.outputBank = self.model.getModelOutput()
-        self.nChannels = self.outputBank.getNChannels()
-        self.nOutputEars = self.outputBank.getNEars()
+        self.outputBanks = []
+        self.outputDict = {}
+        self.modelOutputsToExtract = modelOutputsToExtract
+        for name in modelOutputsToExtract:
+            self.outputBanks.append(self.model.getOutputSignalBank(name))
         self.nSamplesToPadStart = 0
         self.nSamplesToPadEnd = int(0.2*self.fs)#see below
         self.x = None
@@ -63,8 +64,13 @@ class LoudnessExtractor:
         nOutputFrames = int(np.ceil(self.nSamples / float(self.hopSize)))
         self.frameTimes = np.arange(nOutputFrames) * self.hopSize / float(self.fs)
 
-        #output loudness
-        self.loudness = np.zeros((self.nOutputEars, nOutputFrames, self.nChannels))
+        #outputs
+        for i, name in enumerate(self.modelOutputsToExtract):
+            self.outputDict[name] = np.zeros((\
+                nOutputFrames,
+                self.outputBanks[i].getNEars(),\
+                self.outputBanks[i].getNChannels(),\
+                self.outputBanks[i].getNSamples()))
 
         #Format input for SignalBank
         self.inputSignal = inputSignal.reshape((self.nInputEars, 1, self.nSamples))
@@ -76,14 +82,12 @@ class LoudnessExtractor:
             self.inputSignal,\
             np.zeros((self.nInputEars, 1, self.nSamplesToPadEnd))), 2)
 
-        processingFrame = 0
-        outputFrame = 0
         #One process call every hop samples
-        while(outputFrame < nOutputFrames):
+        for frame in range(nOutputFrames):
 
-            '''Any overlap is generated c++ side, so just fill the input
-            SignalBank with new blocks'''
-            startIdx = processingFrame*self.hopSize
+            #Any overlap is generated c++ side, so just fill the input
+            #SignalBank with new blocks
+            startIdx = frame*self.hopSize
             endIdx = startIdx + self.hopSize
             self.inputBuf.setSignals(self.inputSignal[:, :, startIdx:endIdx])
 
@@ -91,18 +95,16 @@ class LoudnessExtractor:
             self.model.process(self.inputBuf)
 
             #get output if output buffer is ready
-            if self.outputBank.getTrig():
-                self.loudness[:,outputFrame,:] = self.outputBank.getSignals()[:,:,0]
-                outputFrame += 1
-            processingFrame += 1
+            for i, name in enumerate(self.modelOutputsToExtract):
+                self.outputDict[name][frame] = self.outputBanks[i].getSignals()
 
         #Processing complete so clear internal states
         self.model.reset()
         self.processed = True
 
-    def plotLoudness(self):
-        ''' Plots the input waveform and loudness time-series output by the
-        model.'''
+    def plotLoudnessTimeSeries(self, modelOutputsToPlot):
+        #Plots the input waveform and loudness time-series output by the
+        #model.
         if self.processed:
             time = np.arange(self.nSamples) / float(self.fs)
             fig, (ax1, ax2) = plt.subplots(2, 1, sharex = True)
@@ -110,20 +112,22 @@ class LoudnessExtractor:
                 ax1.plot(time,\
                         self.inputSignal[ear, 0, self.nSamplesToPadStart:self.nSamplesToPadStart+self.nSamples])
             ax1.set_ylabel("Amplitude")
-            for ear in range(self.nOutputEars):
-                ax2.plot(self.frameTimes, self.loudness[ear])
+            for name in modelOutputsToPlot:
+                for ear in range(self.outputDict[name].shape[2]):
+                    ax2.plot(self.frameTimes, self.outputDict[name][:, ear, 0, :].flatten())
             ax2.set_ylabel("Loudness")
             ax2.set_xlabel("Time, seconds")
             plt.tight_layout()
             plt.xlim(0, time[-1])
             plt.show()
 
+    '''
     def computeGlobalLoudness(self, startSeconds=0, endSeconds=None,
             feature='MEAN', inPhons=False):
-        '''Compute the average loudness from startSeconds to endSeconds.
+        #Compute the average loudness from startSeconds to endSeconds.
         Time points are based on nearest sample, so it is possible that sample points outside of
         this range are included.
-        No bounds checking here.'''
+        No bounds checking here.#
         if self.processed:
             start = int(np.round(startSeconds/self.timeStep))
             end = endSeconds
@@ -142,8 +146,8 @@ class LoudnessExtractor:
             return self.globalLoudness
 
     def saveLoudnessToCSVFile(self, filename):
-        ''' Saves the loudness vectors to a csv file.
-        If multiple ears, seperate csv files are written.'''
+        #Saves the loudness vectors to a csv file.
+        If multiple ears, seperate csv files are written.
         if self.processed:
             frameTimes = self.frameTimes.reshape((self.frameTimes.size, 1))
             for ear in range(self.nOutputEars):
@@ -153,11 +157,12 @@ class LoudnessExtractor:
                             delimiter = ',')
 
     def saveGlobalLoudnessToCSVFile(self, filename):
-        ''' Saves the computed global loudness to a csv file.
-        If multiple ears, seperate files are written. '''
+        #Saves the computed global loudness to a csv file.
+        If multiple ears, seperate files are written.
 
         if self.globalLoudness is not None:
             for ear in range(self.nOutputEars):
                 np.savetxt(filename + '_ear' + str(ear) + '.csv',\
                         self.globalLoudness,
                         delimiter = ',')
+    '''

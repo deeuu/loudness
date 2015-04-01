@@ -31,6 +31,12 @@ namespace loudness{
 
     Model::~Model() {}
 
+    void Model::setUpLinearTargetModuleChain()
+    {
+        for (uint i = 0; i < (modules_.size() - 1); i++)
+            modules_[i] -> addTargetModule(*modules_[i + 1]);
+    }
+
     bool Model::initialize(const SignalBank &input)
     {
         if(!initializeInternal(input))
@@ -42,15 +48,7 @@ namespace loudness{
         {
             LOUDNESS_DEBUG(name_ << ": initialised.");
 
-            //set up the chain
             nModules_ = (int)modules_.size();
-
-            for (int i = 0; i < nModules_; i++)
-            {
-                if (i < (nModules_ - 1))
-                    modules_[i] -> setTargetModule(*modules_[i + 1]);
-                moduleNames_.push_back(modules_[i] -> getName());
-            }
 
             //initialise all
             modules_[0] -> initialize(input);
@@ -77,37 +75,36 @@ namespace loudness{
             modules_[0] -> reset();
     }
 
-    const SignalBank& Model::getModuleOutput(int module) const
+    const SignalBank& Model::getOutputSignalBank(int module) const
     {
         LOUDNESS_ASSERT(isPositiveAndLessThanUpper(module, nModules_));
-        return modules_[module] -> getOutput();
+        return modules_[module] -> getOutputSignalBank();
     }
 
-    const SignalBank& Model::getModuleOutput(const string& moduleName) const
+    const SignalBank& Model::getOutputSignalBank(const string& outputName) const
     {
-        int idx = std::find(moduleNames_.begin(), moduleNames_.end(), moduleName)
-            - moduleNames_.begin();
+        int idx = std::find(outputNames_.begin(), outputNames_.end(), outputName)
+            - outputNames_.begin();
 
         if (!isPositiveAndLessThanUpper(idx, nModules_))
         {
-            LOUDNESS_WARNING(name_ << ": Invalid Module name. Options are:");
+            LOUDNESS_WARNING(name_ << ": Invalid name. Options are:");
             for (int i = 0; i < nModules_; i++)
-                std::cerr << moduleNames_[i] << std::endl;
+                std::cerr << outputNames_[i] << std::endl;
             LOUDNESS_ASSERT(false);
         }
-        return modules_[idx] -> getOutput();
+        return modules_[idx] -> getOutputSignalBank();
     }
 
-    const SignalBank& Model::getModelOutput() const
-    {
-        LOUDNESS_ASSERT(initialized_);
-        return modules_[nModules_ - 1] -> getOutput();
-    }
-
-    const string& Model::getModuleName(int module) const
+    const string& Model::getOutputName(int module) const
     {
         LOUDNESS_ASSERT(isPositiveAndLessThanUpper(module, nModules_));
-        return moduleNames_[module];
+        return outputNames_[module];
+    }
+
+    const vector<string>& Model::getOutputNames() const
+    {
+        return outputNames_;
     }
 
     const string& Model::getName() const

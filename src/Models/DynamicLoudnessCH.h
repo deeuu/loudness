@@ -92,6 +92,8 @@ namespace loudness{
             string pathToFilterCoefs_;
             int outerEarType_;
             Real filterSpacing_, compressionCriterion_;
+            Real attackTimeSTL_, releaseTimeSTL_;
+            Real attackTimeLTL_, releaseTimeLTL_;
             bool uniform_, diotic_, diffuseField_, startAtWindowCentre_;
     }; 
 }

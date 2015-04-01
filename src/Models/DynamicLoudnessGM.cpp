@@ -30,7 +30,8 @@
 #include "../Modules/FastRoexBank.h"
 #include "../Modules/RoexBankANSIS342007.h"
 #include "../Modules/SpecificLoudnessGM.h"
-#include "../Modules/IntegratedLoudnessGM.h"
+#include "../Modules/InstantaneousLoudnessGM.h"
+#include "../Modules/ARAverager.h"
 #include "DynamicLoudnessGM.h"
 
 namespace loudness{
@@ -101,13 +102,26 @@ namespace loudness{
         ansiSpecificLoudness_ = ansiSpecificLoudness;
     }
 
-    void DynamicLoudnessGM::setSmoothingType(const string& smoothingType)
+    void DynamicLoudnessGM::setSmoothingTimes(const string& author)
     {
-
-        if ((smoothingType != "GM2002") && (smoothingType != "GM2003"))
-            smoothingType_ = "GM2002";
+        if (author == "GM2002")
+        {
+            attackTimeSTL_ = -0.001/log(1-0.045);
+            releaseTimeSTL_ = -0.001/log(1-0.02);
+            attackTimeLTL_ = -0.001/log(1-0.01);
+            releaseTimeLTL_ = -0.001/log(1-0.0005);
+        }
+        else if (author == "GM2003")
+        {
+            attackTimeSTL_ = -0.001/log(1-0.045);
+            releaseTimeSTL_  = -0.001/log(1-0.02);
+            attackTimeLTL_ = -0.001/log(1-0.01);
+            releaseTimeLTL_ = -0.001/log(1-0.005);
+        }
         else
-            smoothingType_ = smoothingType;
+        {
+            setSmoothingTimes("GM2002");
+        }
     }
     
     void DynamicLoudnessGM::loadParameterSet(const string& setName)
@@ -122,9 +136,9 @@ namespace loudness{
         setCompressionCriterion(0.0);
         setFastBank(false);
         setAnsiSpecificLoudness(false);
-        setSmoothingType("GM2002");
+        setSmoothingTimes("GM2002");
         setStartAtWindowCentre(true);
-
+                
         if (setName != "GM2002")
         {
             if (setName == "Faster")
@@ -136,26 +150,29 @@ namespace loudness{
             }
             else if (setName == "Recent")
             {
-                setSmoothingType("GM2003");
+                setSmoothingTimes("GM2003");
                 setAnsiSpecificLoudness(true);
-                LOUDNESS_DEBUG(name_ << ": Using updated " <<
-                        "time-constants from 2003 paper and high-level specific " << 
-                        "loudness equation (2007)."); 
+                LOUDNESS_DEBUG(name_
+                        << ": Using updated "
+                        << "time-constants from 2003 paper and high-level specific "
+                        << "loudness equation (2007)."); 
             }
             else if (setName == "RecentAndFaster")
             {
-                setSmoothingType("GM2003");
+                setSmoothingTimes("GM2003");
                 setAnsiSpecificLoudness(true);
                 setFastBank(true);
                 setInterpRoexBank(true);
                 setCompressionCriterion(0.3);
-                LOUDNESS_DEBUG(name_ << ": Using faster params and " << 
-                        "updated time-constants from 2003 paper and " << 
-                        "high-level specific loudness equation (2007).");
+                LOUDNESS_DEBUG(name_
+                        << ": Using faster params and "
+                        << "updated time-constants from 2003 paper and "
+                        << "high-level specific loudness equation (2007).");
             }
             else
             {
-                LOUDNESS_DEBUG(name_ << ": Using original params from Glasberg and Moore 2002.");
+                LOUDNESS_DEBUG(name_
+                        << ": Using original params from Glasberg and Moore 2002.");
             }
         }
     }
@@ -180,6 +197,7 @@ namespace loudness{
             if(hpf_)
             {
                 modules_.push_back(unique_ptr<Module> (new Butter(3, 0, 50.0))); 
+                outputNames_.push_back("HPF");
                 LOUDNESS_DEBUG(name_ << ": Using HPF.");
             }
         }
@@ -205,11 +223,17 @@ namespace loudness{
             
             //create module
             if(iir)
+            {
                 modules_.push_back(unique_ptr<Module> 
                         (new IIR(bCoefs, aCoefs))); 
+                outputNames_.push_back("IIR");
+            }
             else
+            {
                 modules_.push_back(unique_ptr<Module>
                         (new FIR(bCoefs))); 
+                outputNames_.push_back("FIR");
+            }
 
             //clean up
             delete [] data;
@@ -235,14 +259,17 @@ namespace loudness{
         int hopSize = int(input.getFs() / rate_);
         modules_.push_back(unique_ptr<Module> 
                 (new FrameGenerator(windowSizeSamples[0], hopSize, startAtWindowCentre_)));
+        outputNames_.push_back("FrameGenerator");
 
         //windowing: Periodic hann window
         modules_.push_back(unique_ptr<Module>
                 (new Window("hann", windowSizeSamples, true)));
+        outputNames_.push_back("HannWindows");
 
         //power spectrum
         modules_.push_back(unique_ptr<Module> 
                 (new PowerSpectrum(bandFreqsHz, windowSizeSamples, uniform_))); 
+        outputNames_.push_back("PowerSpectrum");
 
         /*
          * Compression
@@ -251,6 +278,7 @@ namespace loudness{
         {
             modules_.push_back(unique_ptr<Module>
                     (new CompressSpectrum(compressionCriterion_))); 
+            outputNames_.push_back("CompressedPowerSpectrum");
         }
 
         /*
@@ -267,6 +295,7 @@ namespace loudness{
 
             modules_.push_back(unique_ptr<Module> 
                     (new WeightSpectrum(middleEar, outerEar))); 
+            outputNames_.push_back("WeightedPowerSpectrum");
         }
 
         /*
@@ -282,18 +311,38 @@ namespace loudness{
             modules_.push_back(unique_ptr<Module> 
                     (new RoexBankANSIS342007(1.8, 38.9, filterSpacing_)));
         }
+        outputNames_.push_back("ExcitationPattern");
         
         /*
          * Specific loudness
          */
         modules_.push_back(unique_ptr<Module>
                 (new SpecificLoudnessGM(ansiSpecificLoudness_)));
+        outputNames_.push_back("SpecificLoudnessPattern");
 
         /*
-        * Loudness integration 
+        * Instantaneous loudness
         */   
-        modules_.push_back(unique_ptr<Module> (new
-                    IntegratedLoudnessGM(smoothingType_)));
+        modules_.push_back(unique_ptr<Module>
+                (new InstantaneousLoudnessGM(1.0, true)));
+        outputNames_.push_back("InstantaneousLoudness");
+
+        /*
+         * Short-term loudness
+         */
+        modules_.push_back(unique_ptr<Module>
+                (new ARAverager(attackTimeSTL_, releaseTimeSTL_)));
+        outputNames_.push_back("ShortTermLoudness");
+
+        /*
+         * Long-term loudness
+         */
+        modules_.push_back(unique_ptr<Module>
+                (new ARAverager(attackTimeLTL_, releaseTimeLTL_)));
+        outputNames_.push_back("LongTermLoudness");
+        
+        //configure targets
+        setUpLinearTargetModuleChain();
 
         return 1;
     }

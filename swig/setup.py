@@ -40,10 +40,11 @@ if __name__ == "__main__":
                 "../src/Modules/FastRoexBank.cpp",
                 "../src/Modules/DoubleRoexBank.cpp",
                 "../src/Modules/SpecificLoudnessGM.cpp",
-                "../src/Modules/IntegratedLoudnessGM.cpp",
+                "../src/Modules/InstantaneousLoudnessGM.cpp",
+                "../src/Modules/ARAverager.cpp",
+                "../src/Models/SteadyStateLoudnessANSIS342007.cpp",
                 "../src/Models/DynamicLoudnessGM.cpp",
-                "../src/Models/DynamicLoudnessCH.cpp",
-                "../src/Models/SteadyStateLoudnessANSIS342007.cpp"
+                "../src/Models/DynamicLoudnessCH.cpp"
             ],
             include_dirs = [numpy_include, "/usr/include"],
             library_dirs=['/usr/lib', '/usr/local/lib'],

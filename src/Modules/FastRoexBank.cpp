@@ -110,11 +110,7 @@ namespace loudness{
             output_.initialize(input.getNEars(), 372, 1, input.getFs());
             output_.setChannelSpacingInCams(0.1);
             for(int i=0; i<372; i++)
-            {
                 output_.setCentreFreq(i, camToFreq(1.8 + i*0.1));
-                LOUDNESS_DEBUG("FastRoexBank: Centre freq: " 
-                        << output_.getCentreFreq(i));
-            }
         }
         else
         {
