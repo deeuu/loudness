@@ -9,6 +9,7 @@ model = ln.DynamicLoudnessGM('../../filterCoefs/32000_IIR_23_freemid.npy')
 
 outputsOfInterest = ["InstantaneousLoudness", "ShortTermLoudness", "LongTermLoudness"]
 extractor = LoudnessExtractor(model, 32000, 1, outputsOfInterest)
+extractor.frameTimeOffset = -0.032
 
 signal = Sound.tone(1000, dur = 1.0, fs = 32e3)
 signal.useDBSPL()

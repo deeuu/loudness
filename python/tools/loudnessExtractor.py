@@ -1,22 +1,34 @@
+from os.path import splitext
+import pickle
 import numpy as np
 import loudness as ln
 import matplotlib.pyplot as plt
 
 class LoudnessExtractor:
     '''Convienience class for processing numpy arrays.
-    This class can be used to extract the loudness of an input array using a
+    This class can be used to extract features of an input array using a
     dynamic loudness model.
+
     The input model should be configured but not initialised. Model
     initialisation will take place internally.
 
-    Processing assumes that the analysis window is centred at time zero. If this
-    is not the case, then the frame times used for plotting and exporting data
-    will be incorrect. For Numpy arrays you can use 'nSamplesToPadStart'
-    (default 0) to correct for this situation, e.g., pad the start of the input
-    signal such that the first frame is centred at time zero. Alternatively,
-    modify self.frameTimes and self.loudness as needed. '''
+    The output is stored in a dictionary with keys corresponding to the features
+    listed in `modelOutputsToExtract'.
+
+    Processing frames are per hop size, which is dictated by the rate of the
+    model. Frame times are relative to the first sample of the input signal. For
+    example, consider a hop size of 48 @ fs = 48kHz, then the first output frame
+    is available at time 0.001s. You can offset the frame times using self.frameTimeOffset.
+    '''
 
     def __init__(self, model, fs = 32000, nInputEars = 1, modelOutputsToExtract = []):
+        ''' 
+        Model   : The input loudness model - must be dynamic.
+        fs      : The sampling frequency
+        nInputEars  : Number of ears used by the input array to be analysed.
+        modelOutputsToExtract   : A list of features output by the model to
+                                  extract.
+        '''
 
         if not model.isDynamicModel():
             raise ValueError("Model must be dynamic.")
@@ -39,13 +51,15 @@ class LoudnessExtractor:
             self.outputBanks.append(self.model.getOutputSignalBank(name))
         self.nSamplesToPadStart = 0
         self.nSamplesToPadEnd = int(0.2*self.fs)#see below
+        self.frameTimeOffset = 0
         self.x = None
         self.processed = False
         self.loudness = None
         self.globalLoudness = None
 
     def process(self, inputSignal):
-        ''' Process the numpy array 'inputSignal' using a dynamic loudness
+        '''
+        Process the numpy array 'inputSignal' using a dynamic loudness
         model.  For stereo signals, the input signal must have two dimensions
         with shape (nSamples x 2).  For monophonic signals, the input signal can
         be 2D, i.e. (nSamples x 1), or one dimensional.  
@@ -62,7 +76,8 @@ class LoudnessExtractor:
 
         #configure the number of output frames needed
         nOutputFrames = int(np.ceil(self.nSamples / float(self.hopSize)))
-        self.frameTimes = np.arange(nOutputFrames) * self.hopSize / float(self.fs)
+        self.outputDict['FrameTimes'] = self.frameTimeOffset + self.timeStep + \
+                np.arange(nOutputFrames) * self.hopSize / float(self.fs)
 
         #outputs
         for i, name in enumerate(self.modelOutputsToExtract):
@@ -103,66 +118,55 @@ class LoudnessExtractor:
         self.processed = True
 
     def plotLoudnessTimeSeries(self, modelOutputsToPlot):
-        #Plots the input waveform and loudness time-series output by the
-        #model.
+        '''
+        Plots the input waveform and the features listed in
+        `modelOutputsToPlot'. These features should have been extracted when
+        calling `process()' and should have one sample per ear and frame, i.e.
+        each feature should be one vector of loudness values per ear.
+        '''
         if self.processed:
             time = np.arange(self.nSamples) / float(self.fs)
             fig, (ax1, ax2) = plt.subplots(2, 1, sharex = True)
+
             for ear in range(self.nInputEars):
                 ax1.plot(time,\
-                        self.inputSignal[ear, 0, self.nSamplesToPadStart:self.nSamplesToPadStart+self.nSamples])
+                        self.inputSignal[ear, 0,\
+                            self.nSamplesToPadStart:self.nSamplesToPadStart+self.nSamples])
             ax1.set_ylabel("Amplitude")
+
             for name in modelOutputsToPlot:
-                for ear in range(self.outputDict[name].shape[2]):
-                    ax2.plot(self.frameTimes, self.outputDict[name][:, ear, 0, :].flatten())
+                for ear in range(self.outputDict[name].shape[1]):
+                    ax2.plot(self.outputDict['FrameTimes'], self.outputDict[name][:, ear, 0, :].flatten())
             ax2.set_ylabel("Loudness")
             ax2.set_xlabel("Time, seconds")
             plt.tight_layout()
             plt.xlim(0, time[-1])
             plt.show()
 
-    '''
-    def computeGlobalLoudness(self, startSeconds=0, endSeconds=None,
-            feature='MEAN', inPhons=False):
-        #Compute the average loudness from startSeconds to endSeconds.
-        Time points are based on nearest sample, so it is possible that sample points outside of
-        this range are included.
-        No bounds checking here.#
+    def saveLoudnessTimeSeriesToCSV(self, filename, modelOutputsToSave):
+        '''
+        Saves the the features listed in `modelOutputsToSave' to a CSV file.
+        These features should have been extracted when calling `process()' and
+        should have one sample per ear and frame, i.e.  each feature should be
+        one vector of loudness values per ear.  
+        '''
         if self.processed:
-            start = int(np.round(startSeconds/self.timeStep))
-            end = endSeconds
-            if end is not None:
-                end = int(np.round(endSeconds/self.timeStep)+1)
-            if feature=='MEAN':
-                self.globalLoudness = np.mean(self.loudness[:,start:end], 1)
-            elif feature=='MAX':
-                self.globalLoudness = np.max(self.loudness[:,start:end], 1)
-            elif feature=='N5':
-                self.globalLoudness = np.percentile(self.loudness[:,start:end],0.95, axis=1)
-            else:
-                self.globalLoudness = feature(self.loudness[:,start:end], axis=1)
-            if inPhons:
-                self.globalLoudness = np.array([ln.soneToPhon(x,True) for x in globalLoudness])
-            return self.globalLoudness
+            nFrames = self.outputDict['FrameTimes'].size
+            dataToSave = self.outputDict['FrameTimes'].reshape((nFrames, 1))
+            for name in modelOutputsToSave:
+                for ear in range(self.outputDict[name].shape[1]):
+                    dataToSave = np.hstack((dataToSave, \
+                        self.outputDict[name][:, ear, 0, :]))
 
-    def saveLoudnessToCSVFile(self, filename):
-        #Saves the loudness vectors to a csv file.
-        If multiple ears, seperate csv files are written.
+            filename, ext = splitext(filename)
+            np.savetxt(filename + '.csv', dataToSave,\
+                delimiter = ',', header = ','.join(self.outputDict.keys()) , comments = "")
+
+    def saveOutputToPickle(self, filename):
+        '''
+        Saves the complete output dictionary to a pickle file.
+        '''
         if self.processed:
-            frameTimes = self.frameTimes.reshape((self.frameTimes.size, 1))
-            for ear in range(self.nOutputEars):
-                for chn in range(self.nChannels):
-                    np.savetxt(filename+'_ear'+str(ear)+'.csv', \
-                            np.hstack((frameTimes, self.loudness[ear])),\
-                            delimiter = ',')
-
-    def saveGlobalLoudnessToCSVFile(self, filename):
-        #Saves the computed global loudness to a csv file.
-        If multiple ears, seperate files are written.
-
-        if self.globalLoudness is not None:
-            for ear in range(self.nOutputEars):
-                np.savetxt(filename + '_ear' + str(ear) + '.csv',\
-                        self.globalLoudness,
-                        delimiter = ',')
-    '''
+            filename, ext = splitext(filename)
+            with open(filename + '.pickle', 'wb') as outfile:
+                pickle.dump(self.outputDict, outfile, protocol=pickle.HIGHEST_PROTOCOL)
