@@ -31,6 +31,9 @@ namespace loudness{
 
     bool SpecificLoudnessGM::initializeInternal(const SignalBank &input)
     {
+        LOUDNESS_ASSERT(input.getNChannels() > 1,
+                name_ << ": Insufficient number of input channels.");
+
         //c value from ANSI 2007
         cParam_ = 0.046871;
 
@@ -39,33 +42,22 @@ namespace loudness{
 
         Real eThrqdB500Hz = internalExcitation(500);
         //fill loudness parameter vectors
-        Real fcPrev = input.getCentreFreq(0);
-        for(int i=0; i<input.getNChannels(); i++)
+        for (int i = 0; i < input.getNChannels(); i++)
         {
             Real fc = input.getCentreFreq(i);
-
-            if(fc<fcPrev)
-                LOUDNESS_ERROR("SpecificLoudnessGM: Centre frequencies are not in ascending order!");
-            fcPrev = fc;
-
-            if(fc<500)
+            if (fc < 500)
             {
                 Real eThrqdB = internalExcitation(fc);
-                eThrqParam_.push_back(pow(10,eThrqdB/10.0));
-                Real gdB = eThrqdB500Hz-eThrqdB;
+                eThrqParam_.push_back(pow(10, eThrqdB/10.0));
+                Real gdB = eThrqdB500Hz - eThrqdB;
                 gParam_.push_back(pow(10, gdB/10.0));
                 aParam_.push_back(gdBToA(gdB));
                 alphaParam_.push_back(gdBToAlpha(gdB));
-                /* 
-                LOUDNESS_DEBUG("SpecificLoudnessGM: eThrq: " <<
-                        eThrqParam_[nFiltersLT500_] << ", gdB: " << gdB << ", A: "
-                        << aParam_[nFiltersLT500_] << ", alpha: " <<
-                        alphaParam_[nFiltersLT500_]);
-                */
                 nFiltersLT500_++;
             }
         }
-        LOUDNESS_DEBUG("SpecificLoudnessGM: number of filters <500 Hz: " << nFiltersLT500_);
+
+        LOUDNESS_DEBUG(name_ << ": number of filters <500 Hz: " << nFiltersLT500_);
 
         //output SignalBank
         output_.initialize(input);
@@ -75,54 +67,56 @@ namespace loudness{
 
     void SpecificLoudnessGM::processInternal(const SignalBank &input)
     {
-        Real excLin, sl=0.0;
-
-        for(int i=0; i<input.getNChannels(); i++)
+        for (int ear = 0; ear < input.getNEars(); ear++)
         {
-            excLin = input.getSample(i,0);
+            Real excLin, sl = 0.0;
+            const Real* inputExcitationPattern = input.getSingleSampleReadPointer(ear, 0);
+            Real* outputSpecificLoudness = output_.getSingleSampleWritePointer(ear, 0);
 
-            //checked out 2.4.14
-            //high level
-            if (excLin > 1e10)
+            for (int i = 0; i < input.getNChannels(); i++)
             {
-                if(ansiS3407_)
-                    sl = pow((excLin/1.0707),0.2);
-                else
-                    sl = pow((excLin/1.04e6),0.5);
-            }
-            else if(i<nFiltersLT500_) //low freqs
-            { 
-                if(excLin>eThrqParam_[i]) //medium level
+                excLin = inputExcitationPattern[i];
+
+                //checked out 2.4.14
+                //high level
+                if (excLin > 1e10)
                 {
-                    sl = (pow(gParam_[i]*excLin+aParam_[i], alphaParam_[i])-
-                            pow(aParam_[i],alphaParam_[i]));
+                    if (ansiS3407_)
+                        sl = pow((excLin/1.0707), 0.2);
+                    else
+                        sl = pow((excLin/1.04e6), 0.5);
                 }
-                else //low level
-                {
-                    sl = pow((2*excLin)/(excLin+eThrqParam_[i]), 1.5)*
-                        (pow(gParam_[i]*excLin+aParam_[i],alphaParam_[i])
-                            -pow(aParam_[i],alphaParam_[i]));
+                else if (i < nFiltersLT500_) //low freqs
+                { 
+                    if (excLin > eThrqParam_[i]) //medium level
+                    {
+                        sl = (pow(gParam_[i]*excLin+aParam_[i], alphaParam_[i]) -
+                                pow(aParam_[i], alphaParam_[i]));
+                    }
+                    else //low level
+                    {
+                        sl = pow((2*excLin)/(excLin+eThrqParam_[i]), 1.5) *
+                            (pow(gParam_[i]*excLin+aParam_[i], alphaParam_[i])
+                                - pow(aParam_[i], alphaParam_[i]));
+                    }
                 }
-            }
-            else //high freqs (variables are constant >= 500 Hz)
-            { 
-                if(excLin>2.3604782331805771) //medium level
-                {
-                    sl = pow(excLin+4.72096, 0.2)-1.3639739128330546;
-                } 
-                else //low level
-                {
-                    sl = pow((2*excLin)/(excLin+2.3604782331805771), 1.5)*
-                        (pow(excLin+4.72096, 0.2)-1.3639739128330546);
+                else //high freqs (variables are constant >= 500 Hz)
+                { 
+                    if (excLin > 2.3604782331805771) //medium level
+                    {
+                        sl = pow(excLin+4.72096, 0.2)-1.3639739128330546;
+                    } 
+                    else //low level
+                    {
+                        sl = pow((2*excLin)/(excLin+2.3604782331805771), 1.5) *
+                            (pow(excLin+4.72096, 0.2)-1.3639739128330546);
+                    }
                 }
+                
+                outputSpecificLoudness[i] = cParam_ * sl;
             }
-            
-            output_.setSample(i, 0, cParam_*sl);
         }
     }
 
     void SpecificLoudnessGM::resetInternal(){};
 }
-
-
-

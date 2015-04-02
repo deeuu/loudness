@@ -87,30 +87,27 @@ namespace loudness{
 
     void Filter::normaliseCoefs()
     {
-        if(aCoefs_.size()>0)
+        if (aCoefs_.size() > 0)
         {
-            if(aCoefs_[0]!=1.0)
+            if (aCoefs_[0] != 1)
             {
-                if(aCoefs_[0]!=0)
-                {
-                    LOUDNESS_DEBUG("Filter: Normalising filter coeffients.");
-                    for(int i=(int)bCoefs_.size()-1; i>-1; i--)
-                        bCoefs_[i] /= aCoefs_[0];
-                    for(int i=(int)aCoefs_.size()-1; i>-1; i--)
-                        aCoefs_[i] /= aCoefs_[0];
-                }
-                else
-                    LOUDNESS_WARNING("Filter: Coefficient a[0] == 0.");
+                LOUDNESS_DEBUG("Filter: Normalising filter coeffients.");
+                for(int i=(int)bCoefs_.size()-1; i>-1; i--)
+                    bCoefs_[i] /= aCoefs_[0];
+                for(int i=(int)aCoefs_.size()-1; i>-1; i--)
+                    aCoefs_[i] /= aCoefs_[0];
             }
+            else
+                LOUDNESS_DEBUG("Filter: Coefficient a[0] == 1, normalisation not required.");
         }
     }
 
     void Filter::resetDelayLine()
     {
         //zero delay line
-        z_.assign(z_.size(),0.0);
+        z_.assign(z_.size(), 0.0);
     }
-
+    
     const RealVec &Filter::getBCoefs() const
     {
         return bCoefs_;
@@ -136,7 +133,3 @@ namespace loudness{
         gain_ = gain;
     }
 }
-
-
-
-

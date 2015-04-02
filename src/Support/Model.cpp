@@ -23,34 +23,38 @@ namespace loudness{
 
     Model::Model(string name, bool dynamicModel) :
         name_(name),
-        dynamicModel_(dynamicModel)
+        dynamicModel_(dynamicModel),
+        rate_(0)
     {
         LOUDNESS_DEBUG(name_ << ": Constructed.");
     }
 
     Model::~Model() {}
 
+    void Model::setUpLinearTargetModuleChain()
+    {
+        for (uint i = 0; i < (modules_.size() - 1); i++)
+            modules_[i] -> addTargetModule(*modules_[i + 1]);
+    }
+
     bool Model::initialize(const SignalBank &input)
     {
         if(!initializeInternal(input))
         {
-            LOUDNESS_ERROR(name_ <<
-                    ": Not initialised!");
+            LOUDNESS_ERROR(name_ << ": Not initialised!");
             return 0;
         }
         else
         {
             LOUDNESS_DEBUG(name_ << ": initialised.");
 
-            //set up the chain
             nModules_ = (int)modules_.size();
-            for(int i=0; i<nModules_-1; i++)
-                modules_[i]->setTargetModule(modules_[i+1].get());
+
             //initialise all
-            modules_[0]->initialize(input);
+            modules_[0] -> initialize(input);
 
             LOUDNESS_DEBUG(name_ 
-                    << ": Targets set and all modules initialised.");
+                    << ": Module targets set and initialised.");
 
             initialized_ = 1;
             return 1;
@@ -59,38 +63,48 @@ namespace loudness{
 
     void Model::process(const SignalBank &input)
     {
-        if(initialized_)
-            modules_[0]->process(input);
+        if (initialized_)
+            modules_[0] -> process(input);
         else
             LOUDNESS_WARNING(name_ << ": Not initialised!");
     }
 
     void Model::reset()
     {
-        modules_[0]->reset();
+        if (initialized_)
+            modules_[0] -> reset();
     }
 
-    const SignalBank* Model::getModuleOutput(int module) const
+    const SignalBank& Model::getOutputSignalBank(int module) const
     {
-        if (module<nModules_)
-            return modules_[module]->getOutput();
-        else
-            return 0;
+        LOUDNESS_ASSERT(isPositiveAndLessThanUpper(module, nModules_));
+        return modules_[module] -> getOutputSignalBank();
     }
 
-    /*
-     * Decided not to return const ref because of bounds checking.
-     * Just return copy instead.
-     */
-    string Model::getModuleName(int module) const
+    const SignalBank& Model::getOutputSignalBank(const string& outputName) const
     {
-        if(module < (int)modules_.size())
-            return modules_[module] -> getName();
-        else
+        int idx = std::find(outputNames_.begin(), outputNames_.end(), outputName)
+            - outputNames_.begin();
+
+        if (!isPositiveAndLessThanUpper(idx, nModules_))
         {
-            LOUDNESS_ERROR(name_ << ": index out of bounds.");
-            return "";
+            LOUDNESS_WARNING(name_ << ": Invalid name. Options are:");
+            for (int i = 0; i < nModules_; i++)
+                std::cerr << outputNames_[i] << std::endl;
+            LOUDNESS_ASSERT(false);
         }
+        return modules_[idx] -> getOutputSignalBank();
+    }
+
+    const string& Model::getOutputName(int module) const
+    {
+        LOUDNESS_ASSERT(isPositiveAndLessThanUpper(module, nModules_));
+        return outputNames_[module];
+    }
+
+    const vector<string>& Model::getOutputNames() const
+    {
+        return outputNames_;
     }
 
     const string& Model::getName() const
@@ -113,14 +127,14 @@ namespace loudness{
         return nModules_;
     }            
     
-    void Model::setTimeStep(Real timeStep)
+    void Model::setRate(Real rate)
     {
-        timeStep_ = timeStep;
+        rate_ = rate;
     }
 
-    Real Model::getTimeStep() const
+    Real Model::getRate() const
     {
-        return timeStep_;
+        return rate_;
     }
 
 }

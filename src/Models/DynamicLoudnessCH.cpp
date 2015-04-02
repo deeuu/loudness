@@ -24,21 +24,28 @@
 #include "../Modules/IIR.h"
 #include "../Modules/Window.h"
 #include "../Modules/PowerSpectrum.h"
-#include "../Modules/GoertzelPS.h"
 #include "../Modules/CompressSpectrum.h"
 #include "../Modules/WeightSpectrum.h"
 #include "../Modules/DoubleRoexBank.h"
-#include "../Modules/IntegratedLoudnessGM.h"
+#include "../Modules/InstantaneousLoudnessGM.h"
+#include "../Modules/ARAverager.h"
 #include "DynamicLoudnessCH.h"
 
 namespace loudness{
 
-    DynamicLoudnessCH::DynamicLoudnessCH(string pathToFilterCoefs) :
-        Model("DynamicLoudnessCH", true)
+    DynamicLoudnessCH::DynamicLoudnessCH(const string& pathToFilterCoefs) :
+        Model("DynamicLoudnessCH", true),
+        pathToFilterCoefs_(pathToFilterCoefs)
     {
-        loadParameterSet(FASTER1);
+        loadParameterSet("Faster");
     }
-    
+
+    DynamicLoudnessCH::DynamicLoudnessCH() :
+        Model("DynamicLoudnessCH", true),
+        pathToFilterCoefs_("")
+    {
+        loadParameterSet("Faster");
+    }
 
     DynamicLoudnessCH::~DynamicLoudnessCH()
     {
@@ -48,14 +55,12 @@ namespace loudness{
     {
         diffuseField_ = diffuseField;
     }
-    void DynamicLoudnessCH::setGoertzel(bool goertzel)
+
+    void DynamicLoudnessCH::setStartAtWindowCentre(bool startAtWindowCentre)
     {
-        goertzel_ = goertzel;
+        startAtWindowCentre_ = startAtWindowCentre;
     }
-    void DynamicLoudnessCH::setDiotic(bool diotic)
-    {
-        diotic_ = diotic;
-    }
+
     void DynamicLoudnessCH::setUniform(bool uniform)
     {
         uniform_ = uniform;
@@ -65,29 +70,35 @@ namespace loudness{
     {
         filterSpacing_ = filterSpacing;
     }
+
     void DynamicLoudnessCH::setCompressionCriterion(Real compressionCriterion)
     {
         compressionCriterion_ = compressionCriterion;
     }
 
-    void DynamicLoudnessCH::loadParameterSet(ParameterSet set)
+    void DynamicLoudnessCH::loadParameterSet(const string& setName)
     {
         //common to all
-        setTimeStep(0.001);
+        setRate(1000);
         setDiffuseField(false);
-        setGoertzel(false);
-        setDiotic(true);
         setUniform(true);
         setFilterSpacing(0.1);
         setCompressionCriterion(0.0);
+        setStartAtWindowCentre(true);
+        attackTimeSTL_ = 0.016;
+        releaseTimeSTL_ = 0.032;
+        attackTimeLTL_ = 0.01;
+        releaseTimeLTL_ = 2.0;
 
-        switch(set){
-            case CH02:
-                break;
-            case FASTER1:
-                setFilterSpacing(0.25);
-                setCompressionCriterion(0.3);
-                break;
+        if (setName == "Faster")
+        {
+            setFilterSpacing(0.25);
+            setCompressionCriterion(0.3);
+            LOUDNESS_DEBUG(name_ << ": using a filter spacing of 0.25 Cams"
+                   << " with 0.3 Cam spectral compression criterion.");
+        }
+        else{
+            LOUDNESS_DEBUG(name_ << "Using Settings from Chen and Hu 2012 paper.");
         }
     }
 
@@ -117,30 +128,20 @@ namespace loudness{
             
             //create module
             if(iir)
+            {
                 modules_.push_back(unique_ptr<Module> 
                         (new IIR(bCoefs, aCoefs))); 
+                outputNames_.push_back("IIR");
+            }
             else
+            {
                 modules_.push_back(unique_ptr<Module>
                         (new FIR(bCoefs))); 
+                outputNames_.push_back("FIR");
+            }
 
             //clean up
             delete [] data;
-        }
-
-        /*
-         * Frame generator for spectrogram
-         */
-        int windowSize = round(0.128*input.getFs());
-        int hopSize = round(timeStep_*input.getFs());
-        if((!goertzel_) && (hopSize<windowSize))
-        {
-            modules_.push_back(unique_ptr<Module> 
-                    (new FrameGenerator(windowSize, hopSize, false)));
-        }
-        else
-        {
-            LOUDNESS_WARNING(name_ << ": FrameGenerator will not be used as no overlap required."
-                    << "Input signal will be aligned with the first analysis window sample (index 0).");
         }
 
         /*
@@ -159,35 +160,30 @@ namespace loudness{
             windowSizeSamples[w] += windowSizeSamples[w]%2;
         }
         
-        //create module
-        if(goertzel_)
-        {
-            modules_.push_back(unique_ptr<Module> 
-                    (new GoertzelPS(bandFreqsHz, windowSizeSecs, timeStep_))); 
-        }
-        else{
-            //configure windowing
-            modules_.push_back(unique_ptr<Module>
-                    (new Window("hann", windowSizeSamples, true)));
-            //power spectrum
-            modules_.push_back(unique_ptr<Module> 
-                    (new PowerSpectrum(bandFreqsHz, uniform_))); 
-        }
+        //Frame generator
+        int hopSize = round(input.getFs() / rate_);
+        modules_.push_back(unique_ptr<Module> 
+                (new FrameGenerator(windowSizeSamples[0], hopSize, startAtWindowCentre_)));
+        outputNames_.push_back("FrameGenerator");
+        
+        //configure windowing: Periodic hann window
+        modules_.push_back(unique_ptr<Module>
+                (new Window("hann", windowSizeSamples, true)));
+        outputNames_.push_back("HannWindows");
+
+        //power spectrum
+        modules_.push_back(unique_ptr<Module> 
+                (new PowerSpectrum(bandFreqsHz, windowSizeSamples, uniform_))); 
+        outputNames_.push_back("PowerSpectrum");
 
         /*
          * Compression
          */
         if(compressionCriterion_ > 0)
         {
-            if(goertzel_)
-            {
-                LOUDNESS_WARNING(name_ << ": Compression cannot be used with bank of Goertzels");
-            }
-            else
-            {
-                modules_.push_back(unique_ptr<Module>
-                        (new CompressSpectrum(compressionCriterion_))); 
-            }
+            modules_.push_back(unique_ptr<Module>
+                    (new CompressSpectrum(compressionCriterion_))); 
+            outputNames_.push_back("CompressedPowerSpectrum");
         }
 
         /*
@@ -195,13 +191,14 @@ namespace loudness{
          */
         if(pathToFilterCoefs_.empty())
         {
-            string middleEar = "CHEN_ETAL";
+             string middleEar = "CHEN_ETAL";
             string outerEar = "ANSI_FREEFIELD";
             if(diffuseField_)
                 outerEar = "ANSI_DIFFUSEFIELD";
 
             modules_.push_back(unique_ptr<Module> 
                     (new WeightSpectrum(middleEar, outerEar))); 
+            outputNames_.push_back("WeightedPowerSpectrum");
         }
 
         /*
@@ -209,16 +206,32 @@ namespace loudness{
          */
         modules_.push_back(unique_ptr<Module> (new DoubleRoexBank(1.5, 40.2,
                         filterSpacing_)));
+        outputNames_.push_back("ExcitationPattern");
         
         /*
-        * Loudness integration 
+        * Instantaneous loudness
         */   
-        modules_.push_back(unique_ptr<Module> (new
-                    IntegratedLoudnessGM(IntegratedLoudnessGM::CH12, diotic_,
-                        1.53e-8)));
+        modules_.push_back(unique_ptr<Module>
+                (new InstantaneousLoudnessGM(1.53e-8, true)));
+        outputNames_.push_back("InstantaneousLoudness");
+
+        /*
+         * Short-term loudness
+         */
+        modules_.push_back(unique_ptr<Module>
+                (new ARAverager(attackTimeSTL_, releaseTimeSTL_)));
+        outputNames_.push_back("ShortTermLoudness");
+
+        /*
+         * Long-term loudness
+         */
+        modules_.push_back(unique_ptr<Module>
+                (new ARAverager(attackTimeLTL_, releaseTimeLTL_)));
+        outputNames_.push_back("LongTermLoudness");
+        
+        //configure targets
+        setUpLinearTargetModuleChain();
 
         return 1;
     }
-
 }
-

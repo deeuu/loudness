@@ -23,7 +23,8 @@
 #include "../Support/Module.h"
 #include <sndfile.h>
 
-#define MAXAUDIOBUFFERSIZE 192000
+//We can exceed this but only by +frameSize
+#define MAX_BUFFER_SIZE 192000
 
 namespace loudness{
 
@@ -54,22 +55,12 @@ namespace loudness{
          * @param fileName  Path to the audio file.
          * @param frameSize Number of samples in the frame.
          */
-        AudioFileCutter(string fileName="", int frameSize = 512);
+        AudioFileCutter(const string& fileName, int frameSize = 512);
 
         virtual ~AudioFileCutter();
         virtual bool initialize();
 
         virtual void process();
-
-        /**
-         * @brief Returns the sampling frequency (Hz) of the loaded audio file.
-         */
-        int getFs() const;
-
-        /**
-         * @brief Returns the total number of samples comprising the entire audio file.
-         */
-        int getNSamples() const;
 
         /**
          * @brief Returns the duration of the audio file in seconds.
@@ -103,8 +94,8 @@ namespace loudness{
         virtual void resetInternal();
 
         string fileName_;
-        int frameSize_, nSamples_, nFrames_, fs_;
-        int audioBufferSize_, bufferIdx_, frame_;
+        int frameSize_, nFrames_;
+        int nSamplesToLoadPerChannel_, audioBufferSize_, bufferIdx_, frame_;
         SNDFILE* sndFile_;
         vector<float> audioBuffer_;
         Real duration_;

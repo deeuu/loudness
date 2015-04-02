@@ -86,6 +86,10 @@ namespace loudness{
         */
         void reset();
 
+        /** Sets each modules in the chain to be the target of it's
+         * predecessor. */
+        void setUpLinearTargetModuleChain();
+
         /**
          * @brief Returns the initialisation state.
          *
@@ -100,40 +104,46 @@ namespace loudness{
          */
         bool isDynamicModel() const;
 
-        /**
-         * @brief Returns a pointer to the output SignalBank of @a module.
-         *
-         * @param module Module index.
-         *
-         * @return SignalBank pointer.
+        /** Returns a reference to the output SignalBank of a module specified
+         * by it's index.
          */
-        const SignalBank* getModuleOutput(int module) const;
-        
+        const SignalBank& getOutputSignalBank(int module) const;
+
+        /** Returns a reference to the output SignalBank of a module specified
+         * by name. The name does not necessarily correspond to the name of the
+         * module class but the one given by the model upon instantiation.
+         */
+        const SignalBank& getOutputSignalBank(const string& outputName) const;
+
         /**
          * @brief Returns the number of initialised modules comprising the
          * model.
          */
         int getNModules() const;
 
-        /**
-         * @brief Sets the time step (hop size in secs) for a dynamic loudness
-         * model.
+        /** Sets the processing rate in Hz for a dynamic loudness
+         * model. Note that after initialisation, the true processing rate will
+         * be dependent on the sampling frequency and the input buffer size.
          */
-        void setTimeStep(Real timeStep);
+        void setRate(Real rate);
+
+        /** Returns processing rate in Hz. Note that after
+         * initialisation, the true processing rate will be dependent on the
+         * sampling frequency and the input buffer size.
+         */
+        Real getRate() const;
 
         /**
-         * @brief Returns the time step (hop size in secs) for a dynamic
-         * loudness model.
-         */
-        Real getTimeStep() const;
-
-        /**
-         * @brief Returns the name of a module residing within the model.
+         * @brief Returns the name of a module residing within the model.  
+         * The name does not necessarily correspond to the name of the module
+         * class but the one given by the model upon instantiation.
          *
          * @param module Module index.
          */
-        string getModuleName(int module) const;
-        
+        const string& getOutputName(int module) const;
+
+        const vector<string>& getOutputNames() const;
+
         /**
          * @brief Returns the name of the model.
          */
@@ -145,8 +155,9 @@ namespace loudness{
         string name_;
         bool dynamicModel_, initialized_;
         int nModules_;
-        Real timeStep_ = 0;
+        Real rate_;
         vector<unique_ptr<Module>> modules_;
+        vector<string> outputNames_;
     };
 }
 

@@ -71,29 +71,13 @@ namespace loudness{
          * when computing the magnitude spectrum of a windowed segment.
          *
          */
-        bool normaliseWindow(RealVec &window, const string &normalisation, Real ref);
+        void normaliseWindow(RealVec &window, const string &normalisation, Real ref);
         void setNormalisation(const string &normalisation);
 
         //Window functions are available for naughty method swiping
         void generateWindow(RealVec &window, const string &windowType, bool periodic);
 
-        /**
-         * @brief For debugging
-         */
-        void setAlignOutput(bool alignOutput);
-
-        void setSum(bool sum);
-
-        /**
-         * @brief Set whether the input signal should be squared.
-         */
-        void setSquareInput(bool squareInput);
-        void setSqrRoot(bool sqrRoot);
         void setRef(const Real ref);
-
-        bool getSum() const;
-        bool getSquareInput() const;
-        bool getSqrRoot() const;
 
     private:
 
@@ -106,12 +90,11 @@ namespace loudness{
 
         string windowType_;
         IntVec length_;
-        bool periodic_;
+        bool periodic_, alignOutput_;
         string normalisation_;
         Real ref_;
-        bool sum_, average_, squareInput_, sqrRoot_;
         int nWindows_, largestWindowSize_;
-        bool parallelWindows_, alignOutput_;
+        bool parallelWindows_;
         RealVecVec window_;
         IntVec windowOffset_;
     };

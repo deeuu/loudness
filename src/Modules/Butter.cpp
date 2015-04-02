@@ -73,10 +73,10 @@ namespace loudness{
         normaliseCoefs();
 
         //delay line
-        z_.assign(2*order_,0.0);
+        z_.assign(input.getNEars() * 2 * order_,0.0);
 
         //output SignalBank
-        output_.initialize(input.getNChannels(), input.getNSamples(), input.getFs());
+        output_.initialize(input);
 
         return 1;
     }
@@ -86,26 +86,32 @@ namespace loudness{
         switch(order_)
         {
             case 3:
-                Real x,y;
-                for(int smp=0; smp<input.getNSamples(); smp++)
+                for (int ear = 0; ear < input.getNEars(); ear++)
                 {
-                    //input sample
-                    x = input.getSample(0, smp) * gain_;
-                    
-                    //filter
-                    y = bCoefs_[0]*(x-z_[2]) + bCoefs_[2]*(z_[1]-z_[0]) - 
-                        aCoefs_[1]*z_[3] - aCoefs_[2]*z_[4] - aCoefs_[3]*z_[5];
+                    const Real* inputSignal = input.getSignalReadPointer(ear, 0, 0);
+                    Real* outputSignal = output_.getSignalWritePointer(ear, 0, 0);
+                    Real* z = &z_[ear * 2 * order_];
+                    Real x,y;
+                    for (int smp = 0; smp < input.getNSamples(); smp++)
+                    {
+                        //input sample
+                        x = inputSignal[smp] * gain_;
+                        
+                        //filter
+                        y = bCoefs_[0]*(x-z[2]) + bCoefs_[2]*(z[1]-z[0]) - 
+                            aCoefs_[1]*z[3] - aCoefs_[2]*z[4] - aCoefs_[3]*z[5];
 
-                    //update delay line
-                    z_[5] = z_[4];
-                    z_[4] = z_[3];
-                    z_[3] = y;
-                    z_[2] = z_[1];
-                    z_[1] = z_[0];
-                    z_[0] = x;
+                        //update delay line
+                        z[5] = z[4];
+                        z[4] = z[3];
+                        z[3] = y;
+                        z[2] = z[1];
+                        z[1] = z[0];
+                        z[0] = x;
 
-                    //output sample
-                    output_.setSample(0, smp, y);
+                        //output sample
+                        outputSignal[smp] = y;
+                    }
                 }
         }
     }
@@ -114,5 +120,3 @@ namespace loudness{
         resetDelayLine();
     }
 }
-
-

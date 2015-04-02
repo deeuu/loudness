@@ -17,44 +17,41 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#ifndef ROEXBANKANSIS3407_H
-#define ROEXBANKANSIS3407_H
+#ifndef INSTANTANEOUSLOUDNESSGM_H
+#define INSTANTANEOUSLOUDNESSGM_H
 
 #include "../Support/Module.h"
 
 namespace loudness{
 
     /**
-     * @class RoexBankANSIS3407
-     * @brief Applies a set of level dependent rounded exponential (roex)
-     * filters to an input power spectrum. 
+     * @class InstantaneousLoudnessGM
      *
-     * This implementation follows:
+     * @brief Given a specific loudness pattern this class computes the
+     * the instantaneous loudness (integrated specific
+     * loudness). 
      *
-     * ANSI S3.4-2007. (2007).  Procedure for the Computation of Loudness of
-     * Steady Sounds.
+     * For input SignalBanks with one ear but diotic simulation, then you can
+     * set diotic true for simple doubling of loudness. If diotic is true and
+     * there are multiple ears, then both specific loudness patterns are summed
+     * to a single value. If diotic is false and there are multiple ears, then
+     * this module outputs one instantaneous loudness per ear.
      */
-    class RoexBankANSIS3407 : public Module
+    class InstantaneousLoudnessGM : public Module
     {
-
     public:
+ 
+        InstantaneousLoudnessGM(Real cParam, bool diotic);
 
-        RoexBankANSIS3407(Real camLo = 1.8, Real camHi = 38.9, Real camStep = 0.1);
-
-        virtual ~RoexBankANSIS3407();
+        virtual ~InstantaneousLoudnessGM();
 
     private:
-
         virtual bool initializeInternal(const SignalBank &input);
-
         virtual void processInternal(const SignalBank &input);
-
         virtual void resetInternal();
 
-        int nFilters_;
-        Real camLo_, camHi_, camStep_;
-        RealVec pu_, pl_, pcomp_, compLevel_;
+        Real cParam_;
+        bool diotic_;
     };
 }
-
 #endif

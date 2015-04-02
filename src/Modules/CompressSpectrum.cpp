@@ -24,7 +24,7 @@
 namespace loudness{
 
     CompressSpectrum::CompressSpectrum(Real alpha) : 
-        Module("AudioFileCutter"),
+        Module("CompressSpectrum"),
         alpha_(alpha)
     {}
 
@@ -32,11 +32,7 @@ namespace loudness{
 
     bool CompressSpectrum::initializeInternal(const SignalBank &input)
     {
-        if(input.getNChannels()<2)
-        {
-            LOUDNESS_ERROR("CompressSpectrum: Insufficient number of channels.");
-            return 0;
-        }
+        LOUDNESS_ASSERT(input.getNChannels() > 1, name_ << ": Insufficient number of channels.");
 
         /*
          * This code is sloppy due to along time spent figuring how 
@@ -48,7 +44,7 @@ namespace loudness{
         int nChannels = input.getNChannels();
         int i=0, binIdxPrev = 0;
         Real dif = freqToCam(input.getCentreFreq(1)) - freqToCam(input.getCentreFreq(0));
-        int groupSize = std::max(2.0, floor(alpha_/(dif)));
+        int groupSize = max(2.0, floor(alpha_/(dif)));
         int groupSizePrev = groupSize;
         vector<int> groupSizeStore, binIdx;
 
@@ -164,28 +160,35 @@ namespace loudness{
         #endif
 
         //set output SignalBank
-        output_.initialize(cfs.size(), 1, input.getFs());
+        output_.initialize(input.getNEars(), cfs.size(), 1, input.getFs());
         output_.setCentreFreqs(cfs);
         output_.setFrameRate(input.getFrameRate());
+        LOUDNESS_DEBUG(name_ << ": Number of bins comprising the compressed spectrum: "
+                << output_.getNChannels());
 
         return 1;
     }
 
     void CompressSpectrum::processInternal(const SignalBank &input)
     {
-
-        Real out = 0;
-        int i = 0, j = 0;
-        while(i<output_.getNChannels()) 
+        for (int ear = 0; ear < input.getNEars(); ear++)
         {
-            if(j<upperBandIdx_[i])
+            const Real* inputSpectrum = input.getSingleSampleReadPointer(ear, 0);
+            Real* outputSpectrum = output_.getSingleSampleWritePointer(ear, 0);
+
+            Real sum = 0.0;
+            int i = 0, j = 0;
+            while (i < output_.getNChannels()) 
             {
-                out += input.getSample(j++, 0);
-            }
-            else
-            {
-                output_.setSample(i++, 0, out);
-                out = 0;
+                if (j < upperBandIdx_[i])
+                {
+                    sum += inputSpectrum[j++];
+                }
+                else
+                {
+                    outputSpectrum[i++] = sum;
+                    sum = 0.0;
+                }
             }
         }
     }

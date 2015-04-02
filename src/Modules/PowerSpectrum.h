@@ -71,9 +71,9 @@ namespace loudness{
          * @brief Constructs a PowerSpectrum object.
          *
          * @param bandFreqsHz A vector of consecutive band edges in Hz.
-         * @param windowSizeSecs A vector of window lengths for each band in ms.
+         * @param windowSizes A vector of window sizes for each band in samples.
          */
-        PowerSpectrum(const RealVec& bandFreqsHz, bool uniform);
+        PowerSpectrum(const RealVec& bandFreqsHz, const vector<int>& windowSizes, bool uniform);
 
         virtual ~PowerSpectrum();
 
@@ -88,14 +88,12 @@ namespace loudness{
         virtual void resetInternal();
 
         RealVec bandFreqsHz_, normFactor_;
+        vector<int> windowSizes_;
         bool uniform_;
         string normalisation_;
-        int nWindows_;
-        vector<int> fftSize_;
         vector<vector<int> > bandBinIndices_; 
         vector<unique_ptr<FFT>> ffts_;
     };
 }
 
 #endif
-

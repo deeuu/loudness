@@ -36,10 +36,9 @@ namespace loudness{
 
     bool IIR::initializeInternal(const SignalBank &input)
     {
-
         //constants
-        int n_b = (int)bCoefs_.size();
-        int n_a = (int)aCoefs_.size();
+        uint n_b = bCoefs_.size();
+        uint n_a = aCoefs_.size();
         if(n_b*n_a > 0)
         {
             if(n_b > n_a)
@@ -49,49 +48,57 @@ namespace loudness{
             }
             else
             {
-                bCoefs_.resize(n_a,0);
+                bCoefs_.resize(n_b,0);
                 order_ = n_a-1;
             }
+
             LOUDNESS_DEBUG("IIR: Filter order is: " << order_);
             orderMinus1_ = order_-1;
 
             //Normalise coefficients if a[0] != 1
             normaliseCoefs();
 
-            //delay line
-            z_.assign(order_,0.0);
+            //internal delay line - single vector for all ears
+            z_.assign(input.getNEars()*order_, 0.0);
 
             //output SignalBank
-            output_.initialize(input.getNChannels(), input.getNSamples(), input.getFs());
+            output_.initialize(input);
 
             return 1;
         }
         {
-            LOUDNESS_ERROR("IIR: No filter coefficients");
+            LOUDNESS_ERROR(name_ << ": No filter coefficients");
             return 0;
         }
     }
 
     void IIR::processInternal(const SignalBank &input)
     {
-        int smp, j;
-        Real x,y;
-
-        for(smp=0; smp<input.getNSamples(); smp++)
+        for(int ear=0; ear<input.getNEars(); ear++)
         {
-            //input sample
-            x = input.getSample(0, smp) * gain_;
+            int smp, j;
+            const Real* inputSignal = input.getSignalReadPointer(ear, 0);
+            Real* outputSignal = output_.getSignalWritePointer(ear, 0);
+            Real* z = &z_[ear * order_];
+            Real x;
 
-            //output sample
-            y = bCoefs_[0] * x + z_[0];
-            output_.setSample(0, smp, y);
+            for(smp=0; smp<input.getNSamples(); smp++)
+            {
+                //input sample
+                x = inputSignal[smp] * gain_;
 
-            //fill delay
-            for (j=1; j<order_; j++)
-                z_[j-1] = bCoefs_[j] * x + z_[j] - aCoefs_[j] * y;
+                //output sample
+                outputSignal[smp] = bCoefs_[0] * x + z[0];
 
-            //final sample
-            z_[orderMinus1_] = bCoefs_[order_] * x - aCoefs_[order_] * y;
+                //fill delay
+                for (j=1; j<order_; j++)
+                    z[j-1] = bCoefs_[j] * x + z[j];
+                z[orderMinus1_] = bCoefs_[order_] * x;
+
+                for (j=1; j<order_; j++)
+                    z[j-1] -= aCoefs_[j] * outputSignal[smp];
+                z[orderMinus1_] -= aCoefs_[order_] * outputSignal[smp];
+            }
         }
     }
 
@@ -99,7 +106,4 @@ namespace loudness{
     {
         resetDelayLine();
     }
-
 }
-
-

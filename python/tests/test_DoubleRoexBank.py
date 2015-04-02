@@ -117,9 +117,6 @@ if __name__ == '__main__':
     halfPoints = N/2 + 1
     inputFreqs = np.arange(halfPoints)*fs/float(N)
 
-    bank = DoubleRoexBank()
-    bank.initialize(inputFreqs)
-
     psd = 10**((20*np.random.randn(halfPoints,1)+70) / 10.0)
     psd /= halfPoints
     '''
@@ -129,23 +126,23 @@ if __name__ == '__main__':
     psd[k1000] = 10**(40/10.0)
     '''
 
-    bank.process(psd)
-    excitationPy = bank.excitation
+    roexbankPy = DoubleRoexBank()
+    roexbankPy.initialize(inputFreqs)
+    roexbankPy.process(psd)
+    excitationPy = roexbankPy.excitation
 
     #loudness side
     psdLN = ln.SignalBank()
-    psdLN.initialize(halfPoints, 1, 32000)
+    psdLN.initialize(1, halfPoints, 1, 32000)
     psdLN.setCentreFreqs(inputFreqs)
-    [psdLN.setSample(i, 0, sample[0]) for i, sample in enumerate(psd)]
+    psdLN.setSignals(psd.reshape((1, psd.size, 1)))
     bankLN = ln.DoubleRoexBank(1.5, 40.2,0.1)
     bankLN.initialize(psdLN)
     bankLN.process(psdLN)
     bankLNout = bankLN.getOutput()
-    excitationLN = np.array([bankLNout.getSample(i,0) for i in
-        range(bankLNout.getNChannels())])
+    excitationLN = bankLNout.getSignals()
 
-
-    print "Equality test: ", np.allclose(excitationPy[:,0], excitationLN)
-    plt.plot(10*np.log10(excitationPy + 1e-10))
-    plt.plot(10*np.log10(excitationLN + 1e-10))
+    print "Equality test: ", np.allclose(excitationPy[:,0], excitationLN[0,:,0])
+    plt.plot(10*np.log10(excitationPy + 1e-10), 'k')
+    plt.plot(10*np.log10(excitationLN[0,:,0] + 1e-10), 'r--')
     plt.show()

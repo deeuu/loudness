@@ -33,49 +33,47 @@ namespace loudness{
 
     bool FIR::initializeInternal(const SignalBank &input)
     {
-        if(bCoefs_.size()>0)
-        {
-            //constants
-            order_ = (int)bCoefs_.size()-1;
-            orderMinus1_ = order_-1;
-            LOUDNESS_DEBUG("FIR: Filter order is: " << order_);
+        LOUDNESS_ASSERT(bCoefs_.size() > 0, name_ << ": No filter coefficients");
 
-            //delay line
-            z_.assign(order_,0.0);
+        //constants, order currently fixed for all ears/channels
+        order_ = (int)bCoefs_.size()-1;
+        orderMinus1_ = order_-1;
+        LOUDNESS_DEBUG("FIR: Filter order is: " << order_);
 
-            //output SignalBank
-            output_.initialize(input.getNChannels(), input.getNSamples(), input.getFs());
+        //internal delay line - single vector for all ears
+        z_.assign(input.getNEars() * order_, 0.0);
 
-            return 1;
-        }
-        {
-            LOUDNESS_ERROR("FIR: No filter coefficients");
-            return 0;
-        }
+        //output SignalBank
+        output_.initialize(input);
+
+        return 1;
     }
 
     void FIR::processInternal(const SignalBank &input)
     {
-        int smp, j;
-        Real x;
-
-        LOUDNESS_DEBUG("FIR: New block");
-        for(smp=0; smp<input.getNSamples(); smp++)
+        for(int ear=0; ear<input.getNEars(); ear++)
         {
-            //input sample
-            x = input.getSample(0, smp) * gain_;
+            int smp, j;
+            const Real* inputSignal = input.getSignalReadPointer(ear, 0);
+            Real* outputSignal = output_.getSignalWritePointer(ear, 0);
+            Real* z = &z_[ear * order_];
+            Real x;
 
-            LOUDNESS_DEBUG("FIR: Input sample: " << x);
+            for(smp=0; smp<input.getNSamples(); smp++)
+            {
+                //input sample
+                x = inputSignal[smp] * gain_;
 
-            //output sample
-            output_.setSample(0, smp, bCoefs_[0] * x + z_[0]);
+                //output sample
+                outputSignal[smp] = bCoefs_[0] * x + z[0];
 
-            //fill delay
-            for (j=1; j<order_; j++)
-                z_[j-1] = bCoefs_[j] * x + z_[j];
+                //fill delay
+                for (j=1; j<order_; j++)
+                    z[j-1] = bCoefs_[j] * x + z[j];
 
-            //final sample
-            z_[orderMinus1_] = bCoefs_[order_] * x;
+                //final sample
+                z[orderMinus1_] = bCoefs_[order_] * x;
+            }
         }
     }
 
@@ -84,5 +82,3 @@ namespace loudness{
         resetDelayLine();
     }
 }
-
-

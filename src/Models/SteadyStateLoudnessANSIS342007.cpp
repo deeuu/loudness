@@ -18,40 +18,42 @@
  */
 
 #include "../Modules/WeightSpectrum.h"
-#include "../Modules/RoexBankANSIS3407.h"
+#include "../Modules/RoexBankANSIS342007.h"
 #include "../Modules/SpecificLoudnessGM.h"
-#include "../Modules/IntegratedLoudnessGM.h"
-#include "SteadyLoudnessANSIS3407.h"
+#include "../Modules/InstantaneousLoudnessGM.h"
+#include "SteadyStateLoudnessANSIS342007.h"
 
 namespace loudness{
 
-    SteadyLoudnessANSIS3407::SteadyLoudnessANSIS3407() :
-        Model("SteadyLoudnessANSIS3407", false),
-        diotic_(true),
-        diffuseField_(false),
-        filterSpacing_(0.1)
-    {}
+    SteadyStateLoudnessANSIS342007::SteadyStateLoudnessANSIS342007() :
+        Model("SteadyStateLoudnessANSIS342007", false)
+    {
+        //Default parameters
+        setDiotic(true);
+        setDiffuseField(false);
+        setFilterSpacing(0.1);
+    }
 
-    SteadyLoudnessANSIS3407::~SteadyLoudnessANSIS3407()
+    SteadyStateLoudnessANSIS342007::~SteadyStateLoudnessANSIS342007()
     {
     }
 
-    void SteadyLoudnessANSIS3407::setDiotic(bool diotic)
+    void SteadyStateLoudnessANSIS342007::setDiotic(bool diotic)
     {
         diotic_ = diotic;
     }
 
-    void SteadyLoudnessANSIS3407::setDiffuseField(bool diffuseField)
+    void SteadyStateLoudnessANSIS342007::setDiffuseField(bool diffuseField)
     {
         diffuseField_ = diffuseField;
     }
 
-    void SteadyLoudnessANSIS3407::setFilterSpacing(Real filterSpacing)
+    void SteadyStateLoudnessANSIS342007::setFilterSpacing(Real filterSpacing)
     {
         filterSpacing_ = filterSpacing;
     }
 
-    bool SteadyLoudnessANSIS3407::initializeInternal(const SignalBank &input)
+    bool SteadyStateLoudnessANSIS342007::initializeInternal(const SignalBank &input)
     {
 
         /*
@@ -64,25 +66,31 @@ namespace loudness{
 
         modules_.push_back(unique_ptr<Module>
                 (new WeightSpectrum(middleEar, outerEar))); 
+        outputNames_.push_back("WeightedPowerSpectrum");
 
         /*
          * Roex filters
          */
         modules_.push_back(unique_ptr<Module>
-                (new RoexBankANSIS3407(1.8, 38.9, filterSpacing_)));
+                (new RoexBankANSIS342007(1.8, 38.9, filterSpacing_)));
+        outputNames_.push_back("ExcitationPattern");
         
         /*
          * Specific loudness using high level modification
          */
         modules_.push_back(unique_ptr<Module>
                 (new SpecificLoudnessGM(true)));
+        outputNames_.push_back("SpecificLoudnessPattern");
 
         /*
         * Loudness integration 
         */   
         modules_.push_back(unique_ptr<Module>
-                (new IntegratedLoudnessGM(IntegratedLoudnessGM::GM02, diotic_,
-                        1.0)));
+                (new InstantaneousLoudnessGM(1.0, true)));
+        outputNames_.push_back("InstantaneousLoudness");
+
+        //configure targets
+        setUpLinearTargetModuleChain();
 
         return 1;
     }

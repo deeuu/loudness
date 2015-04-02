@@ -21,17 +21,11 @@
 #define  COMMON_H
 
 #include <memory>
-#include <math.h>
 #include <vector>
 #include <string>
+#include <algorithm>
 #include "Debug.h"
-
-/*
- * Definitions
- */
-#define PI 3.14159265358979323846264338327
-#define LOW_LIMIT_POWER 1e-10
-#define LOW_LIMIT_DB -100
+#include "UsefulFunctions.h"
 
 /*
  * Expose objects
@@ -48,7 +42,8 @@ namespace loudness{
 typedef double Real;
 typedef unsigned int uint;
 typedef std::vector<Real> RealVec;
-typedef std::vector<int> IntVec;
 typedef std::vector<std::vector<Real> > RealVecVec;
+typedef std::vector<int> IntVec;
+typedef std::vector<Real>::iterator RealIter;
 
 #endif  

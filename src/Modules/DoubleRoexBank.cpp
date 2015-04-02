@@ -39,8 +39,9 @@ namespace loudness{
         LOUDNESS_DEBUG(name_ << ": Total number of filters: " << nFilters_);
 
         //initialize output SignalBank
-        output_.initialize(nFilters_, 1, input.getFs());
+        output_.initialize(input.getNEars(), nFilters_, 1, input.getFs());
         output_.setFrameRate(input.getFrameRate());
+        output_.setChannelSpacingInCams(camStep_);
 
         //filter variables
         wPassive_.resize(nFilters_);
@@ -50,7 +51,7 @@ namespace loudness{
 
         //fill the above arrays
         Real cam, fc, tl, tu, pl, pu, g, pgPassive, pgActive;
-        for(int i=0; i<nFilters_; i++)
+        for (int i = 0; i < nFilters_; i++)
         {
             //erb to frequency
             cam = camLo_+(i*camStep_);
@@ -69,15 +70,15 @@ namespace loudness{
 
             //compute the fixed filters
             int j=0;
-            while(j<input.getNChannels())
+            while (j < input.getNChannels())
             {
                 //normalised deviation
                 g = (input.getCentreFreq(j)-fc)/fc;
 
                 //Is g limited to 2 sufficient for the passive filter?
-                if (g<=2)
+                if (g <= 2)
                 {
-                    if(g<0) //lower value 
+                    if (g < 0) //lower value 
                     {
                         pgPassive = -tl*g; 
                         pgActive = -pl*g; 
@@ -107,45 +108,49 @@ namespace loudness{
         /*
          * Perform the excitation transformation
          */
-        Real excitationLinP, excitationLinA, excitationLog, gain,
-             excitationLogMinus30;
-
-        for(int i=0; i<nFilters_; i++)
+        Real excitationLinP, excitationLinA;
+        Real excitationLog, gain, excitationLogMinus30;
+        for (int ear = 0; ear < input.getNEars(); ear++)
         {
-            excitationLinP = 0.0;
-            excitationLinA = 0.0;
+            const Real* inputSpectrum = input.getSingleSampleReadPointer(ear, 0);
+            Real* outputExcitationPattern = output_.getSingleSampleWritePointer(ear, 0);
 
-            //passive filter output
-            for(unsigned int j=0; j<wPassive_[i].size(); j++)
-                excitationLinP += wPassive_[i][j]*input.getSample(j,0);
-
-            //convert to dB
-            excitationLog = 10*log10(excitationLinP+LOW_LIMIT_POWER);
-
-            //compute gain
-            gain = maxGdB_[i] - (maxGdB_[i] / (1 + exp(-0.05*(excitationLog-(100-maxGdB_[i]))))) + 
-                thirdGainTerm_[i];
-
-            //check for higher levels
-            if(excitationLog>30)
+            for (int i = 0; i < nFilters_; i++)
             {
-                excitationLogMinus30 = excitationLog-30;
-                gain = gain - 0.003*excitationLogMinus30*excitationLogMinus30;
+                excitationLinP = 0.0;
+                excitationLinA = 0.0;
+
+                //passive filter output
+                for (uint j = 0; j < wPassive_[i].size(); j++)
+                    excitationLinP += wPassive_[i][j] * inputSpectrum[j];
+
+                //convert to dB
+                excitationLog = 10*log10(excitationLinP+LOW_LIMIT_POWER);
+
+                //compute gain
+                gain = maxGdB_[i] - (maxGdB_[i] / (1 + exp(-0.05*(excitationLog-(100-maxGdB_[i]))))) 
+                    + thirdGainTerm_[i];
+
+                //check for higher levels
+                if (excitationLog > 30)
+                {
+                    excitationLogMinus30 = excitationLog-30;
+                    gain = gain - 0.003*excitationLogMinus30*excitationLogMinus30;
+                }
+
+                //convert to linear gain
+                gain = pow(10, gain/10.0); 
+
+                //active filter output
+                for (uint j = 0; j < wActive_[i].size(); j++)
+                    excitationLinA += wActive_[i][j] * inputSpectrum[j];
+                excitationLinA *= gain;
+
+                //excitation pattern
+                outputExcitationPattern[i] = excitationLinP + excitationLinA;
             }
-
-            //convert to linear gain
-            gain = pow(10, gain/10.0); 
-
-            //active filter output
-            for(unsigned int j=0; j<wActive_[i].size(); j++)
-                excitationLinA += wActive_[i][j]*input.getSample(j,0);
-            excitationLinA *= gain;
-
-            //excitation pattern
-            output_.setSample(i, 0, excitationLinP + excitationLinA);
         }
     }
 
     void DoubleRoexBank::resetInternal(){};
 }
-

@@ -64,11 +64,6 @@ namespace loudness{
     {
         public:
 
-            enum ParameterSet{
-                CH02 = 0 /**< Chen and Hu 2002. */,
-                FASTER1 = 1 /**< Compressed spectrum and fast roex filterbank. */
-            };
-
             /**
              * @brief Constructs a model with a path to the '.npy' file holding
              * the pre-cochlear filter coefficients.
@@ -76,17 +71,17 @@ namespace loudness{
              * If no path is given, the hybrid filter will
              * perform the outer and middle ear filtering.
              */
-            DynamicLoudnessCH(string pathToFilterCoefs = "");
+            DynamicLoudnessCH(const string& pathToFilterCoefs);
+            DynamicLoudnessCH();
 
             virtual ~DynamicLoudnessCH();
 
             /**
              * @brief Loads a parameter set.
              */
-            void loadParameterSet(ParameterSet set);
+            void loadParameterSet(const string& setName);
+            void setStartAtWindowCentre(bool startAtWindowCentre);
             void setDiffuseField(bool diffuseField);
-            void setGoertzel(bool goertzel);
-            void setDiotic(bool diotic);
             void setUniform(bool uniform);
             void setFilterSpacing(Real filterSpacing);
             void setCompressionCriterion(Real compressionCriterion);
@@ -97,7 +92,9 @@ namespace loudness{
             string pathToFilterCoefs_;
             int outerEarType_;
             Real filterSpacing_, compressionCriterion_;
-            bool uniform_, diotic_, goertzel_, diffuseField_;
+            Real attackTimeSTL_, releaseTimeSTL_;
+            Real attackTimeLTL_, releaseTimeLTL_;
+            bool uniform_, diotic_, diffuseField_, startAtWindowCentre_;
     }; 
 }
 

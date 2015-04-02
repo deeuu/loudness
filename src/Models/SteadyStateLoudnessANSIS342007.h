@@ -17,19 +17,19 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#ifndef STEADYLOUDNESSANSIS3407_H
-#define STEADYLOUDNESSANSIS3407_H
+#ifndef SteadyStateLoudnessANSIS342007_H
+#define SteadyStateLoudnessANSIS342007_H
 
 #include "../Support/Model.h"
 #include <string>
 
 namespace loudness{
 
-    class SteadyLoudnessANSIS3407 : public Model
+    class SteadyStateLoudnessANSIS342007 : public Model
     {
         public:
-            SteadyLoudnessANSIS3407();
-            virtual ~SteadyLoudnessANSIS3407();
+            SteadyStateLoudnessANSIS342007();
+            virtual ~SteadyStateLoudnessANSIS342007();
 
             void setDiotic(bool diotic);
             void setDiffuseField(bool diffuseField);

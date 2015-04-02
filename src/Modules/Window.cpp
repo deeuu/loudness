@@ -27,24 +27,14 @@ namespace loudness{
         length_(length),
         periodic_(periodic),
         normalisation_("energy"),
-        ref_(2e-5),
-        sum_(false),
-        average_(false),
-        squareInput_(false),
-        sqrRoot_(false),
-        alignOutput_(false)
+        ref_(2e-5)
     {}
     Window::Window(const string &windowType, int length, bool periodic) :
         Module("Window"),
         windowType_(windowType),
         periodic_(periodic),
         normalisation_("energy"),
-        ref_(2e-5),
-        sum_(false),
-        average_(false),
-        squareInput_(false),
-        sqrRoot_(false),
-        alignOutput_(false)
+        ref_(2e-5)
     {
        length_.assign(1, length); 
     }
@@ -55,7 +45,99 @@ namespace loudness{
     Window::~Window()
     {
     }
-    
+   
+    bool Window::initializeInternal(const SignalBank &input)
+    {
+        LOUDNESS_ASSERT(input.getNSamples() == length_[0], 
+                    name_ << ": Number of input samples does not equal the largest window size!");
+
+        //number of windows
+        nWindows_ = (int)length_.size();
+        LOUDNESS_DEBUG(name_ << ": Number of windows = " << nWindows_);
+        window_.resize(nWindows_);
+
+        //Largest window should be the first
+        largestWindowSize_ = length_[0];
+        LOUDNESS_DEBUG(name_ << ": Largest window size = " << largestWindowSize_);
+
+        //first window (largest) does not require a shift
+        windowOffset_.push_back(0);
+
+        //check if we are using multi windows on one input channel
+        int nOutputChannels = input.getNChannels();
+        if((input.getNChannels()==1) && (nWindows_>1))
+        {
+            LOUDNESS_DEBUG(name_ << ": Using parallel windows");
+            parallelWindows_ = true;
+            nOutputChannels = nWindows_;
+            //if so, calculate the delay
+            int alignmentSample = ceil((largestWindowSize_-1)/2.0);
+            LOUDNESS_DEBUG(name_ << ": Alignment sample = " << alignmentSample);
+            for(int w=1; w<nWindows_; w++)
+            {
+                int thisCentreSample = ceil((length_[w]-1)/2.0);
+                int thisWindowOffset = alignmentSample - thisCentreSample;
+                windowOffset_.push_back(thisWindowOffset);
+                LOUDNESS_DEBUG(name_ << ": Centre sample for window " << w << " = " << thisCentreSample);
+                LOUDNESS_DEBUG(name_ << ": Offset for window " << w << " = " << thisWindowOffset);
+            }
+        }
+        else
+        {
+            LOUDNESS_ASSERT(input.getNChannels() == nWindows_,
+                    "Multiple channels but incorrect window specification.");
+        }
+        
+        //generate the normalised window functions
+        for (int w=0; w<nWindows_; w++)
+        {
+            window_[w].assign(length_[w],0.0);
+            generateWindow(window_[w], windowType_, periodic_);
+            normaliseWindow(window_[w], normalisation_, ref_);
+            LOUDNESS_DEBUG(name_ << ": Length of window " << w << " = " << window_[w].size());
+        }
+
+        //initialise the output signal
+        output_.initialize(input.getNEars(), nOutputChannels, largestWindowSize_, input.getFs());
+        output_.setFrameRate(input.getFrameRate());
+
+        return 1;
+    }
+
+    void Window::processInternal(const SignalBank &input)
+    {
+        Real* outputSignal;
+        const Real* inputSignal;
+        for(int ear=0; ear<input.getNEars(); ear++)
+        {
+            for(int w=0; w<nWindows_; w++)
+            {
+                inputSignal = input.getSignalReadPointer(ear, 0, windowOffset_[w]);
+                outputSignal = output_.getSignalWritePointer(ear, w, 0);
+
+                for(int smp=0; smp<length_[w]; smp++)
+                    *outputSignal++ = window_[w][smp] * (*inputSignal++);
+            }
+        }
+    }
+
+    void Window::resetInternal()
+    {
+    }
+
+    //Window functions:
+    void Window::hann(RealVec &window, bool periodic)
+    {
+        unsigned int N = window.size();
+        int denom = N-1;//produces zeros on both sides
+        if(periodic)//Harris (1978) Eq 27b 
+            denom = N;
+        for(uint i=0; i<window.size(); i++)
+        {
+            window[i] = 0.5 - 0.5 * cos(2.0*PI*i/denom);
+        }
+    }
+
     void Window::generateWindow(RealVec &window, const string &windowType, bool periodic)
     {
         if(windowType == "hann")
@@ -67,7 +149,7 @@ namespace loudness{
         normalisation_ = normalisation;
     }
 
-    bool Window::normaliseWindow(RealVec &window, const string &normalisation, double ref)
+    void Window::normaliseWindow(RealVec &window, const string &normalisation, double ref)
     {
         if(!normalisation.empty())
         {
@@ -91,170 +173,19 @@ namespace loudness{
             }
             else 
             {
-                LOUDNESS_WARNING(name_ << ": Normalisation must be 'energy' or 'amplitude'");
-                return 0;
+                LOUDNESS_WARNING(name_ << ": Normalisation must be 'energy' or 'amplitude', using 'energy'");
+                normFactor = sqrt(wSize/sumSquares);
             }
             normFactor /= ref;
             for(uint i=0; i < wSize; i++)
                 window[i] *= normFactor;
         }
-        return 1;
     }
-    
-    void Window::hann(RealVec &window, bool periodic)
-    {
-        unsigned int N = window.size();
-        int denom = N-1;//produces zeros on both sides
-        if(periodic)//Harris (1978) Eq 27b 
-            denom = N;
-        for(unsigned int i=0; i<window.size(); i++)
-        {
-            window[i] = 0.5 - 0.5 * cos(2.0*PI*i/denom);
-        }
-    }
-
-    bool Window::initializeInternal(const SignalBank &input)
-    {
-        if(input.getNSamples() != length_[0])
-        {
-            LOUDNESS_ERROR(name_ << ": Number of samples is not equal to the largest window size!");
-            return 0;
-        }
-
-        //number of windows
-        nWindows_ = (int)length_.size();
-        LOUDNESS_DEBUG(name_ << ": Number of windows = " << nWindows_);
-        window_.resize(nWindows_);
-        largestWindowSize_ = length_[0];
-        LOUDNESS_DEBUG(name_ << ": Largest window size = " << largestWindowSize_);
-
-        //first window (largest) does not require a shift
-        windowOffset_.push_back(0);
-        //check if we are using multi windows on one input channel
-        if((input.getNChannels()==1) && (nWindows_>1))
-        {
-            LOUDNESS_DEBUG(name_ << ": Using parallel windows");
-            parallelWindows_ = true;
-            int alignmentSample = ceil((largestWindowSize_-1)/2.0);
-            LOUDNESS_DEBUG(name_ << ": Alignment sample = " << alignmentSample);
-            for(int w=1; w<nWindows_; w++)
-            {
-                int thisCentreSample = ceil((length_[w]-1)/2.0);
-                int thisWindowOffset = alignmentSample - thisCentreSample;
-                windowOffset_.push_back(thisWindowOffset);
-                LOUDNESS_DEBUG(name_ << ": Centre sample for window " << w << " = " << thisCentreSample);
-                LOUDNESS_DEBUG(name_ << ": Offset for window " << w << " = " << thisWindowOffset);
-            }
-        }
-        //generate the normalised window functions
-        for (int w=0; w<nWindows_; w++)
-        {
-            window_[w].assign(length_[w],0.0);
-            generateWindow(window_[w], windowType_, periodic_);
-            normaliseWindow(window_[w], normalisation_, ref_);
-            LOUDNESS_DEBUG(name_ << ": Length of window " << w << " = " << window_[w].size());
-        }
-        //initialise the output signal
-        if(sum_)
-            output_.initialize(nWindows_, 1, input.getFs());//frame rate?
-        else
-        {
-            output_.initialize(nWindows_, largestWindowSize_, input.getFs());
-            if(!alignOutput_)
-            {
-                //we resize the outputs so PowerSpectrum knows
-                for(int w=0; w < nWindows_; w++)
-                    output_.resizeSignal(w, length_[w]);
-            }
-        }
-        output_.setFrameRate(input.getFrameRate());
-
-        return 1;
-    }
-
-    void Window::processInternal(const SignalBank &input)
-    {
-        int chnIdx=0, offset=0, offset2=0;
-        for(int w=0; w<nWindows_; w++)
-        {
-            //offset the read position
-            offset = windowOffset_[w];
-            if(!parallelWindows_)
-                chnIdx = w;
-
-            //For debugging
-            if(alignOutput_)
-                offset2 = offset;
-
-            if(sum_)
-            {
-                double x=0.0, y=0.0;
-                if(squareInput_)
-                {
-                    for (int smp=0; smp<length_[w]; smp++)
-                    {
-                        x = input.getSample(chnIdx, offset++);
-                        x *= x;
-                        y += x;
-                    }
-                    if(sqrRoot_)
-                        y = sqrt(x);
-                }
-                else
-                {    
-                    for (int smp=0; smp<length_[w]; smp++)
-                        y += window_[w][smp] * input.getSample(chnIdx, offset++);
-                }
-                output_.setSample(w, 0, y);
-            }
-            else //normal windowing e.g. for FFT
-            {
-                for (int smp=0; smp<length_[w]; smp++)
-                    output_.setSample(w, smp+offset2, window_[w][smp] * input.getSample(chnIdx, offset++));
-            }
-        }
-    }
-
-    void Window::resetInternal()
-    {
-    }
+ 
 
     void Window::setRef(const Real ref)
     {
         ref_ = ref;
     }
 
-    void Window::setAlignOutput(bool alignOutput)
-    {
-        alignOutput_ = alignOutput;
-    }
- 
-    void Window::setSqrRoot(bool sqrRoot)
-    {
-        sqrRoot_ = sqrRoot;
-    }
-
-    void Window::setSum(bool sum)
-    {
-        sum_ = sum;
-    }
-    void Window::setSquareInput(bool squareInput)
-    {
-        squareInput_ = squareInput;
-    }
-
-    bool Window::getSquareInput() const
-    {
-        return squareInput_;
-    }
-
-    bool Window::getSum() const
-    {
-        return sum_;
-    }
-
-    bool Window::getSqrRoot() const
-    {
-        return sqrRoot_;
-    }
 }

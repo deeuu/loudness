@@ -78,7 +78,7 @@ namespace loudness{
         ~FFT();
 
         bool initialize();
-        void process(const RealVec &input);
+        void process(const Real* input, int length);
         void freeFFTW();
 
         int getFftSize() const;
@@ -91,9 +91,10 @@ namespace loudness{
             else
                 return 0.0;
         }
+
         inline Real getImag(int i)
         {
-            if ((i > 0) && (i <= nImags_))
+            if ( (i > 0) && (i <= nImags_) )
                 return fftOutputBuf_[fftSize_ - i];
             else
                 return 0.0;

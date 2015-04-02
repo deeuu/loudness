@@ -106,6 +106,7 @@ namespace loudness{
         Real gain_;
         int order_, orderMinus1_;
         RealVec bCoefs_, aCoefs_, z_;
+        bool duplicateEarCoefs_;
     };
 }
 

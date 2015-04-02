@@ -20,51 +20,49 @@
 %module loudness
 %{
 #define SWIG_FILE_WITH_INIT
-
+#include "../src/cnpy/cnpy.h"
+#include "../src/Support/Debug.h"
+#include "../src/Support/Common.h"
+#include "../src/Support/UsefulFunctions.h"
+#include "../src/Support/Spline.h"
+#include "../src/Support/AuditoryTools.h"
 #include "../src/Support/SignalBank.h"
 #include "../src/Support/Module.h"
 #include "../src/Support/Model.h"
-#include "../src/Support/Spline.h"
-#include "../src/Support/AuditoryTools.h"
-#include "../src/Support/Timer.h"
-#include "../src/Support/Filter.h"
 #include "../src/Support/FFT.h"
+#include "../src/Support/Filter.h"
 #include "../src/Modules/FIR.h"
 #include "../src/Modules/IIR.h"
-#include "../src/Modules/SMA.h"
 #include "../src/Modules/Butter.h"
-#include "../src/Modules/Biquad.h"
 #include "../src/Modules/AudioFileCutter.h"
 #include "../src/Modules/FrameGenerator.h"
 #include "../src/Modules/Window.h"
-#include "../src/Modules/IntegratedLoudnessGM.h"
-#include "../src/Modules/SpecificLoudnessGM.h"
-#include "../src/Modules/RoexBankANSIS3407.h"
+#include "../src/Modules/PowerSpectrum.h"
+#include "../src/Modules/WeightSpectrum.h"
+#include "../src/Modules/CompressSpectrum.h"
+#include "../src/Modules/RoexBankANSIS342007.h"
 #include "../src/Modules/FastRoexBank.h"
 #include "../src/Modules/DoubleRoexBank.h"
-#include "../src/Modules/PowerSpectrum.h"
-#include "../src/Modules/GoertzelPS.h"
-#include "../src/Modules/CompressSpectrum.h"
-#include "../src/Modules/WeightSpectrum.h"
-#include "../src/Models/SteadyLoudnessANSIS3407.h"
+#include "../src/Modules/SpecificLoudnessGM.h"
+#include "../src/Modules/InstantaneousLoudnessGM.h"
+#include "../src/Modules/ARAverager.h"
+#include "../src/Models/SteadyStateLoudnessANSIS342007.h"
 #include "../src/Models/DynamicLoudnessGM.h"
 #include "../src/Models/DynamicLoudnessCH.h"
 %}
 
 //Required for integration with numpy arrays
-//%include "numpy.i"
-
-/*
+%include "numpy.i"
 %init %{
-import_array();
+    import_array();
 %}
-*/
 
 //apply all of the double typemaps to Real
 %apply double { Real };
 %apply unsigned int { uint };
 
 %include "std_vector.i"
+%include "std_string.i"
 namespace std {
     //The argument to %template() is the name of the instantiation in the target language
     %template(RealVec) vector<double>;
@@ -77,38 +75,42 @@ namespace std {
     %apply const vector<int>& { const IntVec& };
 }
 
-%include "std_string.i"
-using namespace std;
+%apply (double* IN_ARRAY1, int DIM1) {(Real* data, int nSamples)}; 
+%apply (double* IN_ARRAY1, int DIM1) {(Real* data, int nChannels)}; 
+%apply (double* IN_ARRAY3, int DIM1, int DIM2, int DIM3) {(Real* data, int nEars, int nChannels, int nSamples)};
 
+using namespace std;
 namespace loudness{
 using std::string;
+using std::vector;
 }
 
-%include "../src/Support/SignalBank.h"
-%include "../src/Support/Module.h"
-%include "../src/Support/Model.h"
+%include "./SignalBank.i"
+%include "../src/cnpy/cnpy.h"
+%include "../src/Support/Debug.h"
+%include "../src/Support/Common.h"
+%include "../src/Support/UsefulFunctions.h"
 %include "../src/Support/Spline.h"
 %include "../src/Support/AuditoryTools.h"
-%include "../src/Support/Timer.h"
-%include "../src/Support/Filter.h"
+%include "../src/Support/Module.h"
+%include "../src/Support/Model.h"
 %include "../src/Support/FFT.h"
+%include "../src/Support/Filter.h"
+%include "../src/Modules/FIR.h"
+%include "../src/Modules/IIR.h"
+%include "../src/Modules/Butter.h"
 %include "../src/Modules/AudioFileCutter.h"
 %include "../src/Modules/FrameGenerator.h"
 %include "../src/Modules/Window.h"
-%include "../src/Modules/FIR.h"
-%include "../src/Modules/IIR.h"
-%include "../src/Modules/SMA.h"
-%include "../src/Modules/Butter.h"
-%include "../src/Modules/Biquad.h"
 %include "../src/Modules/PowerSpectrum.h"
-%include "../src/Modules/GoertzelPS.h"
-%include "../src/Modules/CompressSpectrum.h"
 %include "../src/Modules/WeightSpectrum.h"
-%include "../src/Modules/IntegratedLoudnessGM.h"
-%include "../src/Modules/SpecificLoudnessGM.h"
-%include "../src/Modules/RoexBankANSIS3407.h"
+%include "../src/Modules/CompressSpectrum.h"
+%include "../src/Modules/RoexBankANSIS342007.h"
 %include "../src/Modules/FastRoexBank.h"
 %include "../src/Modules/DoubleRoexBank.h"
-%include "../src/Models/SteadyLoudnessANSIS3407.h"
+%include "../src/Modules/SpecificLoudnessGM.h"
+%include "../src/Modules/InstantaneousLoudnessGM.h"
+%include "../src/Modules/ARAverager.h"
+%include "../src/Models/SteadyStateLoudnessANSIS342007.h"
 %include "../src/Models/DynamicLoudnessGM.h"
 %include "../src/Models/DynamicLoudnessCH.h"
