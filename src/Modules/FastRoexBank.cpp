@@ -54,7 +54,14 @@ namespace loudness{
             rectBinIndices_[i][0] = i;
             rectBinIndices_[i][1] = i+1;
 
-            //sum components falling within the filter
+            /* Find components falling within the band:
+             * This follows the Fortran code in Glasberg and Moore's 1990 paper
+             * which uses the inclusive interval [fLo, fHi].  An alternative
+             * approach is to find the nearest DFT bins to the lower and upper
+             * band edges, which would require a nearest search (bins may not be
+             * uniformly spaced). Decided to go with the first prodedure for
+             * simplicity and follow original code.
+             */
             bool first = true;
             int j=0;
             while(j<input.getNChannels())
@@ -150,11 +157,10 @@ namespace loudness{
             const Real* inputPowerSpectrum = input.getSingleSampleReadPointer(ear, 0);
             Real* outputExcitationPattern = output_.getSingleSampleWritePointer(ear, 0);
 
-
             Real runningSum = 0.0;
             int j = 0;
             int k = rectBinIndices_[0][0];
-            for (int i=0; i<nChannels; i++)
+            for (int i = 0; i < nChannels; i++)
             {
                 //running sum of component powers
                 while (j < rectBinIndices_[i][1])
