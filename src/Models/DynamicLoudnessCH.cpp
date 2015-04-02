@@ -86,7 +86,7 @@ namespace loudness{
         setCompressionCriterion(0.0);
         setStartAtWindowCentre(true);
         attackTimeSTL_ = 0.016;
-        releaseTimeLTL_ = 0.032;
+        releaseTimeSTL_ = 0.032;
         attackTimeLTL_ = 0.01;
         releaseTimeLTL_ = 2.0;
 

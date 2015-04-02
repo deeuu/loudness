@@ -74,19 +74,6 @@ class LoudnessExtractor:
             raise ValueError("Input should have " \
                 + str(self.nInputEars) + " columns");
 
-        #configure the number of output frames needed
-        nOutputFrames = int(np.ceil(self.nSamples / float(self.hopSize)))
-        self.outputDict['FrameTimes'] = self.frameTimeOffset + self.timeStep + \
-                np.arange(nOutputFrames) * self.hopSize / float(self.fs)
-
-        #outputs
-        for i, name in enumerate(self.modelOutputsToExtract):
-            self.outputDict[name] = np.zeros((\
-                nOutputFrames,
-                self.outputBanks[i].getNEars(),\
-                self.outputBanks[i].getNChannels(),\
-                self.outputBanks[i].getNSamples()))
-
         #Format input for SignalBank
         self.inputSignal = inputSignal.reshape((self.nInputEars, 1, self.nSamples))
 
@@ -96,6 +83,19 @@ class LoudnessExtractor:
             np.zeros((self.nInputEars, 1, self.nSamplesToPadStart)), \
             self.inputSignal,\
             np.zeros((self.nInputEars, 1, self.nSamplesToPadEnd))), 2)
+
+        #configure the number of output frames needed
+        nOutputFrames = int(np.ceil(self.inputSignal.size / float(self.hopSize)))
+        self.outputDict['FrameTimes'] = self.frameTimeOffset + self.timeStep + \
+                np.arange(nOutputFrames) * self.hopSize / float(self.fs)
+
+       #outputs
+        for i, name in enumerate(self.modelOutputsToExtract):
+            self.outputDict[name] = np.zeros((\
+                nOutputFrames,
+                self.outputBanks[i].getNEars(),\
+                self.outputBanks[i].getNChannels(),\
+                self.outputBanks[i].getNSamples()))
 
         #One process call every hop samples
         for frame in range(nOutputFrames):

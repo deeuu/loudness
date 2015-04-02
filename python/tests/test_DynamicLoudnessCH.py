@@ -6,10 +6,10 @@ from sound import Sound
 from loudnessExtractor import LoudnessExtractor
 
 model = ln.DynamicLoudnessCH()
-model.setRate(500)
 
 outputsOfInterest = ["InstantaneousLoudness", "ShortTermLoudness", "LongTermLoudness"]
 extractor = LoudnessExtractor(model, 32000, 1, outputsOfInterest)
+extractor.frameTimeOffset = -0.064
 
 signal = Sound.tone(1000, dur = 1.0, fs = 32e3)
 signal.useDBSPL()
