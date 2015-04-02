@@ -31,6 +31,8 @@ SOURCES=../src/cnpy/cnpy.cpp \
 ../src/Modules/FIR.cpp \
 ../src/Modules/IIR.cpp \
 ../src/Modules/Butter.cpp \
+../src/Modules/ARAverager.cpp \
+../src/Modules/SMA.cpp \
 ../src/Modules/FrameGenerator.cpp \
 ../src/Modules/Window.cpp \
 ../src/Modules/PowerSpectrum.cpp \
@@ -41,8 +43,6 @@ SOURCES=../src/cnpy/cnpy.cpp \
 ../src/Modules/DoubleRoexBank.cpp \
 ../src/Modules/SpecificLoudnessGM.cpp \
 ../src/Modules/InstantaneousLoudnessGM.cpp \
-../src/Modules/ARAverager.cpp \
-../src/Modules/IntegratedLoudnessGM.cpp \
 ../src/Models/SteadyStateLoudnessANSIS342007.cpp \
 ../src/Models/DynamicLoudnessGM.cpp \
 ../src/Models/DynamicLoudnessCH.cpp

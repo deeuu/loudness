@@ -81,10 +81,9 @@ namespace loudness{
         virtual void processInternal(const SignalBank &input);
         virtual void resetInternal();
 
-        int audioBufferSize_, bufferIdx_, windowSize_;
+        int windowSize_, bufferIdx_;
         bool average_, squareInput_;
-        Real runningSum_,safeRunningSum_;
-        RealVec audioBuffer_;
+        RealVec audioBuffer_, runningSumBuf_, safeRunningSumBuf_;
     };
 }
 
