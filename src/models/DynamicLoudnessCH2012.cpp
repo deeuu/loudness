@@ -37,33 +37,38 @@ namespace loudness{
         Model("DynamicLoudnessCH2012", true),
         pathToFilterCoefs_(pathToFilterCoefs)
     {
-        loadParameterSet("faster");
+        configureModelParameters("faster");
     }
 
     DynamicLoudnessCH2012::DynamicLoudnessCH2012() :
         Model("DynamicLoudnessCH2012", true),
         pathToFilterCoefs_("")
     {
-        loadParameterSet("faster");
+        configureModelParameters("faster");
     }
 
     DynamicLoudnessCH2012::~DynamicLoudnessCH2012()
     {
     }
 
-    void DynamicLoudnessCH2012::setUseDiffuseField(bool useDiffuseField)
-    {
-        useDiffuseField_ = useDiffuseField;
-    }
-
     void DynamicLoudnessCH2012::setStartAtWindowCentre(bool startAtWindowCentre)
     {
         startAtWindowCentre_ = startAtWindowCentre;
     }
-
-    void DynamicLoudnessCH2012::setUseUniformSampling(bool useUniformSampling)
+    
+    void DynamicLoudnessCH2012::setUseDiffuseFieldResponse(bool useDiffuseFieldResponse)
     {
-        useUniformSampling_ = useUniformSampling;
+        useDiffuseFieldResponse_ = useDiffuseFieldResponse;
+    }
+
+    void DynamicLoudnessCH2012::setDioticPresentation(bool dioticPresentation)
+    {
+        dioticPresentation_ = dioticPresentation;
+    }
+
+    void DynamicLoudnessCH2012::setSampleSpectrumUniformly(bool sampleSpectrumUniformly)
+    {
+        sampleSpectrumUniformly_ = sampleSpectrumUniformly;
     }
 
     void DynamicLoudnessCH2012::setFilterSpacing(Real filterSpacing)
@@ -76,12 +81,17 @@ namespace loudness{
         compressionCriterion_ = compressionCriterion;
     }
 
-    void DynamicLoudnessCH2012::loadParameterSet(const string& setName)
+    void DynamicLoudnessCH2012::setPathToFilterCoefs(string pathToFilterCoefs)
+    {
+        pathToFilterCoefs_ = pathToFilterCoefs;
+    }
+
+    void DynamicLoudnessCH2012::configureModelParameters(const string& setName)
     {
         //common to all
         setRate(1000);
-        setUseDiffuseField(false);
-        setUseUniformSampling(true);
+        setUseDiffuseFieldResponse(false);
+        setSampleSpectrumUniformly(true);
         setFilterSpacing(0.1);
         setCompressionCriterion(0.0);
         setStartAtWindowCentre(true);
@@ -99,7 +109,7 @@ namespace loudness{
         }
         else if (setName != "CH2012")
         {
-            loadParameterSet("CH2012");
+            configureModelParameters("CH2012");
             LOUDNESS_DEBUG(name_ << "Using Settings from Chen and Hu 2012 paper.");
         }
     }
@@ -175,7 +185,7 @@ namespace loudness{
 
         //power spectrum
         modules_.push_back(unique_ptr<Module> 
-                (new PowerSpectrum(bandFreqsHz, windowSizeSamples, useUniformSampling_))); 
+                (new PowerSpectrum(bandFreqsHz, windowSizeSamples, sampleSpectrumUniformly_))); 
         outputNames_.push_back("PowerSpectrum");
 
         /*
@@ -193,10 +203,10 @@ namespace loudness{
          */
         if(pathToFilterCoefs_.empty())
         {
-             string middleEar = "CHEN_ETAL";
+            string middleEar = "CHEN_ETAL";
             string outerEar = "ANSI_FREEFIELD";
-            if(useDiffuseField_)
-                outerEar = "ANSI_useDiffuseField";
+            if(useDiffuseFieldResponse_)
+                outerEar = "ANSI_DIFFUSEFIELD";
 
             modules_.push_back(unique_ptr<Module> 
                     (new WeightSpectrum(middleEar, outerEar))); 
@@ -214,7 +224,7 @@ namespace loudness{
         * Instantaneous loudness
         */   
         modules_.push_back(unique_ptr<Module>
-                (new InstantaneousLoudnessGM(1.53e-8, true)));
+                (new InstantaneousLoudnessGM(1.53e-8, dioticPresentation_)));
         outputNames_.push_back("InstantaneousLoudness");
 
         /*
@@ -232,7 +242,7 @@ namespace loudness{
         outputNames_.push_back("LongTermLoudness");
         
         //configure targets
-        setUpLinearTargetModuleChain();
+        configureLinearTargetModuleChain();
 
         return 1;
     }

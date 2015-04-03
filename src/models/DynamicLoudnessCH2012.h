@@ -37,7 +37,7 @@ namespace loudness{
      *
      * The default is `faster'.
      *
-     * Use loadParameterSet() to select the model parameters.
+     * Use configureModelParameters() to select the model parameters.
      * 
      * If you want to use a time-domain filter for simulating the transmission
      * response of the outer and middle ear, such as the 4096 order FIR filter
@@ -76,25 +76,25 @@ namespace loudness{
 
             virtual ~DynamicLoudnessCH2012();
 
-            /**
-             * @brief Loads a parameter set.
-             */
-            void loadParameterSet(const string& setName);
+            void configureModelParameters(const string& setName);
+
+            void setSampleSpectrumUniformly(bool sampleSpectrumUniformly);
+            void setDioticPresentation(bool dioticPresentation);
+            void setUseDiffuseFieldResponse(bool useDiffuseFieldResponse);
             void setStartAtWindowCentre(bool startAtWindowCentre);
-            void setUseDiffuseField(bool useDiffuseField);
-            void setUseUniformSampling(bool useUniformSampling);
             void setFilterSpacing(Real filterSpacing);
             void setCompressionCriterion(Real compressionCriterion);
+            void setPathToFilterCoefs(string pathToFilterCoefs);
 
         private:
             virtual bool initializeInternal(const SignalBank &input);
 
             string pathToFilterCoefs_;
-            int outerEarType_;
             Real filterSpacing_, compressionCriterion_;
             Real attackTimeSTL_, releaseTimeSTL_;
             Real attackTimeLTL_, releaseTimeLTL_;
-            bool useUniformSampling_, dioticPresentation_, useDiffuseField_, startAtWindowCentre_;
+            bool sampleSpectrumUniformly_, dioticPresentation_;
+            bool useDiffuseFieldResponse_, startAtWindowCentre_;
     }; 
 }
 

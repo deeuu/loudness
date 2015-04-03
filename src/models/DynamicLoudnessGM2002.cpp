@@ -40,14 +40,14 @@ namespace loudness{
         Model("DynamicLoudnessGM2002", true),
         pathToFilterCoefs_(pathToFilterCoefs)
     {
-        loadParameterSet("RecentAndFaster");
+        configureModelParameters("recentAndFaster");
     }
 
     DynamicLoudnessGM2002::DynamicLoudnessGM2002() :
         Model("DynamicLoudnessGM2002", true),
         pathToFilterCoefs_("")
     {
-        loadParameterSet("RecentAndFaster");
+        configureModelParameters("recentAndFaster");
     }
     
     DynamicLoudnessGM2002::~DynamicLoudnessGM2002()
@@ -59,23 +59,30 @@ namespace loudness{
         startAtWindowCentre_ = startAtWindowCentre;
     }
     
-    void DynamicLoudnessGM2002::setHpf(bool hpf)
+    void DynamicLoudnessGM2002::setUseHPF(bool useHPF)
     {
-        hpf_ = hpf;
+        useHPF_ = useHPF;
     }
-    void DynamicLoudnessGM2002::setDiffuseField(bool diffuseField)
+    void DynamicLoudnessGM2002::setUseDiffuseFieldResponse(bool useDiffuseFieldResponse)
     {
-        diffuseField_ = diffuseField;
+        useDiffuseFieldResponse_ = useDiffuseFieldResponse;
     }
 
-    void DynamicLoudnessGM2002::setUniform(bool uniform)
+    void DynamicLoudnessGM2002::setDioticPresentation(bool dioticPresentation)
     {
-        uniform_ = uniform;
+        dioticPresentation_ = dioticPresentation;
     }
-    void DynamicLoudnessGM2002::setInterpRoexBank(bool interpRoexBank)
+
+    void DynamicLoudnessGM2002::setSampleSpectrumUniformly(bool sampleSpectrumUniformly)
     {
-        interpRoexBank_ = interpRoexBank;
+        sampleSpectrumUniformly_ = sampleSpectrumUniformly;
     }
+
+    void DynamicLoudnessGM2002::setInterpolateRoexBank(bool interpolateRoexBank)
+    {
+        interpolateRoexBank_ = interpolateRoexBank;
+    }
+
     void DynamicLoudnessGM2002::setFilterSpacing(Real filterSpacing)
     {
         filterSpacing_ = filterSpacing;
@@ -84,25 +91,23 @@ namespace loudness{
     {
         compressionCriterion_ = compressionCriterion;
     }
-    void DynamicLoudnessGM2002::setAnsiBank(bool ansiBank)
-    {
-        ansiBank_ = ansiBank;
-    }
+
     void DynamicLoudnessGM2002::setPathToFilterCoefs(string pathToFilterCoefs)
     {
         pathToFilterCoefs_ = pathToFilterCoefs;
     }
 
-    void DynamicLoudnessGM2002::setFastBank(bool fastBank)
+    void DynamicLoudnessGM2002::setUseFastRoexBank(bool useFastRoexBank)
     {
-        fastBank_ = fastBank;
-    }
-    void DynamicLoudnessGM2002::setAnsiSpecificLoudness(bool ansiSpecificLoudness)
-    {
-        ansiSpecificLoudness_ = ansiSpecificLoudness;
+        useFastRoexBank_ = useFastRoexBank;
     }
 
-    void DynamicLoudnessGM2002::setSmoothingTimes(const string& author)
+    void DynamicLoudnessGM2002::setUseANSISpecificLoudness(bool useANSISpecificLoudness)
+    {
+        useANSISpecificLoudness_ = useANSISpecificLoudness;
+    }
+
+    void DynamicLoudnessGM2002::configureSmoothingTimes(const string& author)
     {
         if (author == "GM2002")
         {
@@ -120,49 +125,49 @@ namespace loudness{
         }
         else
         {
-            setSmoothingTimes("GM2002");
+            configureSmoothingTimes("GM2002");
         }
     }
     
-    void DynamicLoudnessGM2002::loadParameterSet(const string& setName)
+    void DynamicLoudnessGM2002::configureModelParameters(const string& setName)
     {
         //common to all
         setRate(1000);
-        setHpf(true);
-        setDiffuseField(false);
-        setUniform(true);
-        setInterpRoexBank(false);
+        setUseHPF(true);
+        setUseDiffuseFieldResponse(false);
+        setSampleSpectrumUniformly(true);
+        setInterpolateRoexBank(false);
         setFilterSpacing(0.25);
         setCompressionCriterion(0.0);
-        setFastBank(false);
-        setAnsiSpecificLoudness(false);
-        setSmoothingTimes("GM2002");
+        setUseFastRoexBank(false);
+        setUseANSISpecificLoudness(false);
+        configureSmoothingTimes("GM2002");
         setStartAtWindowCentre(true);
                 
         if (setName != "GM2002")
         {
-            if (setName == "Faster")
+            if (setName == "faster")
             {
-                setFastBank(true);
-                setInterpRoexBank(true);
+                setUseFastRoexBank(true);
+                setInterpolateRoexBank(true);
                 setCompressionCriterion(0.3);
                 LOUDNESS_DEBUG(name_ << ": Using faster params for Glasberg and Moore's 2002 model.");
             }
-            else if (setName == "Recent")
+            else if (setName == "recent")
             {
-                setSmoothingTimes("GM2003");
-                setAnsiSpecificLoudness(true);
+                configureSmoothingTimes("GM2003");
+                setUseANSISpecificLoudness(true);
                 LOUDNESS_DEBUG(name_
                         << ": Using updated "
                         << "time-constants from 2003 paper and high-level specific "
                         << "loudness equation (ANSI S3.4 2007)."); 
             }
-            else if (setName == "RecentAndFaster")
+            else if (setName == "recentAndFaster")
             {
-                setSmoothingTimes("GM2003");
-                setAnsiSpecificLoudness(true);
-                setFastBank(true);
-                setInterpRoexBank(true);
+                configureSmoothingTimes("GM2003");
+                setUseANSISpecificLoudness(true);
+                setUseFastRoexBank(true);
+                setInterpolateRoexBank(true);
                 setCompressionCriterion(0.3);
                 LOUDNESS_DEBUG(name_
                         << ": Using faster params and "
@@ -186,15 +191,15 @@ namespace loudness{
         //if filter coefficients have not been provided
         //use spectral weighting to approximate outer and middle ear response
         bool weightSpectrum = false;
-        if(pathToFilterCoefs_.empty())
+        if (pathToFilterCoefs_.empty())
         {
             LOUDNESS_WARNING(name_ 
                     << ": No filter coefficients, opting to weight power spectrum.");
 
             weightSpectrum = true; 
 
-            //should we use for HPF for low freqs? default is true
-            if(hpf_)
+            //should we use for useHpf for low freqs? default is true
+            if (useHPF_)
             {
                 modules_.push_back(unique_ptr<Module> (new Butter(3, 0, 50.0))); 
                 outputNames_.push_back("HPF");
@@ -268,7 +273,7 @@ namespace loudness{
 
         //power spectrum
         modules_.push_back(unique_ptr<Module> 
-                (new PowerSpectrum(bandFreqsHz, windowSizeSamples, uniform_))); 
+                (new PowerSpectrum(bandFreqsHz, windowSizeSamples, sampleSpectrumUniformly_))); 
         outputNames_.push_back("PowerSpectrum");
 
         /*
@@ -288,9 +293,9 @@ namespace loudness{
         {
             string middleEar = "ANSI";
             string outerEar = "ANSI_FREEFIELD";
-            if(hpf_)
+            if(useHPF_)
                 middleEar = "ANSI_HPF";
-            if(diffuseField_)
+            if(useDiffuseFieldResponse_)
                 outerEar = "ANSI_DIFFUSEFIELD";
 
             modules_.push_back(unique_ptr<Module> 
@@ -301,10 +306,10 @@ namespace loudness{
         /*
          * Roex filters
          */
-        if(fastBank_)
+        if(useFastRoexBank_)
         {
             modules_.push_back(unique_ptr<Module>
-                    (new FastRoexBank(filterSpacing_, interpRoexBank_)));
+                    (new FastRoexBank(filterSpacing_, interpolateRoexBank_)));
         }
         else
         {
@@ -317,14 +322,14 @@ namespace loudness{
          * Specific loudness
          */
         modules_.push_back(unique_ptr<Module>
-                (new SpecificLoudnessGM(ansiSpecificLoudness_)));
+                (new SpecificLoudnessGM(useANSISpecificLoudness_)));
         outputNames_.push_back("SpecificLoudnessPattern");
 
         /*
         * Instantaneous loudness
         */   
         modules_.push_back(unique_ptr<Module>
-                (new InstantaneousLoudnessGM(1.0, true)));
+                (new InstantaneousLoudnessGM(1.0, dioticPresentation_)));
         outputNames_.push_back("InstantaneousLoudness");
 
         /*
@@ -342,7 +347,7 @@ namespace loudness{
         outputNames_.push_back("LongTermLoudness");
         
         //configure targets
-        setUpLinearTargetModuleChain();
+        configureLinearTargetModuleChain();
 
         return 1;
     }

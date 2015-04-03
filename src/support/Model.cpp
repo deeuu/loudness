@@ -31,7 +31,7 @@ namespace loudness{
 
     Model::~Model() {}
 
-    void Model::setUpLinearTargetModuleChain()
+    void Model::configureLinearTargetModuleChain()
     {
         for (uint i = 0; i < (modules_.size() - 1); i++)
             modules_[i] -> addTargetModule(*modules_[i + 1]);

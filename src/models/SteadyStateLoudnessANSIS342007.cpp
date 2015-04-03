@@ -90,7 +90,7 @@ namespace loudness{
         outputNames_.push_back("InstantaneousLoudness");
 
         //configure targets
-        setUpLinearTargetModuleChain();
+        configureLinearTargetModuleChain();
 
         return 1;
     }

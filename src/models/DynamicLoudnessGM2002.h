@@ -27,9 +27,9 @@ namespace loudness{
     /**
      * @class DynamicLoudnessGM2002
      *
-     * @brief Implements Glasberg and Moore's time-varying loudness model.
+     * @brief Implements Glasberg and Moore's (2002) time-varying loudness model.
      *
-     * At present, there are two parameter sets available:
+     * At present, there are three parameter sets available:
      *
      * 1. GM2002 - The specification used by Glasberg and Moore (2002).
      * 2. Faster - Uses a compressed spectrum with a fast roex filterbank.
@@ -87,32 +87,30 @@ namespace loudness{
 
             virtual ~DynamicLoudnessGM2002();
 
-            /** Loads a parameter set.*/
-            void loadParameterSet(const string& setName);
+            void configureModelParameters(const string& setName);
 
+            void setUseFastRoexBank(bool useFastRoexBank);
+            void setInterpolateRoexBank(bool interpolateRoexBank);
+            void setSampleSpectrumUniformly(bool sampleSpectrumUniformly);
+            void setDioticPresentation(bool dioticPresentation);
+            void setUseHPF(bool useHPF);
+            void setUseDiffuseFieldResponse(bool useDiffuseFieldResponse);
+            void setUseANSISpecificLoudness(bool useANSISpecificLoudness);
             void setStartAtWindowCentre(bool startAtWindowCentre);
-            void setHpf(bool hpf);
-            void setDiffuseField(bool diffuseField);
-            void setUniform(bool uniform);
-            void setInterpRoexBank(bool interpRoexBank);
             void setFilterSpacing(Real filterSpacing);
             void setCompressionCriterion(Real compressionCriterion);
-            void setAnsiBank(bool ansiBank);
             void setPathToFilterCoefs(string pathToFilterCoefs);
-            void setFastBank(bool fastBank);
-            void setAnsiSpecificLoudness(bool ansiSpecificLoudness);
-            void setSmoothingTimes(const string& author);
+            void configureSmoothingTimes(const string& author);
 
         private:
             virtual bool initializeInternal(const SignalBank &input);
 
-            int outerEarType_;
             Real filterSpacing_, compressionCriterion_;
             Real attackTimeSTL_, releaseTimeSTL_;
             Real attackTimeLTL_, releaseTimeLTL_;
-            bool ansiBank_, fastBank_, interpRoexBank_, uniform_, diotic_, goertzel_;
-            bool hpf_, diffuseField_, ansiSpecificLoudness_, startAtWindowCentre_;
-            string pathToFilterCoefs_, smoothingType_;
+            bool useFastRoexBank_, interpolateRoexBank_, sampleSpectrumUniformly_, dioticPresentation_;
+            bool useHPF_, useDiffuseFieldResponse_, useANSISpecificLoudness_, startAtWindowCentre_;
+            string pathToFilterCoefs_;
     }; 
 }
 

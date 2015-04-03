@@ -88,7 +88,7 @@ namespace loudness{
 
         /** Sets each modules in the chain to be the target of it's
          * predecessor. */
-        void setUpLinearTargetModuleChain();
+        void configureLinearTargetModuleChain();
 
         /**
          * @brief Returns the initialisation state.
