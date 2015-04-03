@@ -29,8 +29,8 @@
 #include "../modules/WeightSpectrum.h"
 #include "../modules/FastRoexBank.h"
 #include "../modules/RoexBankANSIS342007.h"
-#include "../modules/SpecificLoudnessGM.h"
-#include "../modules/InstantaneousLoudnessGM.h"
+#include "../modules/SpecificLoudnessANSIS342007.h"
+#include "../modules/InstantaneousLoudness.h"
 #include "../modules/ARAverager.h"
 #include "DynamicLoudnessGM2002.h"
 
@@ -322,14 +322,14 @@ namespace loudness{
          * Specific loudness
          */
         modules_.push_back(unique_ptr<Module>
-                (new SpecificLoudnessGM(useANSISpecificLoudness_)));
+                (new SpecificLoudnessANSIS342007(useANSISpecificLoudness_)));
         outputNames_.push_back("SpecificLoudnessPattern");
 
         /*
         * Instantaneous loudness
         */   
         modules_.push_back(unique_ptr<Module>
-                (new InstantaneousLoudnessGM(1.0, dioticPresentation_)));
+                (new InstantaneousLoudness(1.0, dioticPresentation_)));
         outputNames_.push_back("InstantaneousLoudness");
 
         /*

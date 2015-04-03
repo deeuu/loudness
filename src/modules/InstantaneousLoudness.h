@@ -17,15 +17,15 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#ifndef INSTANTANEOUSLOUDNESSGM_H
-#define INSTANTANEOUSLOUDNESSGM_H
+#ifndef INSTANTANEOUSLOUDNESS_H
+#define INSTANTANEOUSLOUDNESS_H
 
 #include "../support/Module.h"
 
 namespace loudness{
 
     /**
-     * @class InstantaneousLoudnessGM
+     * @class InstantaneousLoudness
      *
      * @brief Given a specific loudness pattern this class computes the
      * the instantaneous loudness (integrated specific
@@ -37,13 +37,13 @@ namespace loudness{
      * to a single value. If diotic is false and there are multiple ears, then
      * this module outputs one instantaneous loudness per ear.
      */
-    class InstantaneousLoudnessGM : public Module
+    class InstantaneousLoudness : public Module
     {
     public:
  
-        InstantaneousLoudnessGM(Real cParam, bool diotic);
+        InstantaneousLoudness(Real cParam, bool diotic);
 
-        virtual ~InstantaneousLoudnessGM();
+        virtual ~InstantaneousLoudness();
 
     private:
         virtual bool initializeInternal(const SignalBank &input);

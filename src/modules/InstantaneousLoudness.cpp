@@ -17,23 +17,23 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#include "InstantaneousLoudnessGM.h"
+#include "InstantaneousLoudness.h"
 #include "../support/AuditoryTools.h"
 
 namespace loudness{
 
-    InstantaneousLoudnessGM::InstantaneousLoudnessGM(Real cParam, bool diotic) :
-        Module("InstantaneousLoudnessGM"),
+    InstantaneousLoudness::InstantaneousLoudness(Real cParam, bool diotic) :
+        Module("InstantaneousLoudness"),
         cParam_(cParam),
         diotic_(diotic)
     {
         LOUDNESS_DEBUG(name_ << ": Constructed.");
     }
 
-    InstantaneousLoudnessGM::~InstantaneousLoudnessGM()
+    InstantaneousLoudness::~InstantaneousLoudness()
     {};
 
-    bool InstantaneousLoudnessGM::initializeInternal(const SignalBank &input)
+    bool InstantaneousLoudness::initializeInternal(const SignalBank &input)
     {
         LOUDNESS_ASSERT(input.getNChannels() > 1, name_ << ": Insufficient number of input channels.");
         LOUDNESS_ASSERT(isPositiveAndLessThanUpper(input.getNEars(), 3),
@@ -68,7 +68,7 @@ namespace loudness{
         return 1;
     }
 
-    void InstantaneousLoudnessGM::processInternal(const SignalBank &input)
+    void InstantaneousLoudness::processInternal(const SignalBank &input)
     {       
         Real il = 0.0;
         for (int ear = 0; ear < input.getNEars(); ear++)
@@ -94,7 +94,7 @@ namespace loudness{
     }
 
     //output SignalBanks are cleared so not to worry about filter state
-    void InstantaneousLoudnessGM::resetInternal()
+    void InstantaneousLoudness::resetInternal()
     {
     }
 }

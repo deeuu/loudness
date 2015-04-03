@@ -17,19 +17,19 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#include "SpecificLoudnessGM.h"
+#include "SpecificLoudnessANSIS342007.h"
 #include "../support/AuditoryTools.h"
 
 namespace loudness{
 
-    SpecificLoudnessGM::SpecificLoudnessGM(bool ansiS3407) :
-        Module("SpecificLoudnessGM"),
+    SpecificLoudnessANSIS342007::SpecificLoudnessANSIS342007(bool ansiS3407) :
+        Module("SpecificLoudnessANSIS342007"),
         ansiS3407_(ansiS3407)
     {}
 
-    SpecificLoudnessGM::~SpecificLoudnessGM() {}
+    SpecificLoudnessANSIS342007::~SpecificLoudnessANSIS342007() {}
 
-    bool SpecificLoudnessGM::initializeInternal(const SignalBank &input)
+    bool SpecificLoudnessANSIS342007::initializeInternal(const SignalBank &input)
     {
         LOUDNESS_ASSERT(input.getNChannels() > 1,
                 name_ << ": Insufficient number of input channels.");
@@ -65,7 +65,7 @@ namespace loudness{
         return 1;
     }
 
-    void SpecificLoudnessGM::processInternal(const SignalBank &input)
+    void SpecificLoudnessANSIS342007::processInternal(const SignalBank &input)
     {
         for (int ear = 0; ear < input.getNEars(); ear++)
         {
@@ -118,5 +118,5 @@ namespace loudness{
         }
     }
 
-    void SpecificLoudnessGM::resetInternal(){};
+    void SpecificLoudnessANSIS342007::resetInternal(){};
 }

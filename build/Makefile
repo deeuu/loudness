@@ -41,8 +41,8 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/modules/RoexBankANSIS342007.cpp \
 ../src/modules/FastRoexBank.cpp \
 ../src/modules/DoubleRoexBank.cpp \
-../src/modules/SpecificLoudnessGM.cpp \
-../src/modules/InstantaneousLoudnessGM.cpp \
+../src/modules/SpecificLoudnessANSIS342007.cpp \
+../src/modules/InstantaneousLoudness.cpp \
 ../src/models/SteadyStateLoudnessANSIS342007.cpp \
 ../src/models/DynamicLoudnessGM2002.cpp \
 ../src/models/DynamicLoudnessCH2012.cpp

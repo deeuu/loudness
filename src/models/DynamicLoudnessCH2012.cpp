@@ -27,7 +27,7 @@
 #include "../modules/CompressSpectrum.h"
 #include "../modules/WeightSpectrum.h"
 #include "../modules/DoubleRoexBank.h"
-#include "../modules/InstantaneousLoudnessGM.h"
+#include "../modules/InstantaneousLoudness.h"
 #include "../modules/ARAverager.h"
 #include "DynamicLoudnessCH2012.h"
 
@@ -224,7 +224,7 @@ namespace loudness{
         * Instantaneous loudness
         */   
         modules_.push_back(unique_ptr<Module>
-                (new InstantaneousLoudnessGM(1.53e-8, dioticPresentation_)));
+                (new InstantaneousLoudness(1.53e-8, dioticPresentation_)));
         outputNames_.push_back("InstantaneousLoudness");
 
         /*

@@ -19,8 +19,8 @@
 
 #include "../modules/WeightSpectrum.h"
 #include "../modules/RoexBankANSIS342007.h"
-#include "../modules/SpecificLoudnessGM.h"
-#include "../modules/InstantaneousLoudnessGM.h"
+#include "../modules/SpecificLoudnessANSIS342007.h"
+#include "../modules/InstantaneousLoudness.h"
 #include "SteadyStateLoudnessANSIS342007.h"
 
 namespace loudness{
@@ -79,14 +79,14 @@ namespace loudness{
          * Specific loudness using high level modification
          */
         modules_.push_back(unique_ptr<Module>
-                (new SpecificLoudnessGM(true)));
+                (new SpecificLoudnessANSIS342007(true)));
         outputNames_.push_back("SpecificLoudnessPattern");
 
         /*
         * Loudness integration 
         */   
         modules_.push_back(unique_ptr<Module>
-                (new InstantaneousLoudnessGM(1.0, true)));
+                (new InstantaneousLoudness(1.0, true)));
         outputNames_.push_back("InstantaneousLoudness");
 
         //configure targets

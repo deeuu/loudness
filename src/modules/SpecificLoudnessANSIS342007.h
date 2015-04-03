@@ -17,8 +17,8 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#ifndef SPECIFICLOUDNESSGM_H
-#define SPECIFICLOUDNESSGM_H
+#ifndef SPECIFICLOUDNESSANSIS342007_H
+#define SPECIFICLOUDNESSANSIS342007_H
 
 #include "../support/Module.h"
 
@@ -36,7 +36,7 @@
 namespace loudness{
 
     /**
-     * @class SpecificLoudnessGM
+     * @class SpecificLoudnessANSIS342007
      * @brief Applies piecewise function to an input excitation pattern (in
      * linear power units) and outputs a corresponding specific loudness
      * pattern.
@@ -51,13 +51,13 @@ namespace loudness{
      * ANSI S3.4-2007.  (2007).  Procedure for the Computation of Loudness of
      * Steady Sounds.
      */
-    class SpecificLoudnessGM : public Module
+    class SpecificLoudnessANSIS342007 : public Module
     {
     public:
 
-        SpecificLoudnessGM(bool ansiS3407=0);
+        SpecificLoudnessANSIS342007(bool ansiS3407=0);
 
-        virtual ~SpecificLoudnessGM();
+        virtual ~SpecificLoudnessANSIS342007();
 
     private:
 
