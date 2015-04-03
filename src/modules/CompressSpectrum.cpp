@@ -17,9 +17,8 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#include <algorithm>    // std::max
 #include "CompressSpectrum.h"
-#include "../Support/AuditoryTools.h"
+#include "../support/AuditoryTools.h"
 
 namespace loudness{
 

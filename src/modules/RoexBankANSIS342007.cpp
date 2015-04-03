@@ -18,7 +18,7 @@
  */
 
 #include "RoexBankANSIS342007.h"
-#include "../Support/AuditoryTools.h"
+#include "../support/AuditoryTools.h"
 
 namespace loudness{
 

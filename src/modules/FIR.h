@@ -20,7 +20,7 @@
 #ifndef FIR_H
 #define FIR_H
 
-#include "../Support/Filter.h"
+#include "../support/Filter.h"
 
 /*
  * =====================================================================================

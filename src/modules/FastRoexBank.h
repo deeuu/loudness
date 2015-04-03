@@ -20,8 +20,8 @@
 #ifndef FASTROEXBANK_H
 #define FASTROEXBANK_H
 
-#include "../Support/Module.h"
-#include "../Support/Spline.h"
+#include "../support/Module.h"
+#include "../thirdParty/spline/Spline.h"
 
 /*
  * =====================================================================================

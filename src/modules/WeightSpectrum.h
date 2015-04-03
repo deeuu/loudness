@@ -20,8 +20,8 @@
 #ifndef WEIGHTSPECTRUM_H
 #define WEIGHTSPECTRUM_H
 
-#include "../Support/Module.h"
-#include "../Support/AuditoryTools.h"
+#include "../support/Module.h"
+#include "../support/AuditoryTools.h"
 
 namespace loudness{
 

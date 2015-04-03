@@ -21,7 +21,7 @@
 #define FFT_H
 
 #include <fftw3.h>
-#include "../Support/Module.h"
+#include "../support/Module.h"
 
 namespace loudness{
 

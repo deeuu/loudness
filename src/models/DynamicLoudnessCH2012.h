@@ -17,25 +17,25 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#ifndef DYNAMICLOUDNESSCH_H
-#define DYNAMICLOUDNESSCH_H
+#ifndef DYNAMICLOUDNESSCH2012_H
+#define DYNAMICLOUDNESSCH2012_H
 
-#include "../Support/Model.h"
+#include "../support/Model.h"
 
 namespace loudness{
 
     /**
-     * @class DynamicLoudnessCH
+     * @class DynamicLoudnessCH2012
      *
-     * @brief Implements Chen and Hu's time-varying loudness model.
+     * @brief Implements Chen and Hu's (2012) time-varying loudness model.
      *
      * At present, there are two parameter sets available:
      *
-     * 1. CH12 - The specification used by Chen and Hu (2012).
-     * 2. FASTER1 - Uses a compressed spectrum with a filter spacing of 0.25
+     * 1. CH2012 - The specification used by Chen and Hu (2012).
+     * 2. faster - Uses a compressed spectrum with a filter spacing of 0.25
      * Cams.
      *
-     * The default is FASTER1.
+     * The default is `faster'.
      *
      * Use loadParameterSet() to select the model parameters.
      * 
@@ -60,29 +60,29 @@ namespace loudness{
      * Processing (ICASSP ’12) (pp. 157–160).
      *
      */
-    class DynamicLoudnessCH : public Model
+    class DynamicLoudnessCH2012 : public Model
     {
         public:
 
-            /**
-             * @brief Constructs a model with a path to the '.npy' file holding
+            /** Constructs a model with a path to the '.npy' file holding
              * the pre-cochlear filter coefficients.
-             *
-             * If no path is given, the hybrid filter will
-             * perform the outer and middle ear filtering.
              */
-            DynamicLoudnessCH(const string& pathToFilterCoefs);
-            DynamicLoudnessCH();
+            DynamicLoudnessCH2012(const string& pathToFilterCoefs);
+            /** Constructs a model with no time-domain filtering.
+             * The pre-cochlear filter is performed using a frequency-domain
+             * weighting function.
+             */
+            DynamicLoudnessCH2012();
 
-            virtual ~DynamicLoudnessCH();
+            virtual ~DynamicLoudnessCH2012();
 
             /**
              * @brief Loads a parameter set.
              */
             void loadParameterSet(const string& setName);
             void setStartAtWindowCentre(bool startAtWindowCentre);
-            void setDiffuseField(bool diffuseField);
-            void setUniform(bool uniform);
+            void setUseDiffuseField(bool useDiffuseField);
+            void setUseUniformSampling(bool useUniformSampling);
             void setFilterSpacing(Real filterSpacing);
             void setCompressionCriterion(Real compressionCriterion);
 
@@ -94,7 +94,7 @@ namespace loudness{
             Real filterSpacing_, compressionCriterion_;
             Real attackTimeSTL_, releaseTimeSTL_;
             Real attackTimeLTL_, releaseTimeLTL_;
-            bool uniform_, diotic_, diffuseField_, startAtWindowCentre_;
+            bool useUniformSampling_, dioticPresentation_, useDiffuseField_, startAtWindowCentre_;
     }; 
 }
 

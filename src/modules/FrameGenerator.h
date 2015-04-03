@@ -20,7 +20,7 @@
 #ifndef FRAMEGENERATOR_H
 #define FRAMEGENERATOR_H
 
-#include "../Support/Module.h"
+#include "../support/Module.h"
 
 namespace loudness{
 

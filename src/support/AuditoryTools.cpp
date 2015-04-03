@@ -18,7 +18,7 @@
  */
 
 #include "AuditoryTools.h"
-#include "Spline.h"
+#include "../thirdParty/spline/Spline.h"
 
 namespace loudness{
 

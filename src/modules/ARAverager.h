@@ -20,7 +20,7 @@
 #ifndef ARAVERAGER_H
 #define ARAVERAGER_H
 
-#include "../Support/Module.h"
+#include "../support/Module.h"
 
 namespace loudness{
 

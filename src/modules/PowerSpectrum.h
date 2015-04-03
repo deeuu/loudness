@@ -20,9 +20,8 @@
 #ifndef POWERSPECTRUM_H
 #define POWERSPECTRUM_H
 
-#include <fftw3.h>
-#include "../Support/Module.h"
-#include "../Support/FFT.h"
+#include "../support/Module.h"
+#include "../support/FFT.h"
 
 namespace loudness{
 

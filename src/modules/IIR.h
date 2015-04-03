@@ -20,7 +20,7 @@
 #ifndef  IIR_H
 #define  IIR_H
 
-#include "../Support/Filter.h"
+#include "../support/Filter.h"
 
 /*
  * =====================================================================================

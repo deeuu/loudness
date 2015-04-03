@@ -20,7 +20,7 @@
 #ifndef FILTER_H
 #define FILTER_H
 
-#include "../Support/Module.h"
+#include "../support/Module.h"
 
 namespace loudness{
 

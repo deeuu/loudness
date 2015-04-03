@@ -17,71 +17,71 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#include "../cnpy/cnpy.h"
-#include "../Support/AuditoryTools.h"
-#include "../Modules/FrameGenerator.h"
-#include "../Modules/FIR.h"
-#include "../Modules/IIR.h"
-#include "../Modules/Window.h"
-#include "../Modules/PowerSpectrum.h"
-#include "../Modules/CompressSpectrum.h"
-#include "../Modules/WeightSpectrum.h"
-#include "../Modules/DoubleRoexBank.h"
-#include "../Modules/InstantaneousLoudnessGM.h"
-#include "../Modules/ARAverager.h"
-#include "DynamicLoudnessCH.h"
+#include "../thirdParty/cnpy/cnpy.h"
+#include "../support/AuditoryTools.h"
+#include "../modules/FrameGenerator.h"
+#include "../modules/FIR.h"
+#include "../modules/IIR.h"
+#include "../modules/Window.h"
+#include "../modules/PowerSpectrum.h"
+#include "../modules/CompressSpectrum.h"
+#include "../modules/WeightSpectrum.h"
+#include "../modules/DoubleRoexBank.h"
+#include "../modules/InstantaneousLoudnessGM.h"
+#include "../modules/ARAverager.h"
+#include "DynamicLoudnessCH2012.h"
 
 namespace loudness{
 
-    DynamicLoudnessCH::DynamicLoudnessCH(const string& pathToFilterCoefs) :
-        Model("DynamicLoudnessCH", true),
+    DynamicLoudnessCH2012::DynamicLoudnessCH2012(const string& pathToFilterCoefs) :
+        Model("DynamicLoudnessCH2012", true),
         pathToFilterCoefs_(pathToFilterCoefs)
     {
-        loadParameterSet("Faster");
+        loadParameterSet("faster");
     }
 
-    DynamicLoudnessCH::DynamicLoudnessCH() :
-        Model("DynamicLoudnessCH", true),
+    DynamicLoudnessCH2012::DynamicLoudnessCH2012() :
+        Model("DynamicLoudnessCH2012", true),
         pathToFilterCoefs_("")
     {
-        loadParameterSet("Faster");
+        loadParameterSet("faster");
     }
 
-    DynamicLoudnessCH::~DynamicLoudnessCH()
+    DynamicLoudnessCH2012::~DynamicLoudnessCH2012()
     {
     }
 
-    void DynamicLoudnessCH::setDiffuseField(bool diffuseField)
+    void DynamicLoudnessCH2012::setUseDiffuseField(bool useDiffuseField)
     {
-        diffuseField_ = diffuseField;
+        useDiffuseField_ = useDiffuseField;
     }
 
-    void DynamicLoudnessCH::setStartAtWindowCentre(bool startAtWindowCentre)
+    void DynamicLoudnessCH2012::setStartAtWindowCentre(bool startAtWindowCentre)
     {
         startAtWindowCentre_ = startAtWindowCentre;
     }
 
-    void DynamicLoudnessCH::setUniform(bool uniform)
+    void DynamicLoudnessCH2012::setUseUniformSampling(bool useUniformSampling)
     {
-        uniform_ = uniform;
+        useUniformSampling_ = useUniformSampling;
     }
 
-    void DynamicLoudnessCH::setFilterSpacing(Real filterSpacing)
+    void DynamicLoudnessCH2012::setFilterSpacing(Real filterSpacing)
     {
         filterSpacing_ = filterSpacing;
     }
 
-    void DynamicLoudnessCH::setCompressionCriterion(Real compressionCriterion)
+    void DynamicLoudnessCH2012::setCompressionCriterion(Real compressionCriterion)
     {
         compressionCriterion_ = compressionCriterion;
     }
 
-    void DynamicLoudnessCH::loadParameterSet(const string& setName)
+    void DynamicLoudnessCH2012::loadParameterSet(const string& setName)
     {
         //common to all
         setRate(1000);
-        setDiffuseField(false);
-        setUniform(true);
+        setUseDiffuseField(false);
+        setUseUniformSampling(true);
         setFilterSpacing(0.1);
         setCompressionCriterion(0.0);
         setStartAtWindowCentre(true);
@@ -90,19 +90,21 @@ namespace loudness{
         attackTimeLTL_ = 0.01;
         releaseTimeLTL_ = 2.0;
 
-        if (setName == "Faster")
+        if (setName == "faster")
         {
             setFilterSpacing(0.25);
             setCompressionCriterion(0.3);
             LOUDNESS_DEBUG(name_ << ": using a filter spacing of 0.25 Cams"
                    << " with 0.3 Cam spectral compression criterion.");
         }
-        else{
+        else if (setName != "CH2012")
+        {
+            loadParameterSet("CH2012");
             LOUDNESS_DEBUG(name_ << "Using Settings from Chen and Hu 2012 paper.");
         }
     }
 
-    bool DynamicLoudnessCH::initializeInternal(const SignalBank &input)
+    bool DynamicLoudnessCH2012::initializeInternal(const SignalBank &input)
     {
         //if filter coefficients have not been provided
         //use spectral weighting to approximate outer and middle ear response
@@ -173,7 +175,7 @@ namespace loudness{
 
         //power spectrum
         modules_.push_back(unique_ptr<Module> 
-                (new PowerSpectrum(bandFreqsHz, windowSizeSamples, uniform_))); 
+                (new PowerSpectrum(bandFreqsHz, windowSizeSamples, useUniformSampling_))); 
         outputNames_.push_back("PowerSpectrum");
 
         /*
@@ -193,8 +195,8 @@ namespace loudness{
         {
              string middleEar = "CHEN_ETAL";
             string outerEar = "ANSI_FREEFIELD";
-            if(diffuseField_)
-                outerEar = "ANSI_DIFFUSEFIELD";
+            if(useDiffuseField_)
+                outerEar = "ANSI_useDiffuseField";
 
             modules_.push_back(unique_ptr<Module> 
                     (new WeightSpectrum(middleEar, outerEar))); 

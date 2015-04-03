@@ -17,10 +17,10 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#include "../Modules/WeightSpectrum.h"
-#include "../Modules/RoexBankANSIS342007.h"
-#include "../Modules/SpecificLoudnessGM.h"
-#include "../Modules/InstantaneousLoudnessGM.h"
+#include "../modules/WeightSpectrum.h"
+#include "../modules/RoexBankANSIS342007.h"
+#include "../modules/SpecificLoudnessGM.h"
+#include "../modules/InstantaneousLoudnessGM.h"
 #include "SteadyStateLoudnessANSIS342007.h"
 
 namespace loudness{

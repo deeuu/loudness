@@ -20,7 +20,7 @@
 #ifndef INSTANTANEOUSLOUDNESSGM_H
 #define INSTANTANEOUSLOUDNESSGM_H
 
-#include "../Support/Module.h"
+#include "../support/Module.h"
 
 namespace loudness{
 

@@ -20,7 +20,7 @@
 #ifndef AUDIOFILECUTTER_H
 #define AUDIOFILECUTTER_H
 
-#include "../Support/Module.h"
+#include "../support/Module.h"
 #include <sndfile.h>
 
 //We can exceed this but only by +frameSize

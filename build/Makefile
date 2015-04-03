@@ -19,33 +19,33 @@ LDFLAGS=-shared -L/usr/local/lib
 LIBS=-lfftw3 -lsndfile #-lrt 
 INCS=-I.
 
-SOURCES=../src/cnpy/cnpy.cpp \
-../src/Support/AuditoryTools.cpp \
-../src/Support/SignalBank.cpp \
-../src/Support/Module.cpp \
-../src/Support/Model.cpp \
-../src/Support/Filter.cpp \
-../src/Support/FFT.cpp \
-../src/Support/Spline.cpp \
-../src/Modules/AudioFileCutter.cpp \
-../src/Modules/FIR.cpp \
-../src/Modules/IIR.cpp \
-../src/Modules/Butter.cpp \
-../src/Modules/ARAverager.cpp \
-../src/Modules/SMA.cpp \
-../src/Modules/FrameGenerator.cpp \
-../src/Modules/Window.cpp \
-../src/Modules/PowerSpectrum.cpp \
-../src/Modules/WeightSpectrum.cpp \
-../src/Modules/CompressSpectrum.cpp \
-../src/Modules/RoexBankANSIS342007.cpp \
-../src/Modules/FastRoexBank.cpp \
-../src/Modules/DoubleRoexBank.cpp \
-../src/Modules/SpecificLoudnessGM.cpp \
-../src/Modules/InstantaneousLoudnessGM.cpp \
-../src/Models/SteadyStateLoudnessANSIS342007.cpp \
-../src/Models/DynamicLoudnessGM.cpp \
-../src/Models/DynamicLoudnessCH.cpp
+SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
+../src/thirdParty/spline/Spline.cpp \
+../src/support/AuditoryTools.cpp \
+../src/support/SignalBank.cpp \
+../src/support/Module.cpp \
+../src/support/Model.cpp \
+../src/support/Filter.cpp \
+../src/support/FFT.cpp \
+../src/modules/AudioFileCutter.cpp \
+../src/modules/FIR.cpp \
+../src/modules/IIR.cpp \
+../src/modules/Butter.cpp \
+../src/modules/ARAverager.cpp \
+../src/modules/SMA.cpp \
+../src/modules/FrameGenerator.cpp \
+../src/modules/Window.cpp \
+../src/modules/PowerSpectrum.cpp \
+../src/modules/WeightSpectrum.cpp \
+../src/modules/CompressSpectrum.cpp \
+../src/modules/RoexBankANSIS342007.cpp \
+../src/modules/FastRoexBank.cpp \
+../src/modules/DoubleRoexBank.cpp \
+../src/modules/SpecificLoudnessGM.cpp \
+../src/modules/InstantaneousLoudnessGM.cpp \
+../src/models/SteadyStateLoudnessANSIS342007.cpp \
+../src/models/DynamicLoudnessGM2002.cpp \
+../src/models/DynamicLoudnessCH2012.cpp
 
 OBJECTS=$(SOURCES:.cpp=.o)
 

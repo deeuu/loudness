@@ -18,7 +18,7 @@
  */
 
 #include "SpecificLoudnessGM.h"
-#include "../Support/AuditoryTools.h"
+#include "../support/AuditoryTools.h"
 
 namespace loudness{
 

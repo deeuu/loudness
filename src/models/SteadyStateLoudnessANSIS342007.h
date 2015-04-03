@@ -17,10 +17,10 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#ifndef SteadyStateLoudnessANSIS342007_H
-#define SteadyStateLoudnessANSIS342007_H
+#ifndef STEADYSTATELOUDNESSANSIS342007_H
+#define STEADYSTATELOUDNESSANSIS342007_H
 
-#include "../Support/Model.h"
+#include "../support/Model.h"
 #include <string>
 
 namespace loudness{

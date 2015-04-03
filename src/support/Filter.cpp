@@ -18,7 +18,7 @@
  */
 
 #include "Filter.h"
-#include "../cnpy/cnpy.h"
+#include "../thirdParty/cnpy/cnpy.h"
 
 namespace loudness{
 

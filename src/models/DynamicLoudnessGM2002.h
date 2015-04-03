@@ -17,15 +17,15 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#ifndef DYNAMICLOUDNESSGM_H
-#define DYNAMICLOUDNESSGM_H
+#ifndef DYNAMICLOUDNESSGM2002_H
+#define DYNAMICLOUDNESSGM2002_H
 
-#include "../Support/Model.h"
+#include "../support/Model.h"
 
 namespace loudness{
 
     /**
-     * @class DynamicLoudnessGM
+     * @class DynamicLoudnessGM2002
      *
      * @brief Implements Glasberg and Moore's time-varying loudness model.
      *
@@ -71,7 +71,7 @@ namespace loudness{
      * ANSI S3.4-2007. Procedure for the Computation of Loudness of Steady
      * Sounds.
      */
-    class DynamicLoudnessGM : public Model
+    class DynamicLoudnessGM2002 : public Model
     {
         public:
 
@@ -82,10 +82,10 @@ namespace loudness{
              * If no path is given, the hybrid filter will
              * perform the outer and middle ear filtering.
              */
-            DynamicLoudnessGM(const string& pathToFilterCoefs);
-            DynamicLoudnessGM();
+            DynamicLoudnessGM2002(const string& pathToFilterCoefs);
+            DynamicLoudnessGM2002();
 
-            virtual ~DynamicLoudnessGM();
+            virtual ~DynamicLoudnessGM2002();
 
             /** Loads a parameter set.*/
             void loadParameterSet(const string& setName);

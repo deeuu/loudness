@@ -17,92 +17,92 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#include "../cnpy/cnpy.h"
-#include "../Support/AuditoryTools.h"
-#include "../Modules/FrameGenerator.h"
-#include "../Modules/Butter.h"
-#include "../Modules/FIR.h"
-#include "../Modules/IIR.h"
-#include "../Modules/Window.h"
-#include "../Modules/PowerSpectrum.h"
-#include "../Modules/CompressSpectrum.h"
-#include "../Modules/WeightSpectrum.h"
-#include "../Modules/FastRoexBank.h"
-#include "../Modules/RoexBankANSIS342007.h"
-#include "../Modules/SpecificLoudnessGM.h"
-#include "../Modules/InstantaneousLoudnessGM.h"
-#include "../Modules/ARAverager.h"
-#include "DynamicLoudnessGM.h"
+#include "../thirdParty/cnpy/cnpy.h"
+#include "../support/AuditoryTools.h"
+#include "../modules/FrameGenerator.h"
+#include "../modules/Butter.h"
+#include "../modules/FIR.h"
+#include "../modules/IIR.h"
+#include "../modules/Window.h"
+#include "../modules/PowerSpectrum.h"
+#include "../modules/CompressSpectrum.h"
+#include "../modules/WeightSpectrum.h"
+#include "../modules/FastRoexBank.h"
+#include "../modules/RoexBankANSIS342007.h"
+#include "../modules/SpecificLoudnessGM.h"
+#include "../modules/InstantaneousLoudnessGM.h"
+#include "../modules/ARAverager.h"
+#include "DynamicLoudnessGM2002.h"
 
 namespace loudness{
 
-    DynamicLoudnessGM::DynamicLoudnessGM(const string& pathToFilterCoefs) :
-        Model("DynamicLoudnessGM", true),
+    DynamicLoudnessGM2002::DynamicLoudnessGM2002(const string& pathToFilterCoefs) :
+        Model("DynamicLoudnessGM2002", true),
         pathToFilterCoefs_(pathToFilterCoefs)
     {
         loadParameterSet("RecentAndFaster");
     }
 
-    DynamicLoudnessGM::DynamicLoudnessGM() :
-        Model("DynamicLoudnessGM", true),
+    DynamicLoudnessGM2002::DynamicLoudnessGM2002() :
+        Model("DynamicLoudnessGM2002", true),
         pathToFilterCoefs_("")
     {
         loadParameterSet("RecentAndFaster");
     }
     
-    DynamicLoudnessGM::~DynamicLoudnessGM()
+    DynamicLoudnessGM2002::~DynamicLoudnessGM2002()
     {
     }
 
-    void DynamicLoudnessGM::setStartAtWindowCentre(bool startAtWindowCentre)
+    void DynamicLoudnessGM2002::setStartAtWindowCentre(bool startAtWindowCentre)
     {
         startAtWindowCentre_ = startAtWindowCentre;
     }
     
-    void DynamicLoudnessGM::setHpf(bool hpf)
+    void DynamicLoudnessGM2002::setHpf(bool hpf)
     {
         hpf_ = hpf;
     }
-    void DynamicLoudnessGM::setDiffuseField(bool diffuseField)
+    void DynamicLoudnessGM2002::setDiffuseField(bool diffuseField)
     {
         diffuseField_ = diffuseField;
     }
 
-    void DynamicLoudnessGM::setUniform(bool uniform)
+    void DynamicLoudnessGM2002::setUniform(bool uniform)
     {
         uniform_ = uniform;
     }
-    void DynamicLoudnessGM::setInterpRoexBank(bool interpRoexBank)
+    void DynamicLoudnessGM2002::setInterpRoexBank(bool interpRoexBank)
     {
         interpRoexBank_ = interpRoexBank;
     }
-    void DynamicLoudnessGM::setFilterSpacing(Real filterSpacing)
+    void DynamicLoudnessGM2002::setFilterSpacing(Real filterSpacing)
     {
         filterSpacing_ = filterSpacing;
     }
-    void DynamicLoudnessGM::setCompressionCriterion(Real compressionCriterion)
+    void DynamicLoudnessGM2002::setCompressionCriterion(Real compressionCriterion)
     {
         compressionCriterion_ = compressionCriterion;
     }
-    void DynamicLoudnessGM::setAnsiBank(bool ansiBank)
+    void DynamicLoudnessGM2002::setAnsiBank(bool ansiBank)
     {
         ansiBank_ = ansiBank;
     }
-    void DynamicLoudnessGM::setPathToFilterCoefs(string pathToFilterCoefs)
+    void DynamicLoudnessGM2002::setPathToFilterCoefs(string pathToFilterCoefs)
     {
         pathToFilterCoefs_ = pathToFilterCoefs;
     }
 
-    void DynamicLoudnessGM::setFastBank(bool fastBank)
+    void DynamicLoudnessGM2002::setFastBank(bool fastBank)
     {
         fastBank_ = fastBank;
     }
-    void DynamicLoudnessGM::setAnsiSpecificLoudness(bool ansiSpecificLoudness)
+    void DynamicLoudnessGM2002::setAnsiSpecificLoudness(bool ansiSpecificLoudness)
     {
         ansiSpecificLoudness_ = ansiSpecificLoudness;
     }
 
-    void DynamicLoudnessGM::setSmoothingTimes(const string& author)
+    void DynamicLoudnessGM2002::setSmoothingTimes(const string& author)
     {
         if (author == "GM2002")
         {
@@ -124,7 +124,7 @@ namespace loudness{
         }
     }
     
-    void DynamicLoudnessGM::loadParameterSet(const string& setName)
+    void DynamicLoudnessGM2002::loadParameterSet(const string& setName)
     {
         //common to all
         setRate(1000);
@@ -155,7 +155,7 @@ namespace loudness{
                 LOUDNESS_DEBUG(name_
                         << ": Using updated "
                         << "time-constants from 2003 paper and high-level specific "
-                        << "loudness equation (2007)."); 
+                        << "loudness equation (ANSI S3.4 2007)."); 
             }
             else if (setName == "RecentAndFaster")
             {
@@ -167,7 +167,7 @@ namespace loudness{
                 LOUDNESS_DEBUG(name_
                         << ": Using faster params and "
                         << "updated time-constants from 2003 paper and "
-                        << "high-level specific loudness equation (2007).");
+                        << "high-level specific loudness equation (ANSI S3.4 2007).");
             }
             else
             {
@@ -177,7 +177,7 @@ namespace loudness{
         }
     }
 
-    bool DynamicLoudnessGM::initializeInternal(const SignalBank &input)
+    bool DynamicLoudnessGM2002::initializeInternal(const SignalBank &input)
     {
         /*
          * Outer-Middle ear filter 
@@ -290,7 +290,6 @@ namespace loudness{
             string outerEar = "ANSI_FREEFIELD";
             if(hpf_)
                 middleEar = "ANSI_HPF";
-            string outerEar = "ANSI_FREEFIELD";
             if(diffuseField_)
                 outerEar = "ANSI_DIFFUSEFIELD";
 
