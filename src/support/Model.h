@@ -105,7 +105,7 @@ namespace loudness{
         bool isDynamicModel() const;
 
         /** Returns a reference to the output SignalBank of a module specified
-         * by it's index.
+         * by index.
          */
         const SignalBank& getOutputSignalBank(int module) const;
 

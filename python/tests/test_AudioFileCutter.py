@@ -6,7 +6,7 @@ from audiolab import wavread
 #Audio loader
 fs = 32000
 frameSize = 32
-fileToLoad = "../../wavs/tone1kHz40dBSPL.wav"
+fileToLoad = "../../wavs/pureTones/pureTone_1000Hz_40dBSPL_32000Hz.wav"
 audio = ln.AudioFileCutter(fileToLoad, frameSize)
 audio.initialize()
 audioBank = audio.getOutput()

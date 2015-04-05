@@ -105,7 +105,7 @@ namespace loudness{
         return initialized_;
     }
 
-    const SignalBank& Module::getOutputSignalBank() const
+    const SignalBank& Module::getOutput() const
     {
         return output_;
     }

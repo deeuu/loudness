@@ -143,7 +143,7 @@ namespace loudness{
          * storing the processing result.
          *
          */
-        const SignalBank& getOutputSignalBank() const;
+        const SignalBank& getOutput() const;
 
         /**
          * @brief Returns the name of the module.
