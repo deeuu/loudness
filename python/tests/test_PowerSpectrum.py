@@ -14,20 +14,20 @@ x /= np.max(np.abs(x), 2).reshape((nEars, frameSizes.size, 1))
 
 #Initialisation
 inputBuf = ln.SignalBank()
-inputBuf.initialize(nEars, 1, frameSizes[0], fs)
+inputBuf.initialize(nEars, nBands, frameSizes[0], fs)
 inputBuf.setSignals(x)
 
 #Power spectrum setup
 bandFreqs = np.array([10, 500, 5000, 15001])
 uniform = True
 spectrumModule = ln.PowerSpectrum(bandFreqs, frameSizes, uniform)
-spectrumModule.initialize(windowBank)
+spectrumModule.initialize(inputBuf)
 
 spectrumBank = spectrumModule.getOutput()
 spectrumLoudness = spectrumBank.getSignals()
 
 #Processing
-spectrumModule.process(windowBank)
+spectrumModule.process(inputBuf)
 
 #numpy side
 fftSizes = np.zeros(nBands, dtype = 'int')
@@ -58,4 +58,8 @@ for band in range(nBands):
     idxLoIn = idxHiIn
 
 #check
-print "Numpy vs Loudness power spectrum test: ", np.allclose(spectrumNumpy, spectrumLoudness[:,:,0])
+if np.allclose(spectrumLoudness[:,:,0], spectrumNumpy):
+    print "Numpy vs loudness power spectrum test: successful"
+else:
+    print "Numpy vs loudness power spectrum test: unsuccessful"
+

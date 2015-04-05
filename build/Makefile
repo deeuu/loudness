@@ -31,6 +31,7 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/modules/FIR.cpp \
 ../src/modules/IIR.cpp \
 ../src/modules/Butter.cpp \
+../src/modules/Biquad.cpp \
 ../src/modules/ARAverager.cpp \
 ../src/modules/SMA.cpp \
 ../src/modules/FrameGenerator.cpp \

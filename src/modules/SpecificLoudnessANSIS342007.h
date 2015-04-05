@@ -55,7 +55,7 @@ namespace loudness{
     {
     public:
 
-        SpecificLoudnessANSIS342007(bool ansiS3407=0);
+        SpecificLoudnessANSIS342007(bool ansiS3407=true);
 
         virtual ~SpecificLoudnessANSIS342007();
 

@@ -38,8 +38,8 @@ namespace loudness{
 
     bool Biquad::initializeInternal(const SignalBank &input)
     {
-        LOUDNESS_ASSERT( bCoefs.size() == 3 &&
-                aCoefs.size() == 3,
+        LOUDNESS_ASSERT( bCoefs_.size() == 3 &&
+                aCoefs_.size() == 3,
                 "Filter coefficients do not satisfy filter order");
 
         //normalise by a[0]

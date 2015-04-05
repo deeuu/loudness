@@ -140,9 +140,9 @@ if __name__ == '__main__':
     bankLN.initialize(psdLN)
     bankLN.process(psdLN)
     bankLNout = bankLN.getOutput()
-    excitationLN = bankLNout.getSignals()
+    excitationLN = bankLNout.getSignals().flatten()
 
-    print "Equality test: ", np.allclose(excitationPy[:,0], excitationLN[0,:,0])
+    print "Equality test: ", np.allclose(excitationLN,excitationPy[:,0]) 
     plt.plot(10*np.log10(excitationPy + 1e-10), 'k')
-    plt.plot(10*np.log10(excitationLN[0,:,0] + 1e-10), 'r--')
+    plt.plot(10*np.log10(excitationLN + 1e-10), 'r--')
     plt.show()

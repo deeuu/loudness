@@ -13,7 +13,7 @@ inputBank.setCentreFreqs(fc)
 
 #Module for computing specific loudness
 #True for ANSI S3.4 2007 mods
-specLoudModule = ln.SpecificLoudnessGM(True)
+specLoudModule = ln.SpecificLoudnessANSIS342007(True)
 specLoudModule.initialize(inputBank)
 specLoudBank = specLoudModule.getOutput()
 
@@ -46,3 +46,4 @@ plt.ylim(0.004,10)
 plt.xlabel('Excitation, dB')
 plt.ylabel('Specific Loudness, sones')
 plt.tight_layout()
+plt.show()

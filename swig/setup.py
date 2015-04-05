@@ -30,6 +30,7 @@ if __name__ == "__main__":
                 "../src/modules/FIR.cpp",
                 "../src/modules/IIR.cpp",
                 "../src/modules/Butter.cpp",
+                "../src/modules/Biquad.cpp",
                 "../src/modules/AudioFileCutter.cpp",
                 "../src/modules/FrameGenerator.cpp",
                 "../src/modules/Window.cpp",

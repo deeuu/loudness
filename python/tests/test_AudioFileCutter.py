@@ -21,7 +21,7 @@ for frame in range(nFrames):
 x, fs, enc = wavread(fileToLoad)
 y = out.flatten()[0:x.size]
 
-if np.allclose(x, y):
+if np.allclose(y, x):
     print "Test comparing result of AudioFileCutter with audiolab's wavread: successful"
 else:
     print "Test comparing result of AudioFileCutter with audiolab's wavread: unsuccessful"

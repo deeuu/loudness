@@ -22,23 +22,35 @@ def updateFilterCoefficients(b, a, fsOld, fsNew):
     a[1] = 2*(omegaSqrd - 1)/ denom
     a[2] = (omegaSqrd - (omega/Q) + 1)/ denom
 
+#design a high pass flter at 48kHz
 b_48k, a_48k = butter(2,100.0/48e3,'highpass')
 b_32k = b_48k.copy()
 a_32k = a_48k.copy()
 
+#solve for coeffcients at new fs = 32kHz
 updateFilterCoefficients(b_32k, a_32k, 48e3, 32e3)
 
+#Loudness side - input fs = 32kHz
 sigIn = ln.SignalBank()
-sigIn.initialize(1,32,32000)
-x = np.random.randn(32)
-sigIn.setSignal(0, x)
+sigIn.initialize(1, 1, 2048, 32000)
+x = np.random.randn(2048)
+sigIn.setSignal(0, 0, x)
 
+#input coefficients designed for 48kHz
 filt = ln.Biquad(b_48k, a_48k)
 filt.setCoefficientFs(48e3)
 filt.initialize(sigIn)
 sigOut = filt.getOutput()
 
-filt.process(sigIn)
-y = lfilter(b_32k, a_32k, x)
+#process using scipy's lfilter
+yScipy = lfilter(b_32k, a_32k, x)
 
-print "Equality test: ", np.allclose(y, sigOut.getSignal(0))
+#process loudness side
+filt.process(sigIn)
+yLoudness = sigOut.getSignal(0, 0)
+
+#equality test
+if np.allclose(yLoudness, yScipy):
+    print "Test comparing result of Biquad with python side filter estimation and scipy's lfilter: successful"
+else:
+    print "Test comparing result of Biquad with python side filter estimation and scipy's lfilter: unsuccessful"

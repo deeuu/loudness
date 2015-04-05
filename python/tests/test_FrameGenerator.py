@@ -15,16 +15,16 @@ inputBank.initialize(nEars, nChannels, bufSize, int(fs))
 #Frame generator
 frameSize = 2048
 hopSize = 32
-startAtZero = False
-frameGen = ln.FrameGenerator(frameSize, hopSize, startAtZero)
+startAtWindowCentre = True
+frameGen = ln.FrameGenerator(frameSize, hopSize, startAtWindowCentre)
 frameGen.initialize(inputBank)
 outputBank = frameGen.getOutput()
 
 nBlocks = int(x.size / bufSize)
-if startAtZero:
-    nProcessedBlocks = int(nBlocks - frameSize/hopSize + 1)
-else:
+if startAtWindowCentre:
     nProcessedBlocks = int(nBlocks - 0.5*frameSize/hopSize + 1)
+else:
+    nProcessedBlocks = int(nBlocks - frameSize/hopSize + 1)
 frames = np.zeros((nEars, nProcessedBlocks, frameSize))
 
 frameIndex = 0
@@ -39,13 +39,11 @@ for block in range(nBlocks):
 
     #get output
     if(outputBank.getTrig()):
-        for ear in range(nEars):
-            frames[ear, frameIndex, :] = [outputBank.getSample(ear,0,i) for i in range(frameSize)]
         frames[:, frameIndex, :] = outputBank.getSignals().reshape((2, frameSize))
         frameIndex += 1
 
 #Check frames are correct
-if not startAtZero:
+if startAtWindowCentre:
     x = np.hstack((np.zeros(np.ceil((frameSize-1)/2.0)), x))
 
 for ear in range(nEars):
