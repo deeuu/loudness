@@ -4,7 +4,6 @@ import loudness as ln
 import sys,os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),'../'))
 from sound import Sound
-from loudnessExtractor import LoudnessExtractor
 from usefulFunctions import *
 
 def pureToneLoudness(levels = 40, freq = 1000):
@@ -21,8 +20,7 @@ def pureToneLoudness(levels = 40, freq = 1000):
     buf.setCentreFreq(0, freq)
     model = ln.SteadyStateLoudnessANSIS342007()
     model.initialize(buf)
-    #final output should be integrated loudness
-    outputBank = model.getModelOutput()
+    outputBank = model.getOutputSignalBank("InstantaneousLoudness")
 
     #output loudness - could be multiple channels but definitely single sample
     #Global loudness -> one ear
@@ -51,9 +49,7 @@ def spectrumLoudness(centreFreqs, spectrum):
     #Model config
     model = ln.SteadyStateLoudnessANSIS342007()
     model.initialize(buf)
-
-    #final output should be integrated loudness
-    outputBank = model.getModelOutput()
+    outputBank = model.getOutputSignalBank("InstantaneousLoudness")
 
     #process
     model.process(buf)

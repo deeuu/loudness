@@ -6,12 +6,13 @@ from sound import Sound
 from loudnessExtractor import LoudnessExtractor
 
 model = ln.DynamicLoudnessGM2002('../../filterCoefs/32000_IIR_23_freemid.npy')
+model.setDioticPresentation(False)
 
 outputsOfInterest = ["InstantaneousLoudness", "ShortTermLoudness", "LongTermLoudness"]
-extractor = LoudnessExtractor(model, 32000, 1, outputsOfInterest)
+extractor = LoudnessExtractor(model, 32000, 2, outputsOfInterest)
 extractor.frameTimeOffset = -0.032
 
-signal = Sound.tone(1000, dur = 1.0, fs = 32e3)
+signal = Sound.tone([1000, 3000], dur = 1.0, fs = 32e3)
 signal.useDBSPL()
 signal.normalise(40, "RMS")
 signal.applyRamp(0.1)

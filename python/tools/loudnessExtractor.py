@@ -68,14 +68,14 @@ class LoudnessExtractor:
         self.nSamples = inputSignal.shape[0]
         if inputSignal.ndim > 1:
             if self.nInputEars != inputSignal.shape[1]:
-                raise ValueError("Input signal does not have " + str(self.nInputEars) \
-                    + " dimensions")
+                raise ValueError("Input signal does not have the expected\
+                number of dimensions ( " + str(self.nInputEars) + " )")
         elif self.nInputEars > 1:
             raise ValueError("Input should have " \
                 + str(self.nInputEars) + " columns");
 
         #Format input for SignalBank
-        self.inputSignal = inputSignal.reshape((self.nInputEars, 1, self.nSamples))
+        self.inputSignal = inputSignal.T.reshape((self.nInputEars, 1, self.nSamples))
 
         '''Pad end so that we can obtain analysis over the last sample, 
         No neat way to do this at the moment so assume 0.2ms is enough.'''
@@ -89,7 +89,7 @@ class LoudnessExtractor:
         self.outputDict['FrameTimes'] = self.frameTimeOffset + self.timeStep + \
                 np.arange(nOutputFrames) * self.hopSize / float(self.fs)
 
-       #outputs
+        #outputs
         for i, name in enumerate(self.modelOutputsToExtract):
             self.outputDict[name] = np.zeros((\
                 nOutputFrames,
@@ -136,7 +136,8 @@ class LoudnessExtractor:
 
             for name in modelOutputsToPlot:
                 for ear in range(self.outputDict[name].shape[1]):
-                    ax2.plot(self.outputDict['FrameTimes'], self.outputDict[name][:, ear, 0, :].flatten())
+                    ax2.plot(self.outputDict['FrameTimes'],\
+                            self.outputDict[name][:, ear, 0, 0].flatten())
             ax2.set_ylabel("Loudness")
             ax2.set_xlabel("Time, seconds")
             plt.tight_layout()
@@ -156,7 +157,7 @@ class LoudnessExtractor:
             for name in modelOutputsToSave:
                 for ear in range(self.outputDict[name].shape[1]):
                     dataToSave = np.hstack((dataToSave, \
-                        self.outputDict[name][:, ear, 0, :]))
+                        self.outputDict[name][:, ear, 0, 0]))
 
             filename, ext = splitext(filename)
             np.savetxt(filename + '.csv', dataToSave,\
@@ -170,3 +171,30 @@ class LoudnessExtractor:
             filename, ext = splitext(filename)
             with open(filename + '.pickle', 'wb') as outfile:
                 pickle.dump(self.outputDict, outfile, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def computeGlobalLoudnessFeatures(self, modelOutputs, startSeconds=0, endSeconds=None):
+        '''
+        Compute the average loudness from startSeconds to endSeconds.
+        Time points are based on nearest sample, so it is possible that sample points outside of
+        this range are included.
+        Loudness features are stored in the output dictionary.
+        '''
+        if self.processed:
+            start = int(np.round(startSeconds/self.timeStep))
+            end = endSeconds
+            if end is not None:
+                end = int(np.round(endSeconds/self.timeStep)+1)
+            for name in modelOutputs:
+                self.outputDict['Features'] = {name : {}}
+                loudnessVec = self.outputDict[name][start:end, :, 0, 0]
+                self.outputDict['Features'][name]['Mean'] = \
+                        np.mean(loudnessVec, 0)
+                self.outputDict['Features'][name]['Median'] = \
+                        np.median(loudnessVec, 0)
+                self.outputDict['Features'][name]['Max'] = \
+                        np.max(loudnessVec, 0)
+                self.outputDict['Features'][name]['N5'] = \
+                        np.percentile(loudnessVec, 95, 0)
+                self.outputDict['Features'][name]['IQR'] = \
+                        np.percentile(loudnessVec, 75, 0) - \
+                        np.percentile(loudnessVec, 25, 0)
