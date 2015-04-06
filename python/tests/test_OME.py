@@ -2,9 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import loudness as ln
 
-def plotResponse(freqsInterp, responseInterp,
+def plotResponse(freqPoints, dataPoints, 
+        freqsInterp, responseInterp,
         ylim=(-40,10), title = ""):
 
+    if np.any(dataPoints):
+        plt.semilogx(freqPoints, dataPoints, 'o')
     plt.semilogx(freqsInterp, responseInterp)
     plt.xlim(20, 20e3)
     plt.ylim(ylim)
@@ -13,38 +16,50 @@ def plotResponse(freqsInterp, responseInterp,
     plt.title(title)
     plt.show()
 
-def plotCombined(author="",fieldType=""):
+def plotMiddleEar(author="", ylim = (-40,0)):
+    freqs = np.arange(20, 20000, 2)
+    ome = ln.OME(author, "")
+    ome.interpolateResponse(freqs)
+    response = ome.getResponse()
+    freqPoints = ome.getMiddleEarFreqPoints()
+    dataPoints = ome.getMiddleEardB()
+    plotResponse(freqPoints, dataPoints, \
+            freqs, response, ylim,\
+            title = "Middle ear : " + author)
+
+def plotOuterEar(author="", ylim = (-40,0)):
+    freqs = np.arange(20, 20000, 2)
+    ome = ln.OME("", author)
+    ome.interpolateResponse(freqs)
+    response = ome.getResponse()
+    freqPoints = ome.getOuterEarFreqPoints()
+    dataPoints = ome.getOuterEardB()
+    plotResponse(freqPoints, dataPoints, \
+            freqs, response, ylim,\
+            title = "Outer ear : " + author)
+
+def plotCombined(author="",fieldType="", ylim = (-40, 10)):
     freqs = np.arange(20,20000,2)
     ome = ln.OME(author, fieldType)
     ome.interpolateResponse(freqs)
     response = ome.getResponse()
-    if author:
-        if author == "CHEN_ETAL_2011":
-            ylim = (-40, 10)
-        elif "ANSI" in author:
-            ylim = (-40, 0)
-            if "ANSI" in fieldType:
-                ylim = (-40, 10)
-    elif "ANSI" in fieldType:
-        ylim = (-5, 20)
-    if "DT990" in fieldType:
-        ylim = (-40, 10)
-    plotResponse(freqs, response, ylim,\
-            title = "Middle : " + author + " Outer: " + fieldType)
+    plotResponse(None, None, \
+            freqs, response, ylim,\
+            title = "Middle ear : " + author + " Outer ear : " + fieldType)
 
 plt.figure(1)
-plotCombined("ANSI_S34_2007")
+plotMiddleEar("ANSI_S34_2007", (-40, 0))
 plt.figure(2)
-plotCombined("CHEN_ETAL_2011")
+plotMiddleEar("CHEN_ETAL_2011", (-40, 10))
 plt.figure(2)
-plotCombined("ANSI_S34_2007_HPF")
+plotMiddleEar("ANSI_S34_2007_HPF", (-40, 0))
 plt.figure(3)
-plotCombined("", "ANSI_S34_2007_FREEFIELD")
+plotOuterEar("ANSI_S34_2007_FREEFIELD", (-5, 20))
 plt.figure(4)
-plotCombined("", "ANSI_S34_2007_DIFFUSEFIELD")
+plotOuterEar("ANSI_S34_2007_DIFFUSEFIELD", (-5, 20))
 plt.figure(5)
-plotCombined("", "DT990")
+plotOuterEar("DT990", (-10, 10))
 plt.figure(6)
-plotCombined("ANSI_S34_2007", "ANSI_S34_2007_FREEFIELD")
+plotCombined("ANSI_S34_2007", "ANSI_S34_2007_FREEFIELD", (-40, 10))
 plt.figure(7)
-plotCombined("ANSI_S34_2007", "DT990")
+plotCombined("ANSI_S34_2007", "DT990", (-40, 10))
