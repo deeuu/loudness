@@ -21,7 +21,8 @@ class LoudnessExtractor:
     is available at time 0.001s. You can offset the frame times using self.frameTimeOffset.
     '''
 
-    def __init__(self, model, fs = 32000, nInputEars = 1, modelOutputsToExtract = []):
+    def __init__(self, model,
+            fs = 32000, modelOutputsToExtract = [], nInputEars = 1):
         ''' 
         Model   : The input loudness model - must be dynamic.
         fs      : The sampling frequency
@@ -32,6 +33,9 @@ class LoudnessExtractor:
 
         if not model.isDynamicModel():
             raise ValueError("Model must be dynamic.")
+
+        if type(modelOutputsToExtract) is not list:
+                modelOutputsToExtract = [modelOutputsToExtract]
 
         self.model = model
         self.fs = int(fs)
@@ -125,6 +129,10 @@ class LoudnessExtractor:
         each feature should be one vector of loudness values per ear.
         '''
         if self.processed:
+
+            if type(modelOutputsToPlot) is not list:
+                    modelOutputsToPlot = [modelOutputsToPlot]
+
             time = np.arange(self.nSamples) / float(self.fs)
             fig, (ax1, ax2) = plt.subplots(2, 1, sharex = True)
 
@@ -152,6 +160,10 @@ class LoudnessExtractor:
         one vector of loudness values per ear.  
         '''
         if self.processed:
+
+            if type(modelOutputsToSave) is not list:
+                    modelOutputsToSave = [modelOutputsToSave]
+
             nFrames = self.outputDict['FrameTimes'].size
             dataToSave = self.outputDict['FrameTimes'].reshape((nFrames, 1))
             for name in modelOutputsToSave:
@@ -180,6 +192,10 @@ class LoudnessExtractor:
         Loudness features are stored in the output dictionary.
         '''
         if self.processed:
+
+            if type(modelOutputs) is not list:
+                    modelOutputs = [modelOutputs]
+
             start = int(np.round(startSeconds/self.timeStep))
             end = endSeconds
             if end is not None:

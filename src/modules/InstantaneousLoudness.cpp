@@ -22,10 +22,10 @@
 
 namespace loudness{
 
-    InstantaneousLoudness::InstantaneousLoudness(Real cParam, bool diotic) :
+    InstantaneousLoudness::InstantaneousLoudness(Real cParam, bool dioticPresentation) :
         Module("InstantaneousLoudness"),
         cParam_(cParam),
-        diotic_(diotic)
+        dioticPresentation_(dioticPresentation)
     {
         LOUDNESS_DEBUG(name_ << ": Constructed.");
     }
@@ -45,17 +45,17 @@ namespace loudness{
         LOUDNESS_ASSERT(camStep>0, name_ << ": Channel spacing (in Cam units) not set.");
         LOUDNESS_DEBUG(name_ << ": Filter spacing (Cams): " << camStep);
 
-        //configure output SignalBank depending on number of ears and diotic
+        //configure output SignalBank depending on number of ears and dioticPresentation
         if (input.getNEars() == 1)
         {
-            if (diotic_)
+            if (dioticPresentation_)
             {
                 cParam_ *= 2;
-                LOUDNESS_DEBUG(name_ << ": Diotic presentation, loudness will be multiplied by 2.");
+                LOUDNESS_DEBUG(name_ << ": dioticPresentation presentation, loudness will be multiplied by 2.");
             }
             output_.initialize(1, 1, 1, input.getFs());
         }
-        else if (diotic_)
+        else if (dioticPresentation_)
         {
             output_.initialize(1, 1, 1, input.getFs());
         }
@@ -79,9 +79,9 @@ namespace loudness{
             for (int chn = 0; chn < input.getNChannels(); chn++)
                 il += inputSpecificLoudness[chn];
 
-            // if not diotic then output total loudness in each ear and reset
+            // if not dioticPresentation then output total loudness in each ear and reset
             // sum
-            if (!diotic_)
+            if (!dioticPresentation_)
             {
                 output_.setSample(ear, 0, 0, il * cParam_);
                 il = 0.0;
@@ -89,7 +89,7 @@ namespace loudness{
         }
 
         //one ear only
-        if (diotic_)
+        if (dioticPresentation_)
             output_.setSample(0, 0, 0, il * cParam_);
     }
 

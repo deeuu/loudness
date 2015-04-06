@@ -31,14 +31,15 @@ namespace loudness{
      *
      * This module outputs a simple moving average of the input samples using a
      * length @pwindowSize window. A running sum is achieved by setting
-     * @paverage to false (the default is true). Furthermore, to square the
-     * input (useful for a running mean square), set @psquareInput to true
+     * @p average to false (the default is true). Furthermore, to square the
+     * input (useful for a running mean square), set @p squareInput to true
      * (default is false). 
      *
      * The implementation is based on RunningSum unit generator in
      * SuperCollider.
      *
-     * @author Dominic Ward
+     * This algorithm will perform a SMA on all signals in the input SignalBank.
+     *
      */
     class SMA : public Module
     {
@@ -56,19 +57,13 @@ namespace loudness{
         SMA(int windowSize=5, bool average=true, bool squareInput=false);
         virtual ~SMA();
 
-        /**
-         * @brief Sets the window size in samples.
-         */
+        /** @brief Sets the window size in samples.*/
         void setWindowSize(int windowSize);
 
-        /**
-         * @brief Set whether the summed samples should be averaged.
-         */
+        /** Set whether the summed samples should be averaged. */
         void setAverage(bool average);
 
-        /**
-         * @brief Set whether the input signal should be squared.
-         */
+        /** Set whether the input signal should be squared. */
         void setSquareInput(bool squareInput);
 
         int getWindowSize() const;

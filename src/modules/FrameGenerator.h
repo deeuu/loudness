@@ -34,11 +34,10 @@ namespace loudness{
      * SignalBank cannot be greater than the hop size. If this happens, the hop
      * size is automatically adjusted. Furthermore, the hop size must be less
      * than or equal to the frame size, but does not have to be an integer
-     * multiple of it's length.
+     * multiple of it's length. 
      *
-     * @todo Check the implementation is read/write safe.
-     *
-     * @author Dominic Ward
+     * FrameGenerator can generate frames for signals in the inputSignalBank,
+     * and so multiple ear/channel processing is supported.
      */
     class FrameGenerator : public Module
     {
@@ -49,8 +48,11 @@ namespace loudness{
          *
          * @param frameSize Number of samples in the frame.
          * @param hopSize Number of samples to hop forward.
+         * @param startAtCentreOfFrame Set true to align the first input sample
+         * with the centre of the frame. If false, the frame is filled starting
+         * at sample index zero.
          */
-        FrameGenerator(int frameSize = 1024, int hopSize = 512, bool startAtWindowCentre = false);
+        FrameGenerator(int frameSize = 1024, int hopSize = 512, bool startAtFrameCentre = false);
         virtual ~FrameGenerator();
 
         /**
@@ -65,9 +67,9 @@ namespace loudness{
 
         /**
          * @brief Returns true if the data begins at the centre of the analysis
-         * window.
+         * frame.
          */
-        bool getStartAtWindowCentre() const;
+        bool getstartAtCentreOfFrame() const;
 
     private:
 
@@ -77,7 +79,7 @@ namespace loudness{
 
         int frameSize_, hopSize_, audioBufferSize_, inputBufferSize_;
         int writeIdx_, overlap_, remainingSamples_;
-        bool startAtWindowCentre_;
+        bool startAtCentreOfFrame_;
         SignalBank audioBufferBank_;
     };
 }

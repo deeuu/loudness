@@ -41,10 +41,7 @@ namespace loudness{
      * frame size is less than the length of the audio file or the end of the
      * file is reached, the frame is padded with zeros.
      *
-     * @todo Mono checked out but need to validate for stereo files.
      * @todo Add MONOMIX case for downmixing stereo files.
-     *
-     * @author Dominic Ward
      */
     class AudioFileCutter : public Module
     {

@@ -23,13 +23,6 @@
 #include "../support/Module.h"
 #include "../thirdParty/spline/Spline.h"
 
-/*
- * =====================================================================================
- *        Class:  FastRoexBank
- *  Description:  
- * =====================================================================================
- */
-
 namespace loudness{
 
     /**
@@ -45,6 +38,9 @@ namespace loudness{
      * A lookup table is employed for the computing the rounded exponential
      * filter.
      *
+     * Cubinc spline interpolated can be applied to yield a 0.1 Cam resolution
+     * excitation pattern.
+     *
      * This implementation follows a combination of:
      *
      * Glasberg, B. R., & Moore, B. C. J. (1990).  Derivation of Auditory Filter
@@ -58,6 +54,12 @@ namespace loudness{
 
     public:
 
+        /** Constructs a FastRoexBank with roex filters equally spaced
+         * on the Cam scale.
+         * 
+         * @param camStep Interval between adjacent filters on the cam Scale.
+         * @param interp Set true to interpolate the excitation pattern.
+         */
         FastRoexBank(Real camStep = 0.1, bool interp = false);
 
         virtual ~FastRoexBank();

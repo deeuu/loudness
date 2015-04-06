@@ -29,17 +29,29 @@ namespace loudness{
      *
      * @brief Implements a first-order low-pass filter with seperate attack and
      * release time-constants. This module will filter all signals in the input
-     * SignalBank independently, therefore givin an output SignalBank of the
+     * SignalBank independently and therefore gives an output SignalBank of the
      * same shape.
      *
      * The time-step used in the calculation of filter coefficients is derived
      * from the input SignalBank's frame rate, which by default is equal to the
      * sampling frequency.
+     *
+     * REFERENCES:
+     *
+     * Zolzer, U. (2002). DAFX - Digital Audio Effects. (U. Zolzer, Ed.) 
+     * John Wiley & Sons, Ltd.
+     *
+     * Glasberg, B. R., & Moore, B. C. J. (2002). A Model of Loudness Applicable
+     * to Time-Varying Sounds. Journal of the Audio Engineering Society, 50(5),
+     * 331–342.
+     *
      */
     class ARAverager : public Module
     {
     public:
  
+        /** Constructs an ARAverager with attackTime and releaseTime in
+         * seconds */
         ARAverager(Real attackTime, Real releaseTime);
 
         virtual ~ARAverager();

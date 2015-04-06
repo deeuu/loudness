@@ -22,9 +22,9 @@
 
 namespace loudness{
 
-    SpecificLoudnessANSIS342007::SpecificLoudnessANSIS342007(bool ansiS3407) :
+    SpecificLoudnessANSIS342007::SpecificLoudnessANSIS342007(bool useANSISpecificLoudness) :
         Module("SpecificLoudnessANSIS342007"),
-        ansiS3407_(ansiS3407)
+        useANSISpecificLoudness_(useANSISpecificLoudness)
     {}
 
     SpecificLoudnessANSIS342007::~SpecificLoudnessANSIS342007() {}
@@ -81,7 +81,7 @@ namespace loudness{
                 //high level
                 if (excLin > 1e10)
                 {
-                    if (ansiS3407_)
+                    if (useANSISpecificLoudness_)
                         sl = pow((excLin/1.0707), 0.2);
                     else
                         sl = pow((excLin/1.04e6), 0.5);

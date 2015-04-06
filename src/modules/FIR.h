@@ -22,21 +22,25 @@
 
 #include "../support/Filter.h"
 
-/*
- * =====================================================================================
- *        Class:  FIR
- *  Description:  Performs FIR filtering of an input SignalBank using direct form 2.
- *
- * =====================================================================================
- */
 
 namespace loudness{
 
+    /** 
+     * @class FIR
+     *
+     * @brief Performs FIR filtering of an input SignalBank using direct form 2.
+     *
+     * At present, this algorithm supports multiple ears but not multiple channels.
+     *
+     * @sa Filter
+     */
     class FIR : public Module, public Filter
     {
         public:
 
+            /** Constructs an FIR with no filter coefficients */
             FIR();
+            /** Constructs an FIR with a set of feedforward coefficients */
             FIR(const RealVec &bCoefs);
 
             virtual ~FIR();
@@ -44,15 +48,6 @@ namespace loudness{
         private:
 
             virtual bool initializeInternal(const SignalBank &input);
-            /*
-            *--------------------------------------------------------------------------------------
-            *       Class:  FIR
-            *      Method:  FIR :: ProcessInternal
-            * Description:  Performs FIR filtering of the input SignalBank.
-            *               Filtered data is stored in the output SignalBank.
-            *  Parameters:  input:  The SignalBank to be filtered.
-            *--------------------------------------------------------------------------------------
-            */
             virtual void processInternal(const SignalBank &input);
             virtual void resetInternal();
 
@@ -60,4 +55,3 @@ namespace loudness{
 }
 
 #endif
-

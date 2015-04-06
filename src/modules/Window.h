@@ -27,30 +27,39 @@ namespace loudness{
     /**
      * @class Window
      * 
-     * @brief Simple Moving Average (Window) filter.
+     * @brief Applies a window function to the input SignalBank.
      *
-     * This module outputs a simple moving average of the input samples using a
-     * length @pwindowSize window. A running sum is achieved by setting
-     * @paverage to false (the default is true). Furthermore, to square the
-     * input (useful for a running mean square), set @psquareInput to true
-     * (default is false). 
+     * This module is for use with PowerSpectrum. In the current implementation,
+     * multiple ears are supported but each ear is expected to have one channel
+     * (one signal per ear to be windowed). If multiple window sizes are
+     * specified when constructed this module, multiple windowed frames of
+     * varying sizes can be generated from a single signal. In this case, the
+     * analysis frames are output in separate channels for each ear. If the
+     * number of input samples is greater than the window size(s), the analysis
+     * windows are zero-padded after the end of the window.
      *
-     * The implementation is based on RunningSum unit generator in
-     * SuperCollider.
-     *
-     * @author Dominic Ward
+     * Currently supported windows:
+     * - Hann (periodic or symmetric)
      */
     class Window : public Module
     {
     public:
 
-        /**
-         * @brief Constructs an Window object.
+        /** Constructs a Window object for generating a single frame.
          *
-         * @param windowSize Number of samples in the sliding window.
+         * @param windowType The type of window to apply.
+         * @param length The length of the window in samples.
+         * @param periodic Periodic if true, symmetric otherwise.
+         */
+        Window(const string &windowType, int length, bool periodic);
+
+        /** Constructs a Window object for generating a multiple frames.
+         *
+         * @param windowType The type of window to apply.
+         * @param length A vector of window lengths in samples.
+         * @param periodic Periodic if true, symmetric otherwise.
          */
         Window(const string &windowType, const IntVec& length, bool periodic);
-        Window(const string &windowType, int length, bool periodic);
         Window();
         virtual ~Window();
 

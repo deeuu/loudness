@@ -28,20 +28,26 @@ namespace loudness{
      * @class InstantaneousLoudness
      *
      * @brief Given a specific loudness pattern this class computes the
-     * the instantaneous loudness (integrated specific
-     * loudness). 
+     * the instantaneous loudness (integrated specific loudness). 
      *
-     * For input SignalBanks with one ear but diotic simulation, then you can
-     * set diotic true for simple doubling of loudness. If diotic is true and
-     * there are multiple ears, then both specific loudness patterns are summed
-     * to a single value. If diotic is false and there are multiple ears, then
-     * this module outputs one instantaneous loudness per ear.
+     * For input SignalBanks with one ear but dioticPresentation simulation,
+     * then you can set dioticPresentation true for simple
+     * doubling of loudness. If dioticPresentation is true and there are
+     * multiple ears, then both specific loudness patterns are summed to a
+     * single value. If dioticPresentation is false and there are multiple
+     * ears, then this module outputs one instantaneous loudness value per ear.
      */
     class InstantaneousLoudness : public Module
     {
     public:
  
-        InstantaneousLoudness(Real cParam, bool diotic);
+        /** Constructs an InstantaneousLoudness object.
+         *
+         * @param cParam A scaling factor applied to the instantaneous loudness.
+         * @dioticPresentation Set true for a single instantaneous loudness
+         * value. For single ear SignalBanks, loudness is doubled.
+         */
+        InstantaneousLoudness(Real cParam, bool dioticPresentation);
 
         virtual ~InstantaneousLoudness();
 
@@ -51,7 +57,7 @@ namespace loudness{
         virtual void resetInternal();
 
         Real cParam_;
-        bool diotic_;
+        bool dioticPresentation_;
     };
 }
 #endif

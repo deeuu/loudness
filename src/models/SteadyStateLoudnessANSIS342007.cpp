@@ -59,10 +59,10 @@ namespace loudness{
         /*
          * Weighting filter
          */
-        string middleEar = "ANSI";
-        string outerEar = "ANSI_FREEFIELD";
+        string middleEar = "ANSIS342007";
+        string outerEar = "ANSIS342007_FREEFIELD";
         if(diffuseField_)
-            outerEar = "ANSI_DIFFUSEFIELD";
+            outerEar = "ANSIS342007_DIFFUSEFIELD";
 
         modules_.push_back(unique_ptr<Module>
                 (new WeightSpectrum(middleEar, outerEar))); 

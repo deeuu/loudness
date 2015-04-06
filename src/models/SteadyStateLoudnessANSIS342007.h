@@ -25,6 +25,25 @@
 
 namespace loudness{
 
+    /**
+     * @brief Implementation of the ANSI S3.4 2007 steady-state loudness model.
+     * 
+     * This loudness model is for processing spectra only, i.e., there is no
+     * time-frequency decomposition. The input SignalBank can have
+     * multiple ears and channels but only one sample per channel which
+     * specifies the intensity of a single component. Make sure that the centre
+     * frequencies corresponding to each input component are set.
+     *
+     * It should be noted that this model makes use of polynomials to
+     * approximate the variables involved in the specific loudness calculations,
+     * rather than interpolation as used in the standard. See AuditoryTools to
+     * see how the specific loudness parameters are computed.
+     *
+     * REFERENCES:
+     *
+     * ANSI. (2007). ANSI S3.4-2007. Procedure for the Computation of Loudness of
+     * Steady Sounds.
+     */
     class SteadyStateLoudnessANSIS342007 : public Model
     {
         public:
@@ -45,4 +64,3 @@ namespace loudness{
 }
 
 #endif
-

@@ -26,6 +26,7 @@ namespace loudness{
 
     /**
      * @class DoubleRoexBank
+     *
      * @brief Applies a bank of double roex filters to an input power spectrum.
      *
      * This is an implementation of the double roex filter model proposed by
@@ -46,6 +47,13 @@ namespace loudness{
 
     public:
 
+        /** Constructs a DoubleRoexBank with double roex filters equally spaced
+         * on the Cam scale.
+         * 
+         * @param camLo Frequency of the first double roex filter in Cams.
+         * @param camHi Frequency of the last double roex filter in Cams.
+         * @param camStep Interval between adjacent filters on the cam Scale.
+         */
         DoubleRoexBank(Real camLo = 1.5, Real camHi = 40.2, Real camStep = 0.1);
 
         virtual ~DoubleRoexBank();

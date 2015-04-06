@@ -24,10 +24,19 @@
 
 namespace loudness{
 
+    /** 
+     * @class Butter
+     *
+     * @brief Implements a Butterworth filter.
+     *
+     * At present, this algorithm is limited to a third order high-pass filter.
+     * At present, this algorithm supports multiple ears but not multiple channels.
+     */
     class Butter : public Module, public Filter
     {
         public:
 
+            /** Constructs a Butterworth filter of specified order, type and centre frequency */
             Butter(int order, int type, Real fc);
 
             virtual ~Butter();

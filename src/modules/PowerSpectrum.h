@@ -27,40 +27,39 @@ namespace loudness{
 
     /**
      * @class PowerSpectrum
+     *
      * @brief Computes the power spectrum of an input SignalBank.  
      *
      * A multi-resolution power spectrum can be obtained by constructing the
      * object with a vector of non-overlapping frequency bands and a vector of
      * window lengths corresponding to each band. The band edges should be
-     * specified in Hz and the window sizes in in seconds.
+     * specified in Hz and the window sizes in samples.
      *
      * For example:
      *  RealVec bandFreqs{20, 100, 500};
-     *  RealVec windowSpec{0.064, 0.032};
+     *  RealVec windowSpec{2048, 1024};
      *  PowerSpectrum object(bandFreqs, windowSpec, true)
      *
-     * Will construct a PowerSpectrum object which uses a 64ms window for all
-     * frequency bins in the interval [20, 100) and a 32ms window for all bins
-     * in the interval [100, 500). Thus the input SignalBank should hold a 64ms
-     * frames worth of input samples. The windows are all time-aligned at their
-     * centre points. The booleon argument corresponds to whether uniform
-     * spectral sampling is used (default is true). If uniform is false, the per
-     * band spectrum is sampled non-uniformly at intervals corresponding to
-     * fs/windowSize. Casual zero padding is applied when the internally
-     * calculated FFT size is greater than the window size (powers of two).
+     * will construct a PowerSpectrum object which uses a window length of 2048
+     * samples for all frequency bins in the interval [20, 100) and a 1024 for
+     * all bins in the interval [100, 500). Thus the input SignalBank should
+     * hold a 2048 frames worth of input samples in two separate channels. The
+     * number of input channels must match the number of windows!  In this
+     * example, all 2048 samples in channel one will be used to construct the
+     * first band, and the first 1024 samples of channel two will be used for
+     * the second band (the remaining 1024 samples are ignored). The idea is
+     * that this module can be used in conjunction with \ref Window which can
+     * output multiple windowed data frames. 
+     *
+     * The boolean argument sampleSpectrumUniformly determines whether all DFT bands
+     * are sampled uniformly.  If sampleSpectrumUniformly is false, the per band
+     * spectrum is sampled non-sampleSpectrumUniformlyly at intervals corresponding
+     * to fs/FFTsize, where FFTsize depends on the size of each window.
      *
      * In the current implementation, a Hann window is applied to all segments
      * and both DC and Nyquist are not computed.
      *
-     * Each spectrum is scaled such that the sum of component powers in a given
-     * band equals the average power in that band (see
-     * http://www.dadisp.com/webhelp/dsphelp.htm#mergedprojects/refman2/SPLGROUP/POWSPEC.htm).
-     *
-     * @todo Develop window class to allow for more functions.
-     *
-     * @author Dominic Ward
-     *
-     * @sa FrameGenerator
+     * @sa FrameGenerator, Window
      */
     class PowerSpectrum: public Module
     {
@@ -71,8 +70,12 @@ namespace loudness{
          *
          * @param bandFreqsHz A vector of consecutive band edges in Hz.
          * @param windowSizes A vector of window sizes for each band in samples.
+         * @param sampleSpectrumUniformly Set true to use the sample FFT size for
+         * each window.
          */
-        PowerSpectrum(const RealVec& bandFreqsHz, const vector<int>& windowSizes, bool uniform);
+        PowerSpectrum(const RealVec& bandFreqsHz,
+                const vector<int>& windowSizes, 
+                bool sampleSpectrumUniformly);
 
         virtual ~PowerSpectrum();
 
@@ -88,7 +91,7 @@ namespace loudness{
 
         RealVec bandFreqsHz_, normFactor_;
         vector<int> windowSizes_;
-        bool uniform_;
+        bool sampleSpectrumUniformly_;
         string normalisation_;
         vector<vector<int> > bandBinIndices_; 
         vector<unique_ptr<FFT>> ffts_;

@@ -21,11 +21,11 @@
 
 namespace loudness{
 
-    PowerSpectrum::PowerSpectrum(const RealVec& bandFreqsHz, const vector<int>& windowSizes, bool uniform):
+    PowerSpectrum::PowerSpectrum(const RealVec& bandFreqsHz, const vector<int>& windowSizes, bool sampleSpectrumUniformly):
         Module("PowerSpectrum"),
         bandFreqsHz_(bandFreqsHz),
         windowSizes_(windowSizes),
-        uniform_(uniform),
+        sampleSpectrumUniformly_(sampleSpectrumUniformly),
         normalisation_("averageEnergy")
     {}
 
@@ -47,7 +47,7 @@ namespace loudness{
         //work out FFT configuration (constrain to power of 2)
         int largestWindowSize = input.getNSamples();
         vector<int> fftSize(nWindows, nextPowerOfTwo(largestWindowSize));
-        if(uniform_)
+        if(sampleSpectrumUniformly_)
         {
             ffts_.push_back(unique_ptr<FFT> (new FFT(fftSize[0]))); 
             ffts_[0] -> initialize();
@@ -142,7 +142,7 @@ namespace loudness{
 
             for(int chn=0; chn<nWindows; chn++)
             {
-                if(!uniform_)
+                if(!sampleSpectrumUniformly_)
                     fftIdx = chn;
 
                 //Do the FFT

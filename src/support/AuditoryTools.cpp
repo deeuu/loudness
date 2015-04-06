@@ -189,22 +189,22 @@ namespace loudness{
         middleEarFreqPoints_.assign(freqs, freqs + 41);
 
         //Middle ear
-        if(middleEarType_ == "ANSI_S34_2007")
+        if(middleEarType_ == "ANSIS342007")
             middleEardB_.assign(midANSI, midANSI + 41);
-        else if(middleEarType_ == "ANSI_S34_2007_HPF")
+        else if(middleEarType_ == "ANSIS342007_HPF")
             middleEardB_.assign(midANSI, midANSI + 41);
-        else if(middleEarType_ == "CHEN_ETAL_2011")
+        else if(middleEarType_ == "CHGM2011")
             middleEardB_.assign(midChenEtAl, midChenEtAl + 41);
         else
             middleEarType_ = "";
 
         //Outer ear
-        if(outerEarType_ == "ANSI_S34_2007_FREEFIELD")
+        if(outerEarType_ == "ANSIS342007_FREEFIELD")
         {
             outerEardB_.assign(freeANSI, freeANSI + 41);
             outerEarFreqPoints_ = middleEarFreqPoints_;
         }
-        else if(outerEarType_ == "ANSI_S34_2007_DIFFUSEFIELD")
+        else if(outerEarType_ == "ANSIS342007_DIFFUSEFIELD")
         {
             outerEardB_.assign(diffuseANSI, diffuseANSI + 41);
             outerEarFreqPoints_ = middleEarFreqPoints_;
@@ -253,7 +253,7 @@ namespace loudness{
 
                 for (uint i=0; i < freqs.size(); i++)
                 {
-                    if((freqs[i]<=75) && (middleEarType_ == "ANSI_S34_2007_HPF"))
+                    if((freqs[i]<=75) && (middleEarType_ == "ANSIS342007_HPF"))
                             response_[i] = -14.6; //Post HPF correction
                     else if(freqs[i] >= middleEarFreqPoints_[40])
                         response_[i] = middleEardB_[40];

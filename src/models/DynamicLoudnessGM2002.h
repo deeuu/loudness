@@ -32,11 +32,15 @@ namespace loudness{
      * At present, there are three parameter sets available:
      *
      * 1. GM2002 - The specification used by Glasberg and Moore (2002).
-     * 2. Faster - Uses a compressed spectrum with a fast roex filterbank.
+     * 2. faster - Uses a compressed spectrum with a fast roex filterbank.
+     * 3. recent - Uses time-constants from Moore et al. (2003) and the
+     * modified equation for computing the speicifc loudness at very high levels
+     * (ANSI S3.4, 2007).
+     * 4. recentAndFaster - A combination of 2. and 3.
      *
-     * The default is Faster.
+     * The default is `faster'.
      *
-     * Use loadParameterSet() to select the model parameters.
+     * Use configureModelParameters() to select the model parameters.
      *
      * If you want to use a time-domain filter for simulating the transmission
      * response of the outer and middle ear, such as the 4096 order FIR filter
@@ -49,7 +53,7 @@ namespace loudness{
      *
      * When using filter spacings greater than 0.1 Cams, the sampled excitation
      * pattern can be interpolated to approximate the high resolution pattern.
-     * If you want this, use setInterpRoexBank(true).
+     * If you want this setInterpolateRoexBank(true).
      *
      * REFERENCES:
      *
@@ -64,12 +68,17 @@ namespace loudness{
      * to Time-Varying Sounds. Journal of the Audio Engineering Society, 50(5),
      * 331–342.
      *
+     * Moore, B. C. J., Glasberg, B. R., & Stone, M. A. (2003). Why Are
+     * Commercials so Loud ? - Perception and Modeling of the Loudness of
+     * Amplitude-Compressed Speech. Journal of the Acoustical Society of America,
+     * 51(12), 1123–1132.
+     *
      * Glasberg, B. R., & Moore, B. C. J. (2006). Prediction of Absolute
      * Thresholds and Equal-Loudness Contours Using a Modified Loudness Model.
      * The Journal of the Acoustical Society of America, 120(2), 585–588.
      *
-     * ANSI S3.4-2007. Procedure for the Computation of Loudness of Steady
-     * Sounds.
+     * ANSI. (2007). ANSI S3.4-2007. Procedure for the Computation of Loudness of
+     * Steady Sounds.
      */
     class DynamicLoudnessGM2002 : public Model
     {

@@ -25,23 +25,23 @@
 namespace loudness{
 
     /**
-     * @class CompressSpectrumwidth 
+     * @class CompressSpectrum
      *
      * @brief Reduces the number of spectral components by averaging the
      * spectrum using a rectangular window.
      *
-     * The summation criterion (alpha) determines the bandwidth; 
+     * The summation criterion (alpha) determines the bandwidth of the window;
      * the algorithms keeps components within alpha spacing on a Cam
-     * scale. Generaly, this can only be achieved at mid-hi frequencies where
-     * the spectrum is dense.
+     * (perceptual) scale. Generally, this can only be achieved at mid-hi
+     * frequencies where the spectrum is dense.
      *
-     * This is achieved by taking the derivative of the input frequencies (which
-     * are assumed to be linearly distributed) and looking for the alpha/beta
-     * points where beta is the integer width of the range in bins.
+     * This is achieved by examining the derivative of the input frequencies (which
+     * are assumed to be linearly distributed) on a Cam frequency scale and
+     * grouping components according to the compression criterion. 
      *
      * There are other solutions to the problem such as adding alpha and
      * counting the number of bins below, but that approach fails to satisfy the
-     * criterion for alpha = 2+. Anyway, this approach only costs about +2 bins
+     * criterion for alpha > 2. Anyway, this approach only costs about +2 bins
      * more on average.
      *
      * @todo clean code.

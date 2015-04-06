@@ -116,7 +116,7 @@ namespace loudness{
             attackTimeLTL_ = -0.001/log(1-0.01);
             releaseTimeLTL_ = -0.001/log(1-0.0005);
         }
-        else if (author == "GM2003")
+        else if (author == "MGS2003")
         {
             attackTimeSTL_ = -0.001/log(1-0.045);
             releaseTimeSTL_  = -0.001/log(1-0.02);
@@ -155,7 +155,7 @@ namespace loudness{
             }
             else if (setName == "recent")
             {
-                configureSmoothingTimes("GM2003");
+                configureSmoothingTimes("MGS2003");
                 setUseANSISpecificLoudness(true);
                 LOUDNESS_DEBUG(name_
                         << ": Using updated "
@@ -291,12 +291,12 @@ namespace loudness{
          */
         if(weightSpectrum)
         {
-            string middleEar = "ANSI";
-            string outerEar = "ANSI_FREEFIELD";
+            string middleEar = "ANSIS342007";
+            string outerEar = "ANSIS342007_FREEFIELD";
             if(useHPF_)
-                middleEar = "ANSI_HPF";
+                middleEar = "ANSIS342007_HPF";
             if(useDiffuseFieldResponse_)
-                outerEar = "ANSI_DIFFUSEFIELD";
+                outerEar = "ANSIS342007_DIFFUSEFIELD";
 
             modules_.push_back(unique_ptr<Module> 
                     (new WeightSpectrum(middleEar, outerEar))); 

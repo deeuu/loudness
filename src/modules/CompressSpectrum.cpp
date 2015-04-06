@@ -79,7 +79,7 @@ namespace loudness{
                 /*  
                  *  This line is cheeky; it re-evaluates the groupSize at the new multiple
                  *  in attempt to maintain alpha spacing, I'm not 100% but the algorithm
-                 *  seems to satisfy the various criteria
+                 *  seems to satisfy various criteria
                  */
                 if(store<nChannels)
                 {

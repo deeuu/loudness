@@ -21,11 +21,11 @@
 
 namespace loudness{
 
-    FrameGenerator::FrameGenerator(int frameSize, int hopSize, bool startAtWindowCentre) :
+    FrameGenerator::FrameGenerator(int frameSize, int hopSize, bool startAtCentreOfFrame) :
         Module("FrameGenerator"),
         frameSize_(frameSize),
         hopSize_(hopSize),
-        startAtWindowCentre_(startAtWindowCentre)
+        startAtCentreOfFrame_(startAtCentreOfFrame)
     {}
     
     FrameGenerator::~FrameGenerator()
@@ -60,7 +60,7 @@ namespace loudness{
         //a buffer for storing remaining input samples once frame is full
         audioBufferBank_.initialize(input.getNEars(), input.getNChannels(), inputBufferSize, input.getFs());
         
-        if (startAtWindowCentre_)
+        if (startAtCentreOfFrame_)
             writeIdx_ = ceil((frameSize_-1)/2.0);
         else
             writeIdx_ = 0;
@@ -134,9 +134,9 @@ namespace loudness{
         return hopSize_;
     }
 
-    bool FrameGenerator::getStartAtWindowCentre() const
+    bool FrameGenerator::getstartAtCentreOfFrame() const
     {
-        return startAtWindowCentre_;
+        return startAtCentreOfFrame_;
     }
 
 }

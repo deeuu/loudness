@@ -26,19 +26,27 @@ namespace loudness{
 
     /**
      * @class RoexBankANSIS342007
+     *
      * @brief Applies a set of level dependent rounded exponential (roex)
      * filters to an input power spectrum. 
      *
      * This implementation follows:
      *
-     * ANSI S3.4-2007. (2007).  Procedure for the Computation of Loudness of
-     * Steady Sounds.
+     * ANSI. (2007). ANSI S3.4-2007. Procedure for the Computation of Loudness
+     * of Steady Sounds.
      */
     class RoexBankANSIS342007 : public Module
     {
 
     public:
 
+        /** Constructs a roex filter bank with filters equally spaced
+         * on the Cam scale.
+         * 
+         * @param camLo Frequency of the first roex filter in Cams.
+         * @param camHi Frequency of the last roex filter in Cams.
+         * @param camStep Interval between adjacent filters on the cam Scale.
+         */
         RoexBankANSIS342007(Real camLo = 1.8, Real camHi = 38.9, Real camStep = 0.1);
 
         virtual ~RoexBankANSIS342007();

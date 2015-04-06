@@ -203,10 +203,10 @@ namespace loudness{
          */
         if(pathToFilterCoefs_.empty())
         {
-            string middleEar = "CHEN_ETAL";
-            string outerEar = "ANSI_FREEFIELD";
+            string middleEar = "CHGM2011";
+            string outerEar = "ANSIS342007_FREEFIELD";
             if(useDiffuseFieldResponse_)
-                outerEar = "ANSI_DIFFUSEFIELD";
+                outerEar = "ANSIS342007_DIFFUSEFIELD";
 
             modules_.push_back(unique_ptr<Module> 
                     (new WeightSpectrum(middleEar, outerEar))); 

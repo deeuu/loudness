@@ -27,6 +27,7 @@ namespace loudness{
 
     /**
      * @class WeightSpectrum
+     *
      * @brief Filters an input SignalBank by applying a set of weights.
      *
      * This algorithm scales an input SignalBank using the set of weights. The
@@ -34,9 +35,6 @@ namespace loudness{
      * is used for modifying a short-time power spectrum, such as the kind
      * output by PowerSpectrum.
      *
-     * Note: Use of OME class internally is a hacky.
-     *
-     * @author Dominic Ward
      */
     class WeightSpectrum : public Module
     {
