@@ -150,19 +150,18 @@ namespace loudness{
 
             void setMiddleEarType(const string& middleEarType);
             void setOuterEarType(const string& outerEarType);
-            //This should really take a RealVec by reference and modify
-            //However, I need to get non-const vectors working with swig
             bool interpolateResponse(const RealVec &freqs);
             const RealVec& getResponse() const;
-            const RealVec& getFreqPoints() const;
             const RealVec& getMiddleEardB() const;
             const RealVec& getOuterEardB() const;
+            const RealVec& getMiddleEarFreqPoints() const;
+            const RealVec& getOuterEarFreqPoints() const;
 
         private:
             void getData();
             string middleEarType_, outerEarType_;
-            RealVec freqPoints_, phoneFreqPoints_, middleEardB_, outerEardB_, response_;
-            bool usingPhones_;
+            RealVec middleEarFreqPoints_, outerEarFreqPoints_;
+            RealVec middleEardB_, outerEardB_, response_;
     };
 }
 

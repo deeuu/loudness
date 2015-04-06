@@ -185,34 +185,34 @@ namespace loudness{
             0.8 ,  0.54,  3.06,  3.5 ,  1.79, -3.52, -7.86, -8.68, -9.81, -7.1 ,
             -5.09, -1.14,  0.02,  1.6 , 0.25, -2.8 , -3.97, -7.45, -6.8 };
             
-        //frequencies
-        freqPoints_.assign(freqs, freqs + 41);
+        //frequencies to use for middle ear interpolation
+        middleEarFreqPoints_.assign(freqs, freqs + 41);
 
         //Middle ear
-        if(middleEarType_ == "ANSI")
+        if(middleEarType_ == "ANSI_S34_2007")
             middleEardB_.assign(midANSI, midANSI + 41);
-        else if(middleEarType_ == "ANSI_HPF")
+        else if(middleEarType_ == "ANSI_S34_2007_HPF")
             middleEardB_.assign(midANSI, midANSI + 41);
-        else if(middleEarType_ == "CHEN_ETAL")
+        else if(middleEarType_ == "CHEN_ETAL_2011")
             middleEardB_.assign(midChenEtAl, midChenEtAl + 41);
         else
             middleEarType_ = "";
 
         //Outer ear
-        usingPhones_ = false;
-        if(outerEarType_ == "ANSI_FREEFIELD")
+        if(outerEarType_ == "ANSI_S34_2007_FREEFIELD")
         {
             outerEardB_.assign(freeANSI, freeANSI + 41);
+            outerEarFreqPoints_ = middleEarFreqPoints_;
         }
-        else if(outerEarType_ == "ANSI_DIFFUSEFIELD")
+        else if(outerEarType_ == "ANSI_S34_2007_DIFFUSEFIELD")
         {
             outerEardB_.assign(diffuseANSI, diffuseANSI + 41);
+            outerEarFreqPoints_ = middleEarFreqPoints_;
         }
         else if(outerEarType_ == "DT990")
         {
             outerEardB_.assign(dt990, dt990 + 86);
-            phoneFreqPoints_.assign(phoneFreqs, phoneFreqs+86);
-            usingPhones_ = true;
+            outerEarFreqPoints_.assign(phoneFreqs, phoneFreqs + 86);
         }
         else
         {
@@ -249,12 +249,13 @@ namespace loudness{
             //middle ear
             if(!middleEarType_.empty())
             {
-                s.set_points(freqPoints_, middleEardB_);
-                for(unsigned int i=0; i<freqs.size(); i++)
+                s.set_points(middleEarFreqPoints_, middleEardB_);
+
+                for (uint i=0; i < freqs.size(); i++)
                 {
-                    if((freqs[i]<=75) && (middleEarType_ == "ANSI_HPF"))
+                    if((freqs[i]<=75) && (middleEarType_ == "ANSI_S34_2007_HPF"))
                             response_[i] = -14.6; //Post HPF correction
-                    else if(freqs[i]>=freqPoints_[40])
+                    else if(freqs[i] >= middleEarFreqPoints_[40])
                         response_[i] = middleEardB_[40];
                     else
                         response_[i] = s(freqs[i]);
@@ -268,20 +269,13 @@ namespace loudness{
             //outer ear
             if(!outerEarType_.empty())
             {
-                Real lastFreq = freqPoints_.back();
+                Real lastFreq = outerEarFreqPoints_.back();
                 Real lastDataPoint = outerEardB_.back();
-                if(usingPhones_)
+                s.set_points(outerEarFreqPoints_, outerEardB_);
+
+                for(uint i = 0; i < freqs.size(); i++)
                 {
-                    lastFreq = phoneFreqPoints_.back();
-                    s.set_points(phoneFreqPoints_, outerEardB_);
-                }
-                else
-                {
-                    s.set_points(freqPoints_, outerEardB_);
-                }
-                for(unsigned int i=0; i<freqs.size(); i++)
-                {
-                    if(freqs[i]>=lastFreq)
+                    if(freqs[i] >= lastFreq)
                         response_[i] += lastDataPoint;
                     else
                         response_[i] += s(freqs[i]);
@@ -311,11 +305,13 @@ namespace loudness{
         return outerEardB_;
     }
 
-    const RealVec& OME::getFreqPoints() const
+    const RealVec& OME::getOuterEarFreqPoints() const
     {
-        if (usingPhones_)
-            return phoneFreqPoints_;
-        else
-            return freqPoints_;
+        return outerEarFreqPoints_;
+    }
+
+    const RealVec& OME::getMiddleEarFreqPoints() const
+    {
+        return middleEarFreqPoints_;
     }
 }
