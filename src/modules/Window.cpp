@@ -140,8 +140,10 @@ namespace loudness{
 
     void Window::generateWindow(RealVec &window, const string &windowType, bool periodic)
     {
-        if(windowType == "hann")
+        if((windowType == "hann") || (windowType == "hanning"))
             hann(window, periodic);
+        else
+            LOUDNESS_ASSERT(false, "Window does not exist.");
     }
 
     void Window::setNormalisation(const string &normalisation)
@@ -151,7 +153,7 @@ namespace loudness{
 
     void Window::normaliseWindow(RealVec &window, const string &normalisation, double ref)
     {
-        if(!normalisation.empty())
+        if((!normalisation.empty()) && (normalisation != "none"))
         {
             double x = 0.0;
             double sum = 0.0, sumSquares = 0.0;
@@ -173,15 +175,16 @@ namespace loudness{
             }
             else 
             {
-                LOUDNESS_WARNING(name_ << ": Normalisation must be 'energy' or 'amplitude', using 'energy'");
+                LOUDNESS_WARNING(name_ << ": Normalisation must be `energy' or `amplitude', using `energy'");
                 normFactor = sqrt(wSize/sumSquares);
             }
+
             normFactor /= ref;
+            LOUDNESS_DEBUG(name_ << ": Normalising window using factor: " << normFactor);
             for(uint i=0; i < wSize; i++)
                 window[i] *= normFactor;
         }
     }
- 
 
     void Window::setRef(const Real ref)
     {
