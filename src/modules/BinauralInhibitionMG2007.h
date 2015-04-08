@@ -33,12 +33,24 @@ namespace loudness{
      *
      * The input SignalBank must have two ears.
      *
+     * This implementation is *essentially* the same as the method described in a
+     * first draft of the ISO 532-2 (2014) which is subject to change. The
+     * definition of the gaussian weighting function in the original paper (Eq.
+     * 1) is incorrect (typo), and the term 'g' is specified in normalised
+     * units, but I believe it should be an absolute deviation from the centre
+     * frequency (in Cams) as given in the ISO document. Thus, a single kernel
+     * can be used for the convolution, otherwise the shape of the weigthing
+     * function would be frequency dependent.
+     *
      * REFERENCES:
      *
      * Moore, B. C. J., & Glasberg, B. R. (2007). Modeling Binaural Loudness. The
      * Journal of the Acoustical Society of America, 121(3), 1604–1612.
      *
+     * ISO. (2014). First ISO/CD 532-2 “Acoustics - Method for calculating
+     * loudness - Part 2: Moore-Glasberg method.”
      */
+
     class BinauralInhibitionMG2007 : public Module
     {
     public:
@@ -53,7 +65,7 @@ namespace loudness{
         virtual void processInternal(const SignalBank &input);
         virtual void resetInternal();
 
-        RealVecVec gaussians_;
+        RealVec gaussian_;
     };
 }
 #endif

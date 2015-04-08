@@ -20,7 +20,7 @@
 #ifndef  USEFULFUNCTIONS_H
 #define  USEFULFUNCTIONS_H
 
-#include <math.h>
+#include <cmath>
 #include <vector>
 #define PI 3.14159265358979323846264338327
 #define LOW_LIMIT_POWER 1e-10
@@ -40,6 +40,13 @@ namespace loudness{
     inline Type min (Type const& a, Type const&b )
     {
         return a < b ? a : b;
+    }
+
+    /** Return the absolute value of a. */
+    template <typename Type>
+    inline Type abs (Type const& a)
+    {
+        return a < 0 ? -a : a;
     }
 
     /** Returns true if value is positive and less than upper. */

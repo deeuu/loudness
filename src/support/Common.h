@@ -46,4 +46,4 @@ typedef std::vector<std::vector<Real> > RealVecVec;
 typedef std::vector<int> IntVec;
 typedef std::vector<Real>::iterator RealIter;
 
-#endif  
+#endif

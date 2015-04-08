@@ -42,6 +42,7 @@ if __name__ == "__main__":
                 "../src/modules/FastRoexBank.cpp",
                 "../src/modules/DoubleRoexBank.cpp",
                 "../src/modules/SpecificLoudnessANSIS342007.cpp",
+                "../src/modules/BinauralInhibitionMG2007.cpp",
                 "../src/modules/InstantaneousLoudness.cpp",
                 "../src/modules/ARAverager.cpp",
                 "../src/models/SteadyStateLoudnessANSIS342007.cpp",
