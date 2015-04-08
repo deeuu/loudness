@@ -18,16 +18,74 @@
  */
 
 #include "SpecificLoudnessANSIS342007.h"
-#include "../support/AuditoryTools.h"
 
 namespace loudness{
 
-    SpecificLoudnessANSIS342007::SpecificLoudnessANSIS342007(bool useANSISpecificLoudness) :
+    SpecificLoudnessANSIS342007::SpecificLoudnessANSIS342007(
+            bool useANSISpecificLoudness,
+            bool updateParameterCForBinauralInhibition) :
         Module("SpecificLoudnessANSIS342007"),
-        useANSISpecificLoudness_(useANSISpecificLoudness)
+        useANSISpecificLoudness_(useANSISpecificLoudness),
+        updateParameterCForBinauralInhibition_(updateParameterCForBinauralInhibition)
     {}
 
     SpecificLoudnessANSIS342007::~SpecificLoudnessANSIS342007() {}
+
+    Real SpecificLoudnessANSIS342007::internalExcitation(Real freq)
+    {
+        if (freq>=500)
+        {
+            return 3.73;
+        }
+        else
+        {
+            Real logFreq;
+            if(freq<=50)
+                logFreq = log10(50);
+            else
+                logFreq = log10(freq);
+
+            return pow(10, (0.43068810954936998 * pow(logFreq,3) 
+                        - 2.7976098820730675 * pow(logFreq,2) 
+                        + 5.0738460335696969 * logFreq -
+                        1.2060617476790148));
+        }
+    };
+
+    Real SpecificLoudnessANSIS342007::gdBToA(Real gdB)
+    {
+        if(gdB>=0)
+        {
+            return 4.72096;
+        }
+        else
+        {
+            return -0.0000010706497192096045 * pow(gdB,5) 
+                -0.000060648487122230512 * pow(gdB,4) 
+                -0.0012047326575717733 * pow(gdB,3) 
+                -0.0068190417911848525 * pow(gdB,2)
+                -0.11847825641628305 * gdB
+                + 4.7138722463497347;
+        }
+    }
+
+    Real SpecificLoudnessANSIS342007::gdBToAlpha(Real gdB)
+    {
+        if(gdB>=0)
+        {
+            return 0.2;
+        }
+        else
+        {
+            return 0.000026864285714285498 * pow(gdB,2)
+                -0.0020023357142857231 * gdB + 0.19993107142857139;
+        }
+    }
+
+    void SpecificLoudnessANSIS342007::setParameterC(Real parameterC)
+    {
+        parameterC_ = parameterC;
+    }
 
     bool SpecificLoudnessANSIS342007::initializeInternal(const SignalBank &input)
     {
@@ -35,7 +93,15 @@ namespace loudness{
                 name_ << ": Insufficient number of input channels.");
 
         //c value from ANSI 2007
-        cParam_ = 0.046871;
+        parameterC_ = 0.046871;
+        
+        if (updateParameterCForBinauralInhibition_)
+        {
+            parameterC_ /= 0.75;
+            LOUDNESS_DEBUG(name_ 
+                    << ": Scaling parameter C for binaural inhibition model: "
+                    << parameterC_);
+        }
 
         //Number of filters below 500Hz
         nFiltersLT500_ = 0;
@@ -50,9 +116,9 @@ namespace loudness{
                 Real eThrqdB = internalExcitation(fc);
                 eThrqParam_.push_back(pow(10, eThrqdB/10.0));
                 Real gdB = eThrqdB500Hz - eThrqdB;
-                gParam_.push_back(pow(10, gdB/10.0));
-                aParam_.push_back(gdBToA(gdB));
-                alphaParam_.push_back(gdBToAlpha(gdB));
+                parameterG_.push_back(pow(10, gdB/10.0));
+                parameterA_.push_back(gdBToA(gdB));
+                parameterAlpha_.push_back(gdBToAlpha(gdB));
                 nFiltersLT500_++;
             }
         }
@@ -90,14 +156,14 @@ namespace loudness{
                 { 
                     if (excLin > eThrqParam_[i]) //medium level
                     {
-                        sl = (pow(gParam_[i]*excLin+aParam_[i], alphaParam_[i]) -
-                                pow(aParam_[i], alphaParam_[i]));
+                        sl = (pow(parameterG_[i]*excLin+parameterA_[i], parameterAlpha_[i]) -
+                                pow(parameterA_[i], parameterAlpha_[i]));
                     }
                     else //low level
                     {
                         sl = pow((2*excLin)/(excLin+eThrqParam_[i]), 1.5) *
-                            (pow(gParam_[i]*excLin+aParam_[i], alphaParam_[i])
-                                - pow(aParam_[i], alphaParam_[i]));
+                            (pow(parameterG_[i]*excLin+parameterA_[i], parameterAlpha_[i])
+                                - pow(parameterA_[i], parameterAlpha_[i]));
                     }
                 }
                 else //high freqs (variables are constant >= 500 Hz)
@@ -113,7 +179,7 @@ namespace loudness{
                     }
                 }
                 
-                outputSpecificLoudness[i] = cParam_ * sl;
+                outputSpecificLoudness[i] = parameterC_ * sl;
             }
         }
     }

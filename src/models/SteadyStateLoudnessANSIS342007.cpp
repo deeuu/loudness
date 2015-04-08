@@ -79,7 +79,7 @@ namespace loudness{
          * Specific loudness using high level modification
          */
         modules_.push_back(unique_ptr<Module>
-                (new SpecificLoudnessANSIS342007(true)));
+                (new SpecificLoudnessANSIS342007(true, false)));
         outputNames_.push_back("SpecificLoudnessPattern");
 
         /*

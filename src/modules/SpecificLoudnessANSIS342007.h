@@ -49,7 +49,37 @@ namespace loudness{
     {
     public:
 
-        SpecificLoudnessANSIS342007(bool useANSISpecificLoudness=true);
+        SpecificLoudnessANSIS342007(bool useANSISpecificLoudness = true,
+                bool updateParameterCForBinauralInhibition_ = false);
+
+        /**
+         * @brief Returns the excitation level (dB) at threshold at the
+         * centre frequency @a freq in Hz.
+         * 
+         * This is a third order polynomial fit to the data given in Table 4 ANSI
+         * S3.04-2007.
+         */
+        Real internalExcitation(Real freq);
+
+        /**
+         * @brief Returns the value of parameter A given G in dB.
+         *
+         * This is a fifth order polynomial fit to the data given in Table 6 ANSI
+         * S3.04-2007.
+         */
+        Real gdBToA(Real gdB);
+
+        /**
+         * @brief Returns the value of parameter alpha given G in dB.
+         *
+         * This is a second order polynomial fit to the data given in Table 5 ANSI
+         * S3.04-2007.
+         */
+        Real gdBToAlpha(Real gdB);
+
+        /** Set parameter C as used for scaling the specific loudness values.
+         */
+        void setParameterC(Real parameterC);
 
         virtual ~SpecificLoudnessANSIS342007();
 
@@ -61,10 +91,10 @@ namespace loudness{
 
         virtual void resetInternal();
 
-        bool useANSISpecificLoudness_;
+        bool useANSISpecificLoudness_, updateParameterCForBinauralInhibition_;
         int nFiltersLT500_;
-        Real cParam_;
-        RealVec eThrqParam_, gParam_, aParam_, alphaParam_;
+        Real parameterC_;
+        RealVec eThrqParam_, parameterG_, parameterA_, parameterAlpha_;
     };
 }
 

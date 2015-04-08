@@ -6,7 +6,8 @@ from sound import Sound
 from loudnessExtractor import LoudnessExtractor
 
 model = ln.DynamicLoudnessGM2002('../../filterCoefs/32000_IIR_23_freemid.npy')
-model.setDioticPresentation(False)
+#model.setDioticPresentation(False)
+model.setInhibitSpecificLoudness(True)
 
 outputsOfInterest = ["InstantaneousLoudness", "ShortTermLoudness", "LongTermLoudness"]
 extractor = LoudnessExtractor(model, 32000, outputsOfInterest, 2)

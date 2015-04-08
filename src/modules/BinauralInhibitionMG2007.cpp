@@ -45,8 +45,10 @@ namespace loudness{
         for (int chn = 0; chn < input.getNChannels(); ++chn)
         {
             Real g = camStep * chn;
-            gaussian_[chn] = exp(- (0.08 * g)*(0.08 * g) );
+            Real arg = (0.08 * g);
+            gaussian_[chn] = exp(-arg * arg);
         }
+
 
         //output is same form as input
         output_.initialize(input);
@@ -63,7 +65,7 @@ namespace loudness{
 
         int nChannels = input.getNChannels();
         for (int chn = 0; chn < nChannels; ++chn)
-        {
+        { 
             /* Stage 1: Smooth the specific loudness patterns */
             Real smoothLeft = 0.0;
             Real smoothRight = 0.0;

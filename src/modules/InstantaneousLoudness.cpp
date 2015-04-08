@@ -35,14 +35,16 @@ namespace loudness{
 
     bool InstantaneousLoudness::initializeInternal(const SignalBank &input)
     {
-        LOUDNESS_ASSERT(input.getNChannels() > 1, name_ << ": Insufficient number of input channels.");
+        LOUDNESS_ASSERT(input.getNChannels() > 1,
+                name_ << ": Insufficient number of input channels.");
         LOUDNESS_ASSERT(isPositiveAndLessThanUpper(input.getNEars(), 3),
                 name_ << ": A human has no more than two ears.");
 
         //assumes uniformly spaced ERB filters
         Real camStep = input.getChannelSpacingInCams(); 
         cParam_ *= camStep;
-        LOUDNESS_ASSERT(camStep>0, name_ << ": Channel spacing (in Cam units) not set.");
+        LOUDNESS_ASSERT(camStep > 0, 
+                name_ << ": Channel spacing (in Cam units) not set.");
         LOUDNESS_DEBUG(name_ << ": Filter spacing (Cams): " << camStep);
 
         //configure output SignalBank depending on number of ears and dioticPresentation

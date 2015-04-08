@@ -21,58 +21,7 @@
 #include "../thirdParty/spline/Spline.h"
 
 namespace loudness{
-
-    Real internalExcitation(Real freq)
-    {
-        if (freq>=500)
-        {
-            return 3.73;
-        }
-        else
-        {
-            Real logFreq;
-            if(freq<=50)
-                logFreq = log10(50);
-            else
-                logFreq = log10(freq);
-
-            return pow(10, (0.43068810954936998 * pow(logFreq,3) 
-                        - 2.7976098820730675 * pow(logFreq,2) 
-                        + 5.0738460335696969 * logFreq -
-                        1.2060617476790148));
-        }
-    };
-
-    Real gdBToA(Real gdB)
-    {
-        if(gdB>=0)
-        {
-            return 4.72096;
-        }
-        else
-        {
-            return -0.0000010706497192096045 * pow(gdB,5) 
-                -0.000060648487122230512 * pow(gdB,4) 
-                -0.0012047326575717733 * pow(gdB,3) 
-                -0.0068190417911848525 * pow(gdB,2)
-                -0.11847825641628305 * gdB
-                + 4.7138722463497347;
-        }
-    }
-
-    Real gdBToAlpha(Real gdB)
-    {
-        if(gdB>=0)
-        {
-            return 0.2;
-        }
-        else
-        {
-            return 0.000026864285714285498 * pow(gdB,2)
-                -0.0020023357142857231 * gdB + 0.19993107142857139;
-        }
-    }
-
+    
     Real kdB(Real freq)
     {
         if (freq>=1000)

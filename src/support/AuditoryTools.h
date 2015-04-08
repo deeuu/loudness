@@ -68,31 +68,6 @@ namespace loudness{
     }
 
     /**
-     * @brief Returns the excitation level (dB) at threshold at the
-     * centre frequency @a freq in Hz.
-     * 
-     * This is a third order polynomial fit to the data given in Table 4 ANSI
-     * S3.04-2007.
-     */
-    Real internalExcitation(Real freq);
-
-    /**
-     * @brief Returns the value of parameter A given G in dB.
-     *
-     * This is a fifth order polynomial fit to the data given in Table 6 ANSI
-     * S3.04-2007.
-     */
-    Real gdBToA(Real gdB);
-
-    /**
-     * @brief Returns the value of parameter alpha given G in dB.
-     *
-     * This is a second order polynomial fit to the data given in Table 5 ANSI
-     * S3.04-2007.
-     */
-    Real gdBToAlpha(Real gdB);
-
-    /**
      * @brief Returns the detection efficiency parameter K (in decibels) corresponding
      * to the input frequency @freq in Hz.
      *

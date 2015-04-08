@@ -30,6 +30,7 @@
 #include "../modules/FastRoexBank.h"
 #include "../modules/RoexBankANSIS342007.h"
 #include "../modules/SpecificLoudnessANSIS342007.h"
+#include "../modules/BinauralInhibitionMG2007.h"
 #include "../modules/InstantaneousLoudness.h"
 #include "../modules/ARAverager.h"
 #include "DynamicLoudnessGM2002.h"
@@ -71,6 +72,11 @@ namespace loudness{
     void DynamicLoudnessGM2002::setDioticPresentation(bool dioticPresentation)
     {
         dioticPresentation_ = dioticPresentation;
+    }
+
+    void DynamicLoudnessGM2002::setInhibitSpecificLoudness(bool inhibitSpecificLoudness)
+    {
+        inhibitSpecificLoudness_ = inhibitSpecificLoudness;
     }
 
     void DynamicLoudnessGM2002::setSampleSpectrumUniformly(bool sampleSpectrumUniformly)
@@ -143,6 +149,7 @@ namespace loudness{
         setUseANSISpecificLoudness(false);
         configureSmoothingTimes("GM2002");
         setStartAtWindowCentre(true);
+        setInhibitSpecificLoudness(true);
                 
         if (setName != "GM2002")
         {
@@ -321,9 +328,20 @@ namespace loudness{
         /*
          * Specific loudness
          */
+        bool usingBinaraulInhibition = inhibitSpecificLoudness_ * (input.getNEars() == 2);
         modules_.push_back(unique_ptr<Module>
-                (new SpecificLoudnessANSIS342007(useANSISpecificLoudness_)));
+                (new SpecificLoudnessANSIS342007(useANSISpecificLoudness_, usingBinaraulInhibition)));
         outputNames_.push_back("SpecificLoudnessPattern");
+
+        /*
+         * Binaural inhibition
+         */
+        if (usingBinaraulInhibition)
+        {
+            modules_.push_back(unique_ptr<Module>
+                (new BinauralInhibitionMG2007));
+            outputNames_.push_back("InhibitedSpecificLoudnessPattern");
+        }
 
         /*
         * Instantaneous loudness

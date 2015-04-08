@@ -102,6 +102,7 @@ namespace loudness{
             void setInterpolateRoexBank(bool interpolateRoexBank);
             void setSampleSpectrumUniformly(bool sampleSpectrumUniformly);
             void setDioticPresentation(bool dioticPresentation);
+            void setInhibitSpecificLoudness(bool inhibitSpecificLoudness);
             void setUseHPF(bool useHPF);
             void setUseDiffuseFieldResponse(bool useDiffuseFieldResponse);
             void setUseANSISpecificLoudness(bool useANSISpecificLoudness);
@@ -117,7 +118,8 @@ namespace loudness{
             Real filterSpacing_, compressionCriterion_;
             Real attackTimeSTL_, releaseTimeSTL_;
             Real attackTimeLTL_, releaseTimeLTL_;
-            bool useFastRoexBank_, interpolateRoexBank_, sampleSpectrumUniformly_, dioticPresentation_;
+            bool useFastRoexBank_, interpolateRoexBank_, sampleSpectrumUniformly_;
+            bool dioticPresentation_, inhibitSpecificLoudness_;
             bool useHPF_, useDiffuseFieldResponse_, useANSISpecificLoudness_, startAtWindowCentre_;
             string pathToFilterCoefs_;
     }; 
