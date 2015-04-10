@@ -51,7 +51,16 @@ namespace loudness{
      * filter which combines a 3rd order high-pass filter with a frequency
      * domain weighting function.
      *
-     * When using filter spacings greater than 0.1 Cams, the sampled excitation
+     * If the input SignalBank used to initialise this model has one ear, then
+     * the instantaneous loudness is multiplied by two. If you don't want this,
+     * call method setDioticPresentation(false) (default is true). If the input
+     * SignalBank has two ears, the default the instantaneous loudness is a sum
+     * of the loudness in both left and right ears. If you want to access the
+     * loudness in both left and right ears seperately, call method
+     * setDioticPresentation(false). When there are two ears, the binaural
+     * inhibition model proposed by Moore and Glasberg (2007) is used. If you
+     * don't want this call method setInhibitSpecificLoudness(false).     * When
+     * using filter spacings greater than 0.1 Cams, the sampled excitation
      * pattern can be interpolated to approximate the high resolution pattern.
      * If you want this setInterpolateRoexBank(true).
      *
@@ -77,7 +86,11 @@ namespace loudness{
      * Thresholds and Equal-Loudness Contours Using a Modified Loudness Model.
      * The Journal of the Acoustical Society of America, 120(2), 585–588.
      *
-     * ANSI. (2007). ANSI S3.4-2007. Procedure for the Computation of Loudness of
+     * Moore, B. C. J., & Glasberg, B. R. (2007). Modeling Binaural Loudness.
+     * The Journal of the Acoustical Society of America, 121(3), 1604–1612.
+     *
+     * ANSI. (2007). ANSI S3.4-2007. Procedure for the Computation of Loudness
+     * of
      * Steady Sounds.
      */
     class DynamicLoudnessGM2002 : public Model

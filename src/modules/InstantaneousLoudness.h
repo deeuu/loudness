@@ -30,7 +30,7 @@ namespace loudness{
      * @brief Given a specific loudness pattern this class computes the
      * the instantaneous loudness (integrated specific loudness). 
      *
-     * For input SignalBanks with one ear but dioticPresentation simulation,
+     * For input SignalBanks with one ear but simulating diotic presentation,
      * then you can set dioticPresentation true for simple
      * doubling of loudness. If dioticPresentation is true and there are
      * multiple ears, then both specific loudness patterns are summed to a

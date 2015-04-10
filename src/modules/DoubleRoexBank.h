@@ -54,7 +54,10 @@ namespace loudness{
          * @param camHi Frequency of the last double roex filter in Cams.
          * @param camStep Interval between adjacent filters on the cam Scale.
          */
-        DoubleRoexBank(Real camLo = 1.5, Real camHi = 40.2, Real camStep = 0.1);
+        DoubleRoexBank(Real camLo = 1.5,
+                Real camHi = 40.2,
+                Real camStep = 0.1,
+                Real scalingFactor = 1.0);
 
         virtual ~DoubleRoexBank();
 
@@ -67,7 +70,7 @@ namespace loudness{
         virtual void resetInternal();
 
         int nFilters_;
-        Real camLo_, camHi_, camStep_;
+        Real camLo_, camHi_, camStep_, scalingFactor_;
         RealVec maxGdB_, thirdGainTerm_;
         RealVecVec wPassive_, wActive_;
     };

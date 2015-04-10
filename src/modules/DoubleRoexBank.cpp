@@ -22,11 +22,15 @@
 
 namespace loudness{
 
-    DoubleRoexBank::DoubleRoexBank(Real camLo, Real camHi, Real camStep) : 
+    DoubleRoexBank::DoubleRoexBank(Real camLo, 
+            Real camHi,
+            Real camStep,
+            Real scalingFactor) : 
         Module("DoubleRoexBank"),
         camLo_(camLo), 
         camHi_(camHi),
-        camStep_(camStep)
+        camStep_(camStep),
+        scalingFactor_(scalingFactor)
     {}
 
     DoubleRoexBank::~DoubleRoexBank() {}
@@ -98,6 +102,8 @@ namespace loudness{
             }
         }
         LOUDNESS_DEBUG(name_ << ": Passive and active filters configured.");
+        LOUDNESS_DEBUG(name_ << ": Excitation pattern will be scaled by: " 
+                << scalingFactor_);
         
         return 1;
     }
@@ -147,7 +153,7 @@ namespace loudness{
                 excitationLinA *= gain;
 
                 //excitation pattern
-                outputExcitationPattern[i] = excitationLinP + excitationLinA;
+                outputExcitationPattern[i] = scalingFactor_ * (excitationLinP + excitationLinA);
             }
         }
     }

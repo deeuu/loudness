@@ -328,19 +328,23 @@ namespace loudness{
         /*
          * Specific loudness
          */
-        bool usingBinaraulInhibition = inhibitSpecificLoudness_ * (input.getNEars() == 2);
+        bool usingBinauralInhibition = inhibitSpecificLoudness_ * (input.getNEars() == 2);
         modules_.push_back(unique_ptr<Module>
-                (new SpecificLoudnessANSIS342007(useANSISpecificLoudness_, usingBinaraulInhibition)));
+                (new SpecificLoudnessANSIS342007(useANSISpecificLoudness_, usingBinauralInhibition)));
         outputNames_.push_back("SpecificLoudnessPattern");
 
         /*
          * Binaural inhibition
          */
-        if (usingBinaraulInhibition)
+        if (usingBinauralInhibition)
         {
             modules_.push_back(unique_ptr<Module>
                 (new BinauralInhibitionMG2007));
             outputNames_.push_back("InhibitedSpecificLoudnessPattern");
+        }
+        else
+        {
+            LOUDNESS_DEBUG(name_ << ": No binaural inhibition.");
         }
 
         /*

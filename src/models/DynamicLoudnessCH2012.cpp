@@ -27,6 +27,7 @@
 #include "../modules/CompressSpectrum.h"
 #include "../modules/WeightSpectrum.h"
 #include "../modules/DoubleRoexBank.h"
+#include "../modules/BinauralInhibitionMG2007.h"
 #include "../modules/InstantaneousLoudness.h"
 #include "../modules/ARAverager.h"
 #include "DynamicLoudnessCH2012.h"
@@ -66,6 +67,16 @@ namespace loudness{
         dioticPresentation_ = dioticPresentation;
     }
 
+    void DynamicLoudnessCH2012::setOutputSpecificLoudness(bool outputSpecificLoudness)
+    {
+        outputSpecificLoudness_ = outputSpecificLoudness;
+    }
+
+    void DynamicLoudnessCH2012::setInhibitSpecificLoudness(bool inhibitSpecificLoudness)
+    {
+        inhibitSpecificLoudness_ = inhibitSpecificLoudness;
+    }
+
     void DynamicLoudnessCH2012::setSampleSpectrumUniformly(bool sampleSpectrumUniformly)
     {
         sampleSpectrumUniformly_ = sampleSpectrumUniformly;
@@ -92,6 +103,8 @@ namespace loudness{
         setRate(1000);
         setUseDiffuseFieldResponse(false);
         setSampleSpectrumUniformly(true);
+        setOutputSpecificLoudness(true);
+        setInhibitSpecificLoudness(true);
         setFilterSpacing(0.1);
         setCompressionCriterion(0.0);
         setStartAtWindowCentre(true);
@@ -216,15 +229,49 @@ namespace loudness{
         /*
          * Roex filters
          */
+
+        // Set up scaling factors depending on output config
+        Real doubleRoexBankfactor, instantaneousLoudnessFactor;
+        if (outputSpecificLoudness_)
+        {
+            doubleRoexBankfactor = 1.53e-8;
+            instantaneousLoudnessFactor = 1.0;
+            outputNames_.push_back("SpecificLoudnessPattern");
+            LOUDNESS_DEBUG(name_ << ": Excitation pattern will be scaled for specific loudness");
+        }
+        else
+        {
+            doubleRoexBankfactor = 1.0;
+            instantaneousLoudnessFactor = 1.53e-8;
+            outputNames_.push_back("ExcitationPattern");
+        }
+
+        bool usingBinauralInhibition = inhibitSpecificLoudness_ *
+            (input.getNEars() == 2) * outputSpecificLoudness_;
+        if (usingBinauralInhibition)
+            doubleRoexBankfactor /= 0.75;
+
         modules_.push_back(unique_ptr<Module> (new DoubleRoexBank(1.5, 40.2,
-                        filterSpacing_)));
-        outputNames_.push_back("ExcitationPattern");
+                        filterSpacing_, doubleRoexBankfactor)));
+
+        /*
+         * Binaural inhibition
+         */
+        if (usingBinauralInhibition)
+        {
+            modules_.push_back(unique_ptr<Module> (new BinauralInhibitionMG2007));
+            outputNames_.push_back("InhibitedSpecificLoudnessPattern");
+        }
+        else
+        {
+            LOUDNESS_DEBUG(name_ << ": No binaural inhibition.");
+        }
         
         /*
         * Instantaneous loudness
         */   
         modules_.push_back(unique_ptr<Module>
-                (new InstantaneousLoudness(1.53e-8, dioticPresentation_)));
+                (new InstantaneousLoudness(instantaneousLoudnessFactor, dioticPresentation_)));
         outputNames_.push_back("InstantaneousLoudness");
 
         /*

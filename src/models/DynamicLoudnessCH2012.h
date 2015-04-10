@@ -48,7 +48,25 @@ namespace loudness{
      * weighting function as specified by Chen and Hu (2012). The middle ear
      * function follows the one given in Figure 2 of Chen et al (2011).
      *
+     * If the input SignalBank used to initialise this model has one ear, then
+     * the instantaneous loudness is multiplied by two. If you don't want this,
+     * call method setDioticPresentation(false) (default is true). If the input
+     * SignalBank has two ears, the default the instantaneous loudness is a sum
+     * of the loudness in both left and right ears. If you want to access the
+     * loudness in both left and right ears seperately, call method
+     * setDioticPresentation(false). When there are two ears, the binaural
+     * inhibition model proposed by Moore and Glasberg (2007) is used. If you
+     * don't want this call method setInhibitSpecificLoudness(false). Note that
+     * because this model does not have an explicit `specific loudness' stage,
+     * the excitation pattern is scaled to give units of sones rather than
+     * power. If you don't want this, call method setOutputSpecificLoudness
+     * (false) (default is true). In this case, binaural inhibition will not be
+     * implemented.
+     *
      * REFERENCES:
+     *
+     * Moore, B. C. J., & Glasberg, B. R. (2007). Modeling Binaural Loudness. The
+     * Journal of the Acoustical Society of America, 121(3), 1604–1612.
      *
      * Chen, Z., Hu, G., Glasberg, B. R., & Moore, B. C. J. (2011). A new method
      * of calculating auditory excitation patterns and loudness for steady
@@ -80,6 +98,8 @@ namespace loudness{
 
             void setSampleSpectrumUniformly(bool sampleSpectrumUniformly);
             void setDioticPresentation(bool dioticPresentation);
+            void setOutputSpecificLoudness(bool outputSpecificLoudness);
+            void setInhibitSpecificLoudness(bool inhibitSpecificLoudness);
             void setUseDiffuseFieldResponse(bool useDiffuseFieldResponse);
             void setStartAtWindowCentre(bool startAtWindowCentre);
             void setFilterSpacing(Real filterSpacing);
@@ -94,6 +114,7 @@ namespace loudness{
             Real attackTimeSTL_, releaseTimeSTL_;
             Real attackTimeLTL_, releaseTimeLTL_;
             bool sampleSpectrumUniformly_, dioticPresentation_;
+            bool outputSpecificLoudness_, inhibitSpecificLoudness_;
             bool useDiffuseFieldResponse_, startAtWindowCentre_;
     }; 
 }
