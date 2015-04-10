@@ -23,7 +23,7 @@
 #include <iostream>
 #include <iomanip>
 
-#define DEBUG
+//#define DEBUG
 
 #define GET_MACRO(_1,_2,NAME,...) NAME
 #define LOUDNESS_ASSERT(...) GET_MACRO(__VA_ARGS__, LOUDNESS_ASSERT2, LOUDNESS_ASSERT1)(__VA_ARGS__)
@@ -54,7 +54,7 @@
 #define LOUDNESS_ASSERT1(condition) do {} while (false)
 #define LOUDNESS_ASSERT2(condition, msg) do {} while (false)
 #endif
-//exceptions...
+//exceptions (need proper class)
 #define LOUDNESS_ERROR(msg) std::cerr << msg << std::endl;
 //general concerns and corrections
 #define LOUDNESS_WARNING(msg) std::cerr << msg << std::endl;

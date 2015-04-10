@@ -1,5 +1,6 @@
-# setup.py
+#!/usr/bin/python
 
+from optparse import OptionParser
 from distutils.core import setup, Extension
 from distutils import sysconfig
 

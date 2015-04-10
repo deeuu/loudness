@@ -117,22 +117,30 @@ namespace loudness{
             signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + sample] = value;
         }
 
-        /** Fills one signal with nSamples of data pointed by source. 
-         * The ear, channel and sample index to write to must be specified,
+        /** Copies nSamples from an array pointed to by source into a specified
+         * signal. The ear, channel and sample index to write to must be specified,
          * along with the number of samples to copy. Watch your bounds.
          */
-        void copySignal(int ear, int channel, int writeSampleIndex, const Real* source, int nSamples);
+        void copySamples(int ear, int channel, int writeSampleIndex, const Real* source, int nSamples);
 
-        /** Fills all signals of the current SignalBank with the contents
-         * of another. Both the destination sample index and source sample index
-         * must be specified, along with the number of samples to copy.
+        /** Copies nSamples from an array pointed to by source into a specified
+         * signal. The ear, channel and sample index to write to must be specified,
+         * along with the number of samples to copy. Watch your bounds.
+         */
+        void copySamples(int ear, int channel, int writeSampleIndex, const float* source, int nSamples);
+
+        /** Copies nSamples from all signals of the input SignalBank into the
+         * current SignalBank. Both the destination sample index and source
+         * sample index must be specified, along with the number of samples to
+         * copy.  Watch your bounds.
+         */
+        void copySamples(int writeSampleIndex, const SignalBank& input, int readSampleIndex, int nSamples);
+
+        /** Copies nSamples from all signals of the input SignalBank into the
+         * current SignalBank. Both the destination sample index and source.
          * Watch your bounds.
          */
-        void copyAllSignals(int writeSampleIndex, const SignalBank& input, int readSampleIndex, int nSamples);
-        /** Fills all signals of the current SignalBank with the contents of
-         * another. Watch your bounds.
-         */
-        void copyAllSignals(const SignalBank& input);
+        void copySamples(const SignalBank& input);
 
         /** Pull all signals back by nSamples. */
         void pullBack(int nSamples);
@@ -188,9 +196,9 @@ namespace loudness{
          */
         inline Real getSample(int ear, int channel, int sample) const
         {
-             LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
-                     isPositiveAndLessThanUpper(channel, nChannels_) &&
-                     isPositiveAndLessThanUpper(sample, nSamples_));
+            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
+                    isPositiveAndLessThanUpper(channel, nChannels_) &&
+                    isPositiveAndLessThanUpper(sample, nSamples_));
             return signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + sample];
         }
 
