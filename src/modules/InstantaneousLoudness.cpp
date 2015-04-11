@@ -53,16 +53,18 @@ namespace loudness{
             if (dioticPresentation_)
             {
                 cParam_ *= 2;
-                LOUDNESS_DEBUG(name_ << ": dioticPresentation presentation, loudness will be multiplied by 2.");
+                LOUDNESS_DEBUG(name_ << ": diotic presentation presentation; loudness will be multiplied by 2.");
             }
             output_.initialize(1, 1, 1, input.getFs());
         }
         else if (dioticPresentation_)
         {
+            LOUDNESS_DEBUG(name_ << ": diotic presentation presentation; loudness will be summed across ears.");
             output_.initialize(1, 1, 1, input.getFs());
         }
         else
         {
+            LOUDNESS_DEBUG(name_ << ": dichotic presentation presentation; loudness output in each ear.");
             output_.initialize(input.getNEars(), 1, 1, input.getFs());
         }
         output_.setFrameRate(input.getFrameRate());
@@ -73,12 +75,12 @@ namespace loudness{
     void InstantaneousLoudness::processInternal(const SignalBank &input)
     {       
         Real il = 0.0;
-        for (int ear = 0; ear < input.getNEars(); ear++)
+        for (int ear = 0; ear < input.getNEars(); ++ear)
         {
             const Real* inputSpecificLoudness = input.getSingleSampleReadPointer(ear, 0);
 
             // sum loudness over all auditory filters
-            for (int chn = 0; chn < input.getNChannels(); chn++)
+            for (int chn = 0; chn < input.getNChannels(); ++chn)
                 il += inputSpecificLoudness[chn];
 
             // if not dioticPresentation then output total loudness in each ear and reset

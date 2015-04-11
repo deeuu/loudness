@@ -114,7 +114,7 @@ namespace loudness{
 
     void SignalBank::copySamples(int ear, int channel, int writeSampleIndex, const Real* source, int nSamples)
     {
-        LOUDNESS_ASSERT(((nSamples+writeSampleIndex) < nSamples_) &&
+        LOUDNESS_ASSERT(((nSamples+writeSampleIndex) <= nSamples_) &&
                 isPositiveAndLessThanUpper(ear, nEars_) &&
                 isPositiveAndLessThanUpper(channel, nChannels_));
 
@@ -126,7 +126,7 @@ namespace loudness{
 
     void SignalBank::copySamples(int ear, int channel, int writeSampleIndex, const float* source, int nSamples)
     {
-        LOUDNESS_ASSERT(((nSamples+writeSampleIndex) < nSamples_) &&
+        LOUDNESS_ASSERT(((nSamples+writeSampleIndex) <= nSamples_) &&
                 isPositiveAndLessThanUpper(ear, nEars_) &&
                 isPositiveAndLessThanUpper(channel, nChannels_));
 

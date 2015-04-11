@@ -29,8 +29,8 @@ namespace loudness{
         Model("SteadyStateLoudnessANSIS342007", false)
     {
         //Default parameters
-        setDiotic(true);
-        setDiffuseField(false);
+        setDioticPresentation(true);
+        setUseDiffuseFieldResponse(false);
         setFilterSpacing(0.1);
     }
 
@@ -38,14 +38,14 @@ namespace loudness{
     {
     }
 
-    void SteadyStateLoudnessANSIS342007::setDiotic(bool diotic)
+    void SteadyStateLoudnessANSIS342007::setDioticPresentation(bool dioticPresentation)
     {
-        diotic_ = diotic;
+        dioticPresentation_ = dioticPresentation;
     }
 
-    void SteadyStateLoudnessANSIS342007::setDiffuseField(bool diffuseField)
+    void SteadyStateLoudnessANSIS342007::setUseDiffuseFieldResponse(bool useDiffuseFieldResponse)
     {
-        diffuseField_ = diffuseField;
+        useDiffuseFieldResponse_ = useDiffuseFieldResponse;
     }
 
     void SteadyStateLoudnessANSIS342007::setFilterSpacing(Real filterSpacing)
@@ -61,7 +61,7 @@ namespace loudness{
          */
         string middleEar = "ANSIS342007";
         string outerEar = "ANSIS342007_FREEFIELD";
-        if(diffuseField_)
+        if(useDiffuseFieldResponse_)
             outerEar = "ANSIS342007_DIFFUSEFIELD";
 
         modules_.push_back(unique_ptr<Module>
@@ -86,7 +86,7 @@ namespace loudness{
         * Loudness integration 
         */   
         modules_.push_back(unique_ptr<Module>
-                (new InstantaneousLoudness(1.0, true)));
+                (new InstantaneousLoudness(1.0, dioticPresentation_)));
         outputNames_.push_back("InstantaneousLoudness");
 
         //configure targets

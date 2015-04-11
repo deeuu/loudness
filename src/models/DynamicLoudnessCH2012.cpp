@@ -105,6 +105,7 @@ namespace loudness{
         setSampleSpectrumUniformly(true);
         setOutputSpecificLoudness(true);
         setInhibitSpecificLoudness(true);
+        setDioticPresentation(true);
         setFilterSpacing(0.1);
         setCompressionCriterion(0.0);
         setStartAtWindowCentre(true);

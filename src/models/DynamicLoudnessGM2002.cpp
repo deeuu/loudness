@@ -139,7 +139,7 @@ namespace loudness{
     {
         //common to all
         setRate(1000);
-        setUseHPF(true);
+        setUseHPF(false);
         setUseDiffuseFieldResponse(false);
         setSampleSpectrumUniformly(true);
         setInterpolateRoexBank(false);
@@ -147,9 +147,10 @@ namespace loudness{
         setCompressionCriterion(0.0);
         setUseFastRoexBank(false);
         setUseANSISpecificLoudness(false);
-        configureSmoothingTimes("GM2002");
         setStartAtWindowCentre(true);
+        setDioticPresentation(true);
         setInhibitSpecificLoudness(true);
+        configureSmoothingTimes("GM2002");
                 
         if (setName != "GM2002")
         {

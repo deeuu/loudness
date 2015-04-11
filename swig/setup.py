@@ -54,4 +54,4 @@ if __name__ == "__main__":
             library_dirs=['/usr/lib', '/usr/local/lib'],
             libraries=['fftw3', 'sndfile'],
             swig_opts=['-c++'],
-            extra_compile_args=["-std=c++11", "-fPIC", "-O3"])])
+            extra_compile_args=["-std=c++11", "-fPIC", "-O3", "-DDEBUG"])])
