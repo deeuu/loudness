@@ -67,7 +67,7 @@ namespace loudness{
     {
         if(initialized_ && input.getTrig())
         {
-            LOUDNESS_DEBUG(name_ << ": processing SignalBank ...");
+            LOUDNESS_PROCESS_DEBUG(name_ << ": processing SignalBank ...");
             output_.setTrig(true);
             processInternal(input);
         }

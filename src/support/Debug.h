@@ -54,6 +54,11 @@
 #define LOUDNESS_ASSERT1(condition) do {} while (false)
 #define LOUDNESS_ASSERT2(condition, msg) do {} while (false)
 #endif
+#if defined(PDEBUG)
+#define LOUDNESS_PROCESS_DEBUG(msg) do {std::cerr << msg << std::endl;} while (false)
+#else
+#define LOUDNESS_PROCESS_DEBUG(msg) do {} while (false)
+#endif
 //exceptions (need proper class)
 #define LOUDNESS_ERROR(msg) std::cerr << msg << std::endl;
 //general concerns and corrections
