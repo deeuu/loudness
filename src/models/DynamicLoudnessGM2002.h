@@ -111,18 +111,30 @@ namespace loudness{
 
             void configureModelParameters(const string& setName);
 
-            void setUseFastRoexBank(bool useFastRoexBank);
-            void setInterpolateRoexBank(bool interpolateRoexBank);
-            void setSampleSpectrumUniformly(bool sampleSpectrumUniformly);
-            void setDioticPresentation(bool dioticPresentation);
-            void setInhibitSpecificLoudness(bool inhibitSpecificLoudness);
-            void setUseHPF(bool useHPF);
-            void setUseDiffuseFieldResponse(bool useDiffuseFieldResponse);
-            void setUseANSISpecificLoudness(bool useANSISpecificLoudness);
-            void setStartAtWindowCentre(bool startAtWindowCentre);
+            void setRoexBankFast(bool isRoexBankFast);
+
+            void setExcitationPatternInterpolated(bool isExcitationPatternInterpolated);
+
+            void setSpectrumSampledUniformly(bool isSpectrumSampledUniformly);
+
+            void setPresentationDiotic(bool isPresentationDiotic);
+
+            void setBinauralInhibitionUsed(bool isBinauralInhibitionUsed);
+
+            void setHPFUsed(bool isHPFUsed);
+
+            void setResponseDiffuseField(bool isResponseDiffuseField);
+
+            void setSpecificLoudnessANSIS342007(bool isSpecificLoudnessANSIS342007_);
+
+            void setFirstSampleAtWindowCentre(bool isFirstSampleAtWindowCentre);
+
             void setFilterSpacing(Real filterSpacing);
+
             void setCompressionCriterion(Real compressionCriterion);
+
             void setPathToFilterCoefs(string pathToFilterCoefs);
+
             void configureSmoothingTimes(const string& author);
 
         private:
@@ -131,9 +143,10 @@ namespace loudness{
             Real filterSpacing_, compressionCriterion_;
             Real attackTimeSTL_, releaseTimeSTL_;
             Real attackTimeLTL_, releaseTimeLTL_;
-            bool useFastRoexBank_, interpolateRoexBank_, sampleSpectrumUniformly_;
-            bool dioticPresentation_, inhibitSpecificLoudness_;
-            bool useHPF_, useDiffuseFieldResponse_, useANSISpecificLoudness_, startAtWindowCentre_;
+            bool isRoexBankFast_, isExcitationPatternInterpolated_, isSpectrumSampledUniformly_;
+            bool isPresentationDiotic_, isBinauralInhibitionUsed_;
+            bool isHPFUsed_, isResponseDiffuseField_, isSpecificLoudnessANSIS342007_;
+            bool isFirstSampleAtWindowCentre_;
             string pathToFilterCoefs_;
     }; 
 }

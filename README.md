@@ -1,4 +1,4 @@
-loudness
+Loudness
 ========
 
 Loudness is a C++ library with Python bindings for modelling perceived loudness. 
@@ -17,7 +17,7 @@ To build the Python bindings you will need:
 
 ## Acknowledgments 
 
-The library interface is entirely based on the fantastic AIM-C:
+The library interface is based on the fantastic AIM-C:
 https://code.google.com/p/aimc/
 
 The cnpy library for reading numpy arrays in C++:
