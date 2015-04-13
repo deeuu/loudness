@@ -59,10 +59,12 @@ namespace loudness{
      * loudness in both left and right ears seperately, call method
      * setDioticPresentation(false). When there are two ears, the binaural
      * inhibition model proposed by Moore and Glasberg (2007) is used. If you
-     * don't want this call method setInhibitSpecificLoudness(false).     * When
-     * using filter spacings greater than 0.1 Cams, the sampled excitation
+     * don't want this call method setInhibitSpecificLoudness(false). 
+     * 
+     * When using filter spacings greater than 0.1 Cams, the sampled excitation
      * pattern can be interpolated to approximate the high resolution pattern.
-     * If you want this setInterpolateRoexBank(true).
+     * If you want this setExcitationPatternInterpolated(true). In `faster'
+     * modes, this is true.
      *
      * REFERENCES:
      *

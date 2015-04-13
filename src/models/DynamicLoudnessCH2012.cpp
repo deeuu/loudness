@@ -77,6 +77,11 @@ namespace loudness{
         isSpectrumSampledUniformly_ = isSpectrumSampledUniformly;
     }
 
+    void DynamicLoudnessCH2012::setExcitationPatternInterpolated(bool isExcitationPatternInterpolated)
+    {
+        isExcitationPatternInterpolated_ = isExcitationPatternInterpolated;
+    }
+
     void DynamicLoudnessCH2012::setSpecificLoudnessOutput(bool isSpecificLoudnessOutput)
     {
         isSpecificLoudnessOutput_ = isSpecificLoudnessOutput;
@@ -103,6 +108,7 @@ namespace loudness{
         setRate(1000);
         setResponseDiffuseField(false);
         setSpectrumSampledUniformly(true);
+        setExcitationPatternInterpolated(false);
         setSpecificLoudnessOutput(true);
         setBinauralInhibitionUsed(true);
         setPresentationDiotic(true);
@@ -117,6 +123,7 @@ namespace loudness{
         if (setName == "faster")
         {
             setFilterSpacingInCams(0.25);
+            setExcitationPatternInterpolated(true);
             setCompressionCriterionInCams(0.3);
             LOUDNESS_DEBUG(name_ << ": using a filter spacing of 0.25 Cams"
                    << " with 0.3 Cam spectral compression criterion.");
@@ -252,15 +259,19 @@ namespace loudness{
         if (isBinauralInhibitionUsed_)
             doubleRoexBankfactor /= 0.75;
 
-        modules_.push_back(unique_ptr<Module> (new DoubleRoexBank(1.5, 40.2,
-                        filterSpacingInCams_, doubleRoexBankfactor)));
+        modules_.push_back(unique_ptr<Module>
+                (new DoubleRoexBank(1.5, 40.2,
+                                    filterSpacingInCams_,
+                                    doubleRoexBankfactor,
+                                    isExcitationPatternInterpolated_)));
 
         /*
          * Binaural inhibition
          */
         if (isBinauralInhibitionUsed_)
         {
-            modules_.push_back(unique_ptr<Module> (new BinauralInhibitionMG2007));
+            modules_.push_back(unique_ptr<Module> 
+                    (new BinauralInhibitionMG2007));
             outputNames_.push_back("InhibitedSpecificLoudnessPattern");
         }
         else

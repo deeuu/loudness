@@ -63,6 +63,11 @@ namespace loudness{
      * (false) (default is true). In this case, binaural inhibition will not be
      * implemented.
      *
+     * When using filter spacings greater than 0.1 Cams, the sampled excitation
+     * pattern can be interpolated to approximate the high resolution pattern.
+     * If you want this setExcitationPatternInterpolated(true); In mode `faster'
+     * this is true;
+     *
      * REFERENCES:
      *
      * Moore, B. C. J., & Glasberg, B. R. (2007). Modeling Binaural Loudness. The
@@ -98,6 +103,8 @@ namespace loudness{
 
             void setSpectrumSampledUniformly(bool isSpectrumSampledUniformly);
 
+            void setExcitationPatternInterpolated(bool isExcitationPatternInterpolated);
+
             void setPresentationDiotic(bool isPresentationDiotic);
 
             void setBinauralInhibitionUsed(bool isBinauralInhibitionUsed);
@@ -121,7 +128,7 @@ namespace loudness{
             Real filterSpacingInCams_, compressionCriterionInCams_;
             Real attackTimeSTL_, releaseTimeSTL_;
             Real attackTimeLTL_, releaseTimeLTL_;
-            bool isSpectrumSampledUniformly_, isPresentationDiotic_;
+            bool isSpectrumSampledUniformly_, isExcitationPatternInterpolated_, isPresentationDiotic_;
             bool isSpecificLoudnessOutput_, isBinauralInhibitionUsed_;
             bool isResponseDiffuseField_, isFirstSampleAtWindowCentre_;
     }; 
