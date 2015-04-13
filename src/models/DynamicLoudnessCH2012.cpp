@@ -52,34 +52,34 @@ namespace loudness{
     {
     }
 
-    void DynamicLoudnessCH2012::setStartAtWindowCentre(bool startAtWindowCentre)
+    void DynamicLoudnessCH2012::setFirstSampleAtWindowCentre(bool isFirstSampleAtWindowCentre)
     {
-        startAtWindowCentre_ = startAtWindowCentre;
+        isFirstSampleAtWindowCentre_ = isFirstSampleAtWindowCentre;
     }
-    
-    void DynamicLoudnessCH2012::setUseDiffuseFieldResponse(bool useDiffuseFieldResponse)
+ 
+   void DynamicLoudnessCH2012::setResponseDiffuseField(bool isResponseDiffuseField)
     {
-        useDiffuseFieldResponse_ = useDiffuseFieldResponse;
-    }
-
-    void DynamicLoudnessCH2012::setDioticPresentation(bool dioticPresentation)
-    {
-        dioticPresentation_ = dioticPresentation;
+        isResponseDiffuseField_ = isResponseDiffuseField;
     }
 
-    void DynamicLoudnessCH2012::setOutputSpecificLoudness(bool outputSpecificLoudness)
+    void DynamicLoudnessCH2012::setPresentationDiotic(bool isPresentationDiotic)
     {
-        outputSpecificLoudness_ = outputSpecificLoudness;
+        isPresentationDiotic_ = isPresentationDiotic;
     }
 
-    void DynamicLoudnessCH2012::setInhibitSpecificLoudness(bool inhibitSpecificLoudness)
+    void DynamicLoudnessCH2012::setBinauralInhibitionUsed(bool isBinauralInhibitionUsed)
     {
-        inhibitSpecificLoudness_ = inhibitSpecificLoudness;
+        isBinauralInhibitionUsed_ = isBinauralInhibitionUsed;
     }
 
-    void DynamicLoudnessCH2012::setSampleSpectrumUniformly(bool sampleSpectrumUniformly)
+    void DynamicLoudnessCH2012::setSpectrumSampledUniformly(bool isSpectrumSampledUniformly)
     {
-        sampleSpectrumUniformly_ = sampleSpectrumUniformly;
+        isSpectrumSampledUniformly_ = isSpectrumSampledUniformly;
+    }
+
+    void DynamicLoudnessCH2012::setSpecificLoudnessOutput(bool isSpecificLoudnessOutput)
+    {
+        isSpecificLoudnessOutput_ = isSpecificLoudnessOutput;
     }
 
     void DynamicLoudnessCH2012::setFilterSpacing(Real filterSpacing)
@@ -101,14 +101,14 @@ namespace loudness{
     {
         //common to all
         setRate(1000);
-        setUseDiffuseFieldResponse(false);
-        setSampleSpectrumUniformly(true);
-        setOutputSpecificLoudness(true);
-        setInhibitSpecificLoudness(true);
-        setDioticPresentation(true);
+        setResponseDiffuseField(false);
+        setSpectrumSampledUniformly(true);
+        setSpecificLoudnessOutput(true);
+        setBinauralInhibitionUsed(true);
+        setPresentationDiotic(true);
+        setFirstSampleAtWindowCentre(true);
         setFilterSpacing(0.1);
         setCompressionCriterion(0.0);
-        setStartAtWindowCentre(true);
         attackTimeSTL_ = 0.016;
         releaseTimeSTL_ = 0.032;
         attackTimeLTL_ = 0.01;
@@ -189,7 +189,7 @@ namespace loudness{
         //Frame generator
         int hopSize = round(input.getFs() / rate_);
         modules_.push_back(unique_ptr<Module> 
-                (new FrameGenerator(windowSizeSamples[0], hopSize, startAtWindowCentre_)));
+                (new FrameGenerator(windowSizeSamples[0], hopSize, isFirstSampleAtWindowCentre_)));
         outputNames_.push_back("FrameGenerator");
         
         //configure windowing: Periodic hann window
@@ -199,7 +199,7 @@ namespace loudness{
 
         //power spectrum
         modules_.push_back(unique_ptr<Module> 
-                (new PowerSpectrum(bandFreqsHz, windowSizeSamples, sampleSpectrumUniformly_))); 
+                (new PowerSpectrum(bandFreqsHz, windowSizeSamples, isSpectrumSampledUniformly_))); 
         outputNames_.push_back("PowerSpectrum");
 
         /*
@@ -219,7 +219,7 @@ namespace loudness{
         {
             string middleEar = "CHGM2011";
             string outerEar = "ANSIS342007_FREEFIELD";
-            if(useDiffuseFieldResponse_)
+            if(isResponseDiffuseField_)
                 outerEar = "ANSIS342007_DIFFUSEFIELD";
 
             modules_.push_back(unique_ptr<Module> 
@@ -233,7 +233,7 @@ namespace loudness{
 
         // Set up scaling factors depending on output config
         Real doubleRoexBankfactor, instantaneousLoudnessFactor;
-        if (outputSpecificLoudness_)
+        if (isSpecificLoudnessOutput_)
         {
             doubleRoexBankfactor = 1.53e-8;
             instantaneousLoudnessFactor = 1.0;
@@ -247,9 +247,9 @@ namespace loudness{
             outputNames_.push_back("ExcitationPattern");
         }
 
-        bool usingBinauralInhibition = inhibitSpecificLoudness_ *
-            (input.getNEars() == 2) * outputSpecificLoudness_;
-        if (usingBinauralInhibition)
+        isBinauralInhibitionUsed_ = isBinauralInhibitionUsed_
+            * (input.getNEars() == 2) * isSpecificLoudnessOutput_;
+        if (isBinauralInhibitionUsed_)
             doubleRoexBankfactor /= 0.75;
 
         modules_.push_back(unique_ptr<Module> (new DoubleRoexBank(1.5, 40.2,
@@ -258,7 +258,7 @@ namespace loudness{
         /*
          * Binaural inhibition
          */
-        if (usingBinauralInhibition)
+        if (isBinauralInhibitionUsed_)
         {
             modules_.push_back(unique_ptr<Module> (new BinauralInhibitionMG2007));
             outputNames_.push_back("InhibitedSpecificLoudnessPattern");
@@ -272,7 +272,8 @@ namespace loudness{
         * Instantaneous loudness
         */   
         modules_.push_back(unique_ptr<Module>
-                (new InstantaneousLoudness(instantaneousLoudnessFactor, dioticPresentation_)));
+                (new InstantaneousLoudness(instantaneousLoudnessFactor, 
+                                           isPresentationDiotic_)));
         outputNames_.push_back("InstantaneousLoudness");
 
         /*

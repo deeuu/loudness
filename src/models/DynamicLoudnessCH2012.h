@@ -96,14 +96,22 @@ namespace loudness{
 
             void configureModelParameters(const string& setName);
 
-            void setSampleSpectrumUniformly(bool sampleSpectrumUniformly);
-            void setDioticPresentation(bool dioticPresentation);
-            void setOutputSpecificLoudness(bool outputSpecificLoudness);
-            void setInhibitSpecificLoudness(bool inhibitSpecificLoudness);
-            void setUseDiffuseFieldResponse(bool useDiffuseFieldResponse);
-            void setStartAtWindowCentre(bool startAtWindowCentre);
+            void setSpectrumSampledUniformly(bool isSpectrumSampledUniformly);
+
+            void setPresentationDiotic(bool isPresentationDiotic);
+
+            void setBinauralInhibitionUsed(bool isBinauralInhibitionUsed);
+
+            void setResponseDiffuseField(bool isResponseDiffuseField);
+
+            void setFirstSampleAtWindowCentre(bool isFirstSampleAtWindowCentre);
+
+            void setSpecificLoudnessOutput(bool isSpecificLoudnessOutput);
+
             void setFilterSpacing(Real filterSpacing);
+
             void setCompressionCriterion(Real compressionCriterion);
+
             void setPathToFilterCoefs(string pathToFilterCoefs);
 
         private:
@@ -113,9 +121,9 @@ namespace loudness{
             Real filterSpacing_, compressionCriterion_;
             Real attackTimeSTL_, releaseTimeSTL_;
             Real attackTimeLTL_, releaseTimeLTL_;
-            bool sampleSpectrumUniformly_, dioticPresentation_;
-            bool outputSpecificLoudness_, inhibitSpecificLoudness_;
-            bool useDiffuseFieldResponse_, startAtWindowCentre_;
+            bool isSpectrumSampledUniformly_, isPresentationDiotic_;
+            bool isSpecificLoudnessOutput_, isBinauralInhibitionUsed_;
+            bool isResponseDiffuseField_, isFirstSampleAtWindowCentre_;
     }; 
 }
 

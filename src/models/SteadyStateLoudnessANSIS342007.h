@@ -50,15 +50,17 @@ namespace loudness{
             SteadyStateLoudnessANSIS342007();
             virtual ~SteadyStateLoudnessANSIS342007();
 
-            void setDioticPresentation(bool dioticPresentation);
-            void setUseDiffuseFieldResponse(bool useDiffuseFieldResponse);
+            void setPresentationDiotic(bool isPresentationDiotic);
+
+            void setResponseDiffuseField(bool isResponseDiffuseField);
+
             void setFilterSpacing(Real filterSpacing);
             
         private:
             virtual bool initializeInternal(const SignalBank &input);
 
             Real filterSpacing_;
-            bool dioticPresentation_, useDiffuseFieldResponse_;
+            bool isPresentationDiotic_, isResponseDiffuseField_;
     }; 
 }
 
