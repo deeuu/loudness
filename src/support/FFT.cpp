@@ -79,14 +79,14 @@ namespace loudness{
 
     void FFT::process(const Real* input, int length)
     {
-        if(initialized_)
+        if(fftSize_ > 0)
         {
             //fill the buffer
             int i = fftSize_;
             while(i > length)
                 fftInputBuf_[--i] = 0.0;
-            while(i > 0)
-                fftInputBuf_[--i] = input[i];
+            while(--i >= 0)
+                fftInputBuf_[i] = input[i];
 
             //compute fft
             fftw_execute(fftPlan_);
