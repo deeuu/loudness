@@ -108,9 +108,9 @@ namespace loudness{
 
             void setSpecificLoudnessOutput(bool isSpecificLoudnessOutput);
 
-            void setFilterSpacing(Real filterSpacing);
+            void setFilterSpacingInCams(Real filterSpacingInCams);
 
-            void setCompressionCriterion(Real compressionCriterion);
+            void setCompressionCriterionInCams(Real compressionCriterionInCams);
 
             void setPathToFilterCoefs(string pathToFilterCoefs);
 
@@ -118,7 +118,7 @@ namespace loudness{
             virtual bool initializeInternal(const SignalBank &input);
 
             string pathToFilterCoefs_;
-            Real filterSpacing_, compressionCriterion_;
+            Real filterSpacingInCams_, compressionCriterionInCams_;
             Real attackTimeSTL_, releaseTimeSTL_;
             Real attackTimeLTL_, releaseTimeLTL_;
             bool isSpectrumSampledUniformly_, isPresentationDiotic_;

@@ -82,14 +82,14 @@ namespace loudness{
         isSpecificLoudnessOutput_ = isSpecificLoudnessOutput;
     }
 
-    void DynamicLoudnessCH2012::setFilterSpacing(Real filterSpacing)
+    void DynamicLoudnessCH2012::setFilterSpacingInCams(Real filterSpacingInCams)
     {
-        filterSpacing_ = filterSpacing;
+        filterSpacingInCams_ = filterSpacingInCams;
     }
 
-    void DynamicLoudnessCH2012::setCompressionCriterion(Real compressionCriterion)
+    void DynamicLoudnessCH2012::setCompressionCriterionInCams(Real compressionCriterionInCams)
     {
-        compressionCriterion_ = compressionCriterion;
+        compressionCriterionInCams_ = compressionCriterionInCams;
     }
 
     void DynamicLoudnessCH2012::setPathToFilterCoefs(string pathToFilterCoefs)
@@ -107,8 +107,8 @@ namespace loudness{
         setBinauralInhibitionUsed(true);
         setPresentationDiotic(true);
         setFirstSampleAtWindowCentre(true);
-        setFilterSpacing(0.1);
-        setCompressionCriterion(0.0);
+        setFilterSpacingInCams(0.1);
+        setCompressionCriterionInCams(0.0);
         attackTimeSTL_ = 0.016;
         releaseTimeSTL_ = 0.032;
         attackTimeLTL_ = 0.01;
@@ -116,8 +116,8 @@ namespace loudness{
 
         if (setName == "faster")
         {
-            setFilterSpacing(0.25);
-            setCompressionCriterion(0.3);
+            setFilterSpacingInCams(0.25);
+            setCompressionCriterionInCams(0.3);
             LOUDNESS_DEBUG(name_ << ": using a filter spacing of 0.25 Cams"
                    << " with 0.3 Cam spectral compression criterion.");
         }
@@ -205,10 +205,10 @@ namespace loudness{
         /*
          * Compression
          */
-        if(compressionCriterion_ > 0)
+        if(compressionCriterionInCams_ > 0)
         {
             modules_.push_back(unique_ptr<Module>
-                    (new CompressSpectrum(compressionCriterion_))); 
+                    (new CompressSpectrum(compressionCriterionInCams_))); 
             outputNames_.push_back("CompressedPowerSpectrum");
         }
 
@@ -253,7 +253,7 @@ namespace loudness{
             doubleRoexBankfactor /= 0.75;
 
         modules_.push_back(unique_ptr<Module> (new DoubleRoexBank(1.5, 40.2,
-                        filterSpacing_, doubleRoexBankfactor)));
+                        filterSpacingInCams_, doubleRoexBankfactor)));
 
         /*
          * Binaural inhibition

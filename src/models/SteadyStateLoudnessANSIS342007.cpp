@@ -31,7 +31,7 @@ namespace loudness{
         //Default parameters
         setPresentationDiotic(true);
         setResponseDiffuseField(false);
-        setFilterSpacing(0.1);
+        setfilterSpacingInCams(0.1);
     }
 
     SteadyStateLoudnessANSIS342007::~SteadyStateLoudnessANSIS342007()
@@ -48,9 +48,9 @@ namespace loudness{
         isResponseDiffuseField_ = isResponseDiffuseField;
     }
 
-    void SteadyStateLoudnessANSIS342007::setFilterSpacing(Real filterSpacing)
+    void SteadyStateLoudnessANSIS342007::setfilterSpacingInCams(Real filterSpacingInCams)
     {
-        filterSpacing_ = filterSpacing;
+        filterSpacingInCams_ = filterSpacingInCams;
     }
 
     bool SteadyStateLoudnessANSIS342007::initializeInternal(const SignalBank &input)
@@ -72,7 +72,7 @@ namespace loudness{
          * Roex filters
          */
         modules_.push_back(unique_ptr<Module>
-                (new RoexBankANSIS342007(1.8, 38.9, filterSpacing_)));
+                (new RoexBankANSIS342007(1.8, 38.9, filterSpacingInCams_)));
         outputNames_.push_back("ExcitationPattern");
         
         /*

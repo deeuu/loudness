@@ -21,6 +21,7 @@
 #define DOUBLEROEXBANK_H
 
 #include "../support/Module.h"
+#include "../thirdParty/spline/Spline.h"
 
 namespace loudness{
 
@@ -57,7 +58,8 @@ namespace loudness{
         DoubleRoexBank(Real camLo = 1.5,
                 Real camHi = 40.2,
                 Real camStep = 0.1,
-                Real scalingFactor = 1.0);
+                Real scalingFactor = 1.0,
+                bool isExcitationPatternInterpolated = false);
 
         virtual ~DoubleRoexBank();
 
@@ -69,10 +71,12 @@ namespace loudness{
 
         virtual void resetInternal();
 
-        int nFilters_;
         Real camLo_, camHi_, camStep_, scalingFactor_;
-        RealVec maxGdB_, thirdGainTerm_;
+        bool isExcitationPatternInterpolated_;
+        int nFilters_;
+        RealVec maxGdB_, thirdGainTerm_, cams_, logExcitation_;
         RealVecVec wPassive_, wActive_;
+        spline spline_;
     };
 }
 

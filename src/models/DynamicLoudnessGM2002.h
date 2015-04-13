@@ -129,9 +129,9 @@ namespace loudness{
 
             void setFirstSampleAtWindowCentre(bool isFirstSampleAtWindowCentre);
 
-            void setFilterSpacing(Real filterSpacing);
+            void setFilterSpacingInCams(Real filterSpacingInCams);
 
-            void setCompressionCriterion(Real compressionCriterion);
+            void setCompressionCriterionInCams(Real compressionCriterionInCams);
 
             void setPathToFilterCoefs(string pathToFilterCoefs);
 
@@ -140,7 +140,7 @@ namespace loudness{
         private:
             virtual bool initializeInternal(const SignalBank &input);
 
-            Real filterSpacing_, compressionCriterion_;
+            Real filterSpacingInCams_, compressionCriterionInCams_;
             Real attackTimeSTL_, releaseTimeSTL_;
             Real attackTimeLTL_, releaseTimeLTL_;
             bool isRoexBankFast_, isExcitationPatternInterpolated_, isSpectrumSampledUniformly_;

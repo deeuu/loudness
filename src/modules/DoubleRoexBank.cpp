@@ -25,12 +25,14 @@ namespace loudness{
     DoubleRoexBank::DoubleRoexBank(Real camLo, 
             Real camHi,
             Real camStep,
-            Real scalingFactor) : 
+            Real scalingFactor,
+            bool isExcitationPatternInterpolated) : 
         Module("DoubleRoexBank"),
         camLo_(camLo), 
         camHi_(camHi),
         camStep_(camStep),
-        scalingFactor_(scalingFactor)
+        scalingFactor_(scalingFactor),
+        isExcitationPatternInterpolated_(isExcitationPatternInterpolated)
     {}
 
     DoubleRoexBank::~DoubleRoexBank() {}
@@ -38,14 +40,40 @@ namespace loudness{
     bool DoubleRoexBank::initializeInternal(const SignalBank &input)
     {
 
+        if (camStep_ <= 0.1)
+            isExcitationPatternInterpolated_ = false;
+        if (isExcitationPatternInterpolated_)
+        {
+            camLo_ = 1.5;
+            camHi_ = 40.2;
+        }
+
         //number of roex filters to use
         nFilters_ = round((camHi_-camLo_)/camStep_)+1; //+1 inclusive
         LOUDNESS_DEBUG(name_ << ": Total number of filters: " << nFilters_);
 
-        //initialize output SignalBank
-        output_.initialize(input.getNEars(), nFilters_, 1, input.getFs());
+        //initialise output SignalBank
+        if(isExcitationPatternInterpolated_)
+        {
+            //centre freqs in cams
+            cams_.assign(nFilters_, 0);
+
+            //required for log interpolation
+            logExcitation_.assign(nFilters_, 0.0);
+
+            //388 filters to cover [1.5, 40.2]
+            output_.initialize(input.getNEars(), 388, 1, input.getFs());
+            output_.setChannelSpacingInCams(0.1);
+            for (int i = 0; i < 388; ++i)
+                output_.setCentreFreq(i, camToFreq(camLo_ + (i * 0.1)));
+        }
+        else
+        {
+            output_.initialize(input.getNEars(), nFilters_, 1, input.getFs());
+            output_.setChannelSpacingInCams(camStep_);
+        }
+
         output_.setFrameRate(input.getFrameRate());
-        output_.setChannelSpacingInCams(camStep_);
 
         //filter variables
         wPassive_.resize(nFilters_);
@@ -54,30 +82,34 @@ namespace loudness{
         thirdGainTerm_.resize(nFilters_);
 
         //fill the above arrays
-        Real cam, fc, tl, tu, pl, pu, g, pgPassive, pgActive;
         for (int i = 0; i < nFilters_; i++)
         {
-            //erb to frequency
-            cam = camLo_+(i*camStep_);
-            fc = camToFreq(cam);
-            output_.setCentreFreq(i,fc);
+            Real cam = camLo_ + (i * camStep_);
+            Real fc = camToFreq(cam);
+
+            if (isExcitationPatternInterpolated_)
+                cams_[i] = cam;
+            else
+                output_.setCentreFreq(i, fc);
 
             //slopes
-            tl = fc/(0.108*fc+2.33);
-            tu = 15.6;
-            pl = fc/(0.027*fc+5.44);
-            pu = 27.9;
+            Real tl = fc/(0.108*fc+2.33);
+            Real tu = 15.6;
+            Real pl = fc/(0.027*fc+5.44);
+            Real pu = 27.9;
 
             //precalculate some gain terms
             maxGdB_[i] = fc/(0.0191*fc+1.1);
             thirdGainTerm_[i] = maxGdB_[i]/(1+exp(0.05*(100-maxGdB_[i])));
 
             //compute the fixed filters
-            int j=0;
+            int j = 0;
             while (j < input.getNChannels())
             {
+                Real pgPassive, pgActive;
+
                 //normalised deviation
-                g = (input.getCentreFreq(j)-fc)/fc;
+                Real g = (input.getCentreFreq(j)-fc)/fc;
 
                 //Is g limited to 2 sufficient for the passive filter?
                 if (g <= 2)
@@ -116,12 +148,12 @@ namespace loudness{
          */
         Real excitationLinP, excitationLinA;
         Real excitationLog, gain, excitationLogMinus30;
-        for (int ear = 0; ear < input.getNEars(); ear++)
+        for (int ear = 0; ear < input.getNEars(); ++ear)
         {
             const Real* inputSpectrum = input.getSingleSampleReadPointer(ear, 0);
             Real* outputExcitationPattern = output_.getSingleSampleWritePointer(ear, 0);
 
-            for (int i = 0; i < nFilters_; i++)
+            for (int i = 0; i < nFilters_; ++i)
             {
                 excitationLinP = 0.0;
                 excitationLinA = 0.0;
@@ -140,20 +172,34 @@ namespace loudness{
                 //check for higher levels
                 if (excitationLog > 30)
                 {
-                    excitationLogMinus30 = excitationLog-30;
-                    gain = gain - 0.003*excitationLogMinus30*excitationLogMinus30;
+                    excitationLogMinus30 = excitationLog - 30;
+                    gain = gain - 0.003 * excitationLogMinus30 * excitationLogMinus30;
                 }
 
                 //convert to linear gain
-                gain = pow(10, gain/10.0); 
+                gain = pow(10, gain / 10.0); 
 
                 //active filter output
-                for (uint j = 0; j < wActive_[i].size(); j++)
+                for (uint j = 0; j < wActive_[i].size(); ++j)
                     excitationLinA += wActive_[i][j] * inputSpectrum[j];
                 excitationLinA *= gain;
 
                 //excitation pattern
-                outputExcitationPattern[i] = scalingFactor_ * (excitationLinP + excitationLinA);
+                Real excitation = scalingFactor_ * (excitationLinP + excitationLinA);
+
+                if (isExcitationPatternInterpolated_)
+                    logExcitation_[i] = log(excitation + 1e-10);
+                else
+                    outputExcitationPattern[i] = excitation;
+            }
+
+            //Interpolate to estimate 0.1~Cam res excitation pattern
+            if (isExcitationPatternInterpolated_)
+            {
+                spline_.set_points(cams_, logExcitation_);
+
+                for (int i = 0; i < 388; ++i)
+                    outputExcitationPattern[i] = exp(spline_(camLo_ + i * 0.1));
             }
         }
     }

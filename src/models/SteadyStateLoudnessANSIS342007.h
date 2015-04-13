@@ -54,12 +54,12 @@ namespace loudness{
 
             void setResponseDiffuseField(bool isResponseDiffuseField);
 
-            void setFilterSpacing(Real filterSpacing);
+            void setfilterSpacingInCams(Real filterSpacingInCams);
             
         private:
             virtual bool initializeInternal(const SignalBank &input);
 
-            Real filterSpacing_;
+            Real filterSpacingInCams_;
             bool isPresentationDiotic_, isResponseDiffuseField_;
     }; 
 }

@@ -90,13 +90,13 @@ namespace loudness{
         isExcitationPatternInterpolated_ = isExcitationPatternInterpolated;
     }
 
-    void DynamicLoudnessGM2002::setFilterSpacing(Real filterSpacing)
+    void DynamicLoudnessGM2002::setFilterSpacingInCams(Real filterSpacingInCams)
     {
-        filterSpacing_ = filterSpacing;
+        filterSpacingInCams_ = filterSpacingInCams;
     }
-    void DynamicLoudnessGM2002::setCompressionCriterion(Real compressionCriterion)
+    void DynamicLoudnessGM2002::setCompressionCriterionInCams(Real compressionCriterionInCams)
     {
-        compressionCriterion_ = compressionCriterion;
+        compressionCriterionInCams_ = compressionCriterionInCams;
     }
 
     void DynamicLoudnessGM2002::setPathToFilterCoefs(string pathToFilterCoefs)
@@ -144,8 +144,8 @@ namespace loudness{
         setResponseDiffuseField(false);
         setSpectrumSampledUniformly(true);
         setExcitationPatternInterpolated(false);
-        setFilterSpacing(0.25);
-        setCompressionCriterion(0.0);
+        setFilterSpacingInCams(0.25);
+        setCompressionCriterionInCams(0.0);
         setRoexBankFast(false);
         setSpecificLoudnessANSIS342007(false);
         setFirstSampleAtWindowCentre(true);
@@ -159,7 +159,7 @@ namespace loudness{
             {
                 setRoexBankFast(true);
                 setExcitationPatternInterpolated(true);
-                setCompressionCriterion(0.3);
+                setCompressionCriterionInCams(0.3);
                 LOUDNESS_DEBUG(name_ << ": Using faster params for Glasberg and Moore's 2002 model.");
             }
             else if (setName == "recent")
@@ -177,7 +177,7 @@ namespace loudness{
                 setSpecificLoudnessANSIS342007(true);
                 setRoexBankFast(true);
                 setExcitationPatternInterpolated(true);
-                setCompressionCriterion(0.3);
+                setCompressionCriterionInCams(0.3);
                 LOUDNESS_DEBUG(name_
                         << ": Using faster params and "
                         << "updated time-constants from 2003 paper and "
@@ -288,10 +288,10 @@ namespace loudness{
         /*
          * Compression
          */
-        if(compressionCriterion_ > 0)
+        if(compressionCriterionInCams_ > 0)
         {
             modules_.push_back(unique_ptr<Module>
-                    (new CompressSpectrum(compressionCriterion_))); 
+                    (new CompressSpectrum(compressionCriterionInCams_))); 
             outputNames_.push_back("CompressedPowerSpectrum");
         }
 
@@ -318,12 +318,12 @@ namespace loudness{
         if(isRoexBankFast_)
         {
             modules_.push_back(unique_ptr<Module>
-                    (new FastRoexBank(filterSpacing_, isExcitationPatternInterpolated_)));
+                    (new FastRoexBank(filterSpacingInCams_, isExcitationPatternInterpolated_)));
         }
         else
         {
             modules_.push_back(unique_ptr<Module> 
-                    (new RoexBankANSIS342007(1.8, 38.9, filterSpacing_)));
+                    (new RoexBankANSIS342007(1.8, 38.9, filterSpacingInCams_)));
         }
         outputNames_.push_back("ExcitationPattern");
         
