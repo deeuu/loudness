@@ -39,6 +39,9 @@ namespace loudness{
 
     bool Model::initialize(const SignalBank &input)
     {
+        modules_.clear();
+        outputNames_.clear();
+
         if(!initializeInternal(input))
         {
             LOUDNESS_ERROR(name_ << ": Not initialised!");
