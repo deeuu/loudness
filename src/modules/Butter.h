@@ -34,20 +34,22 @@ namespace loudness{
      */
     class Butter : public Module, public Filter
     {
-        public:
+    public:
 
-            /** Constructs a Butterworth filter of specified order, type and centre frequency */
-            Butter(int order, int type, Real fc);
+        /** Constructs a Butterworth filter of specified order, type and centre frequency */
+        Butter(int order, int type, Real fc);
 
-            virtual ~Butter();
+        virtual ~Butter();
 
-        private:
-            virtual bool initializeInternal(const SignalBank &input);
-            virtual void processInternal(const SignalBank &input);
-            virtual void resetInternal();
+    private:
+        virtual bool initializeInternal(const SignalBank &input);
+        virtual bool initializeInternal(){return 0;};
+        virtual void processInternal(const SignalBank &input);
+        virtual void processInternal(){};
+        virtual void resetInternal();
 
-            int type_;
-            Real fc_;
+        int type_;
+        Real fc_;
     };
 }
 #endif

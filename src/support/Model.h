@@ -57,7 +57,7 @@ namespace loudness{
         *
         * @param rate
         */
-        Model(string name = "Model", bool dynamicModel = true);
+        Model(string name = "Model", bool isDynamic = true);
         virtual ~Model();
 
         /**
@@ -102,7 +102,7 @@ namespace loudness{
          *
          * @return true if dynamic, false otherwise.
          */
-        bool isDynamicModel() const;
+        bool isDynamic() const;
 
         /** Returns a reference to the output SignalBank of a module specified
          * by index.
@@ -153,7 +153,7 @@ namespace loudness{
         virtual bool initializeInternal(const SignalBank &input) = 0;
 
         string name_;
-        bool dynamicModel_, initialized_;
+        bool isDynamic_, initialized_;
         int nModules_;
         Real rate_;
         vector<unique_ptr<Module>> modules_;

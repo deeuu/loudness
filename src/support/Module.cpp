@@ -32,17 +32,39 @@ namespace loudness{
 
     bool Module::initialize()
     {
-        return 0;
+        if(initialized_)
+        {
+            LOUDNESS_WARNING(name_ << ": Reinitialising ...")
+        }
+
+        if(!initializeInternal())
+        {
+            LOUDNESS_ERROR(name_ << ": Not initialised!");
+            return 0;
+        }
+        else
+        {
+            LOUDNESS_DEBUG(name_ << ": Initialised.");
+            if(output_.isInitialized())
+            {
+                for (uint i = 0; i < targetModules_.size(); i++)
+                    targetModules_[i] -> initialize(output_);
+            }
+
+            initialized_ = 1;
+            return 1;
+        }
+ 
     }
 
     bool Module::initialize(const SignalBank &input)
     {
         if(initialized_)
         {
-            LOUDNESS_ERROR(name_ << ": I'm already initialised!")
-            return 0;
+            LOUDNESS_WARNING(name_ << ": Reinitialising ...")
         }
-        else if(!initializeInternal(input))
+
+        if(!initializeInternal(input))
         {
             LOUDNESS_ERROR(name_ << ": Not initialised!");
             return 0;
@@ -61,7 +83,21 @@ namespace loudness{
         }
     }
 
-    void Module::process(){}
+    void Module::process()
+    {
+        if(initialized_)
+        {
+            LOUDNESS_PROCESS_DEBUG(name_ << ": processing ...");
+            output_.setTrig(true);
+            processInternal();
+        }
+        else
+            output_.setTrig(false);
+
+        for (uint i = 0; i < targetModules_.size(); i++)
+            targetModules_[i] -> process(output_);
+
+    }
 
     void Module::process(const SignalBank &input)
     {
@@ -83,6 +119,9 @@ namespace loudness{
         //clear output signal
         if(output_.isInitialized())
             output_.clear();
+        
+        //call module specific reset
+        resetInternal();
 
         //clear internal parameters
         for (uint i = 0; i < targetModules_.size(); i++)

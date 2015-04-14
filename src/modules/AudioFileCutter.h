@@ -55,9 +55,16 @@ namespace loudness{
         AudioFileCutter(const string& fileName, int frameSize = 512);
 
         virtual ~AudioFileCutter();
-        virtual bool initialize();
 
-        virtual void process();
+        /** Set the frameSize. */
+        void setFrameSize(int frameSize);
+
+        /** Set the frameSize in seconds. frameSize will be computed upon
+         * initialisation. */
+        void setFrameSizeInSeconds(Real frameSizeInSeconds);
+
+        /** Sets the file name of the audio file to be loaded. */
+        void setFileName(const string& fileName);
 
         /**
          * @brief Returns the duration of the audio file in seconds.
@@ -73,21 +80,10 @@ namespace loudness{
         int getNFrames() const;
 
     private:
-
-        /* Hmmm */
         virtual bool initializeInternal(const SignalBank &input){return 0;};
+        virtual bool initializeInternal();
         virtual void processInternal(const SignalBank &input){};
-        /**
-         * @brief Loads an audio file specified by @a fileName_;
-         *
-         * @param initialize Set to true if you want the output bank to be
-         * reinitialised and false if not.
-         */
-        bool loadAudioFile(bool initialize);
-
-        /**
-         * @brief Calls the method loadAudioFile.
-         */
+        virtual void processInternal();
         virtual void resetInternal();
 
         string fileName_;
@@ -95,7 +91,7 @@ namespace loudness{
         int nSamplesToLoadPerChannel_, audioBufferSize_, bufferIdx_, frame_;
         SNDFILE* sndFile_;
         vector<float> audioBuffer_;
-        Real duration_;
+        Real duration_, frameSizeInSeconds_;
 
     };
 }

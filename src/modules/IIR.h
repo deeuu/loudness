@@ -34,19 +34,21 @@ namespace loudness{
      */
     class IIR : public Module, public Filter
     {
-        public:
-            /** Constructs an IIR with no filter coefficients */
-            IIR();
-            /** Constructs an IIR with a set of feedforward (bCoefs) and
-             * feedback (aCoefs) coefficients */
-            IIR(const RealVec &bCoefs, const RealVec &aCoefs);
+    public:
+        /** Constructs an IIR with no filter coefficients */
+        IIR();
+        /** Constructs an IIR with a set of feedforward (bCoefs) and
+         * feedback (aCoefs) coefficients */
+        IIR(const RealVec &bCoefs, const RealVec &aCoefs);
 
-            virtual ~IIR();
-        private:
+        virtual ~IIR();
+    private:
+        virtual bool initializeInternal(const SignalBank &input);
+        virtual bool initializeInternal(){return 0;};
+        virtual void processInternal(const SignalBank &input);
+        virtual void processInternal(){};
+        virtual void resetInternal();
 
-            virtual bool initializeInternal(const SignalBank &input);
-            virtual void processInternal(const SignalBank &input);
-            virtual void resetInternal();
     };
 }
 

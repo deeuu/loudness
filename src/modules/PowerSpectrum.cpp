@@ -35,6 +35,8 @@ namespace loudness{
     bool PowerSpectrum::initializeInternal(const SignalBank &input)
     {
         
+        ffts_.clear();
+
         //number of windows
         int nWindows = (int)windowSizes_.size();
         LOUDNESS_ASSERT(input.getNChannels() == nWindows,

@@ -21,9 +21,9 @@
 
 namespace loudness{
 
-    Model::Model(string name, bool dynamicModel) :
+    Model::Model(string name, bool isDynamic) :
         name_(name),
-        dynamicModel_(dynamicModel),
+        isDynamic_(isDynamic),
         rate_(0)
     {
         LOUDNESS_DEBUG(name_ << ": Constructed.");
@@ -117,9 +117,9 @@ namespace loudness{
         return initialized_;
     }
 
-    bool Model::isDynamicModel() const
+    bool Model::isDynamic() const
     {
-        return dynamicModel_;
+        return isDynamic_;
     }
 
     int Model::getNModules() const

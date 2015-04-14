@@ -84,11 +84,10 @@ namespace loudness{
         virtual ~SpecificLoudnessANSIS342007();
 
     private:
-
         virtual bool initializeInternal(const SignalBank &input);
-
+        virtual bool initializeInternal(){return 0;};
         virtual void processInternal(const SignalBank &input);
-
+        virtual void processInternal(){};
         virtual void resetInternal();
 
         bool useANSISpecificLoudness_, updateParameterCForBinauralInhibition_;

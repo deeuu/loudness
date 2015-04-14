@@ -65,9 +65,9 @@ namespace loudness{
 
     private:
         virtual bool initializeInternal(const SignalBank &input);
-
+        virtual bool initializeInternal(){return 0;};
         virtual void processInternal(const SignalBank &input);
-
+        virtual void processInternal(){};
         virtual void resetInternal();
 
         RealVec weights_;

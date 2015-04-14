@@ -27,6 +27,7 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/support/Model.cpp \
 ../src/support/Filter.cpp \
 ../src/support/FFT.cpp \
+../src/support/AudioFileProcessor.cpp \
 ../src/modules/AudioFileCutter.cpp \
 ../src/modules/FIR.cpp \
 ../src/modules/IIR.cpp \

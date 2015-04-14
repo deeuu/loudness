@@ -72,9 +72,10 @@ namespace loudness{
         bool getstartAtCentreOfFrame() const;
 
     private:
-
         virtual bool initializeInternal(const SignalBank &input);
+        virtual bool initializeInternal(){return 0;};
         virtual void processInternal(const SignalBank &input);
+        virtual void processInternal(){};
         virtual void resetInternal();
 
         int frameSize_, hopSize_, audioBufferSize_, inputBufferSize_;

@@ -36,21 +36,21 @@ namespace loudness{
      */
     class FIR : public Module, public Filter
     {
-        public:
+    public:
 
-            /** Constructs an FIR with no filter coefficients */
-            FIR();
-            /** Constructs an FIR with a set of feedforward coefficients */
-            FIR(const RealVec &bCoefs);
+        /** Constructs an FIR with no filter coefficients */
+        FIR();
+        /** Constructs an FIR with a set of feedforward coefficients */
+        FIR(const RealVec &bCoefs);
 
-            virtual ~FIR();
+        virtual ~FIR();
 
-        private:
-
-            virtual bool initializeInternal(const SignalBank &input);
-            virtual void processInternal(const SignalBank &input);
-            virtual void resetInternal();
-
+    private:
+        virtual bool initializeInternal(const SignalBank &input);
+        virtual bool initializeInternal(){return 0;};
+        virtual void processInternal(const SignalBank &input);
+        virtual void processInternal(){};
+        virtual void resetInternal();
     };
 }
 
