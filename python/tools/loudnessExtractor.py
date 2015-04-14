@@ -1,7 +1,8 @@
-from os.path import splitext
+import os
 import pickle
 import numpy as np
 import loudness as ln
+from sound import Sound
 import matplotlib.pyplot as plt
 
 class LoudnessExtractor:
@@ -171,7 +172,7 @@ class LoudnessExtractor:
                     dataToSave = np.hstack((dataToSave, \
                         self.outputDict[name][:, ear, 0, 0]))
 
-            filename, ext = splitext(filename)
+            filename, ext = os.path.splitext(filename)
             np.savetxt(filename + '.csv', dataToSave,\
                 delimiter = ',', header = ','.join(self.outputDict.keys()) , comments = "")
 
@@ -180,7 +181,7 @@ class LoudnessExtractor:
         Saves the complete output dictionary to a pickle file.
         '''
         if self.processed:
-            filename, ext = splitext(filename)
+            filename, ext = os.path.splitext(filename)
             with open(filename + '.pickle', 'wb') as outfile:
                 pickle.dump(self.outputDict, outfile, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -214,3 +215,56 @@ class LoudnessExtractor:
                 self.outputDict['Features'][name]['IQR'] = \
                         np.percentile(loudnessVec, 75, 0) - \
                         np.percentile(loudnessVec, 25, 0)
+
+class BatchWavFileProcessor:
+    """Class for processing multiple wav files using an input loudness model.
+
+    This is essentially a wrapper around LoudnessExtractor. 
+
+    All wav files in the directory wavFileDirectory will be processed.
+    Dictionaries holding processed data are saved as pickle files for each wavFile.
+    """
+
+    
+    def __init__(self, 
+            model,
+            fs = 32000, 
+            modelOutputsToExtract = [],
+            nInputEars = 1,
+            wavFileDirectory = "",
+            saveDirectory = ""):
+
+        self.wavFileDirectory = os.path.abspath(wavFileDirectory)
+        self.saveDirectory = os.path.abspath(saveDirectory)
+        if not self.saveDirectory:
+            raise ValueError("No directory to save processing data")
+
+        self.nInputEars = nInputEars
+
+        #Get a list of all wav files in this directory
+        self.wavFiles = []
+        for file in os.listdir(self.wavFileDirectory):
+            if file.endswith(".wav"):
+                self.wavFiles.append(file)
+        self.wavFiles.sort()
+        if not self.wavFiles:
+            raise ValueError("No wav files found")
+        
+        self.extractor = LoudnessExtractor(model, fs,
+                modelOutputsToExtract,
+                nInputEars)
+
+    def process(self):
+        for wavFile in self.wavFiles:
+            sound = Sound.readFromAudioFile(self.wavFileDirectory + '/' + wavFile)
+
+            print('Processing %s ...' % wavFile)
+            if sound.nChannels != self.nInputEars:
+                print("File %s does not have %d channels...skipping" 
+                        % (wavFile, self.nInputEars))
+
+            self.extractor.process(sound.data)
+            savePath = self.saveDirectory + '/' + wavFile
+            savePath, ext = os.path.splitext(savePath)
+            print('Saved to %s.pickle ...' % savePath)
+            self.extractor.saveOutputToPickle(savePath)
