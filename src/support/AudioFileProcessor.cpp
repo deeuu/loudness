@@ -33,8 +33,6 @@ namespace loudness{
     {
         LOUDNESS_ASSERT(model.isDynamic(), "Model is not dynamic.");
 
-        LOUDNESS_ASSERT(model.isInitialized(), "Model should not be initialised.");
-
         //initialise audio cutter
         cutter_.setFrameSizeInSeconds(1.0 / model.getRate());
         cutter_.initialize();
@@ -63,6 +61,7 @@ namespace loudness{
             model.process(cutter_.getOutput());
         }
         timer_.toc();
+        cutter_.reset();
     }
 
     Real AudioFileProcessor::getProcessingTime()

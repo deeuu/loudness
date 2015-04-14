@@ -35,6 +35,7 @@ namespace loudness{
         //Camstep limit is 0.1
         if(camStep_ <= 0.1)
             isExcitationPatternInterpolated_ = false;
+        
         /*
          * Level per ERB precalculations
          */
@@ -89,6 +90,11 @@ namespace loudness{
         Real camLo = 1.8;
         Real camHi = 38.9;
         nFilters_ = round((camHi-camLo)/camStep_)+1; 
+
+        LOUDNESS_DEBUG(name_
+                << ": interpolation applied: " << isExcitationPatternInterpolated_
+                << " filter spacing in Cams: " << camStep_
+                << " Total number of filters: " << nFilters_);
 
         const Real p51_1k = 4000 / freqToERB(1000.0);
 

@@ -50,7 +50,11 @@ namespace loudness{
 
         //number of roex filters to use
         nFilters_ = round((camHi_-camLo_)/camStep_)+1; //+1 inclusive
-        LOUDNESS_DEBUG(name_ << ": Total number of filters: " << nFilters_);
+
+        LOUDNESS_DEBUG(name_
+                << ": interpolation applied: " << isExcitationPatternInterpolated_
+                << " filter spacing in Cams: " << camStep_
+                << " Total number of filters: " << nFilters_);
 
         //initialise output SignalBank
         if(isExcitationPatternInterpolated_)

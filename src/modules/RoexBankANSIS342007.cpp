@@ -41,6 +41,10 @@ namespace loudness{
         //number of roex filters to use
         nFilters_ = round((camHi_-camLo_)/camStep_)+1; //+1 inclusive
 
+        LOUDNESS_DEBUG(name_
+                << " filter spacing in Cams: " << camStep_
+                << " Total number of filters: " << nFilters_);
+
         //initialize output SignalBank
         output_.initialize(input.getNEars(), nFilters_, 1, input.getFs());
         output_.setFrameRate(input.getFrameRate());
