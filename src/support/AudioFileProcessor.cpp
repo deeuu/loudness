@@ -36,6 +36,10 @@ namespace loudness{
         //initialise audio cutter
         cutter_.setFrameSizeInSeconds(1.0 / model.getRate());
         cutter_.initialize();
+
+        timeStep_ = cutter_.getFrameSize() / (Real) cutter_.getFs();
+        LOUDNESS_DEBUG("AudioFileProcessor: timestep : " << timeStep_);
+
         model.initialize(cutter_.getOutput());
         nFrames_ = cutter_.getNFrames();
     }
@@ -53,6 +57,7 @@ namespace loudness{
 
     void AudioFileProcessor::processAllFrames(Model& model)
     {
+        model.reset();
         timer_.tic();
         int frame = nFrames_;
         while(frame-- > 0)
@@ -62,6 +67,7 @@ namespace loudness{
         }
         timer_.toc();
         cutter_.reset();
+
     }
 
     Real AudioFileProcessor::getProcessingTime()
@@ -69,9 +75,19 @@ namespace loudness{
         return timer_.getElapsedTime();
     }
 
-    Real AudioFileProcessor::getDuration()
+    Real AudioFileProcessor::getDuration() const
     {
         return cutter_.getDuration();
+    }
+
+    Real AudioFileProcessor::getTimeStep() const
+    {
+        return timeStep_;
+    }
+
+    int AudioFileProcessor::getNFrames() const
+    {
+        return nFrames_;
     }
 
     void AudioFileProcessor::reset()

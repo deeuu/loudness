@@ -60,14 +60,12 @@ namespace loudness{
      * processInternal() is only called if the SignalBank trigger is 1 (which is
      * the default), otherwise the output bank will not be updated.
      *
-     * @author Dominic Ward
-     *
      * @sa SignalBank
      */
     class Module
     {
     public:
-        Module(string name = "Module");
+        Module(const string& name = "Module");
         virtual ~Module();
 
         /**
@@ -122,7 +120,7 @@ namespace loudness{
          *
          * Once processed, the output SignalBank is passed as input to the
          * target module for processing. Note that the target module must
-         * continue to exist for the lifetime of the aggregate object when
+         * continue to exist for the lifetime of the object when
          * initialize(), process() or reset() are called. This Module does not
          * own the target module.
          *
@@ -136,12 +134,19 @@ namespace loudness{
          */
         void removeLastTargetModule();
 
+        /** Sets whether the output SignalBank is aggregated or not. */
+        void setOutputAggregated(bool isOutputAggregated);
+
         /**
          * @brief Returns the module initialisation state.
          *
          * @return true if initialised, false otherwise.
          */
         bool isInitialized() const;
+
+        /** Returns true if the output SignalBank is aggregated, false otherwise
+         **/
+        bool isOutputAggregated() const;
 
         /**
          * @brief Returns a const reference to the output SignalBank used for
@@ -166,10 +171,10 @@ namespace loudness{
         virtual void resetInternal() = 0;
 
         //members
-        bool initialized_;
+        string name_;
+        bool initialized_, isOutputAggregated_;
         vector<Module*> targetModules_;
         SignalBank output_;
-        string name_;
     };
 }
 

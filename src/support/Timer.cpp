@@ -56,7 +56,7 @@ namespace loudness{
 
     }
 
-    Real Timer::getElapsedTime()
+    Real Timer::getElapsedTime() const
     {
         return elapsedTime_;
     }

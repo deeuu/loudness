@@ -72,12 +72,15 @@ namespace std {
     //The argument to %template() is the name of the instantiation in the target language
     %template(RealVec) vector<double>;
     %template(IntVec) vector<int>;
+    %template(StringVec) vector<string>;
 
     %apply vector<double>& { RealVec& };
     %apply const vector<double>& { const RealVec& };
     %apply vector<int> { IntVec };
     %apply vector<int>& { IntVec& };
     %apply const vector<int>& { const IntVec& };
+    %apply vector<string>& { StringVec };
+    %apply const vector<string>& { const StringVec& };
 }
 
 %apply (double* IN_ARRAY1, int DIM1) {(Real* data, int nSamples)}; 

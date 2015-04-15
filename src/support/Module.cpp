@@ -21,10 +21,11 @@
 
 namespace loudness{
     
-    Module::Module(string name):
-        name_(name)
+    Module::Module(const string& name) :
+        name_(name),
+        initialized_(false),
+        isOutputAggregated_(false)
     {
-        initialized_ = 0;
         LOUDNESS_DEBUG(name_ << ": Constructed.");
     };
 
@@ -90,35 +91,46 @@ namespace loudness{
             LOUDNESS_PROCESS_DEBUG(name_ << ": processing ...");
             output_.setTrig(true);
             processInternal();
-        }
-        else
-            output_.setTrig(false);
+            if (isOutputAggregated_)
+                output_.aggregate();
 
-        for (uint i = 0; i < targetModules_.size(); i++)
-            targetModules_[i] -> process(output_);
+            for (uint i = 0; i < targetModules_.size(); i++)
+                targetModules_[i] -> process(output_);
+        }
 
     }
 
     void Module::process(const SignalBank &input)
     {
-        if(initialized_ && input.getTrig())
+        if (initialized_) 
         {
-            LOUDNESS_PROCESS_DEBUG(name_ << ": processing SignalBank ...");
-            output_.setTrig(true);
-            processInternal(input);
-        }
-        else
-            output_.setTrig(false);
+            if (isOutputAggregated_)
+            {
+                LOUDNESS_PROCESS_DEBUG(name_ << ": Aggregating output SignalBank.");
+                output_.aggregate();
+            }
 
-        for (uint i = 0; i < targetModules_.size(); i++)
-            targetModules_[i] -> process(output_);
+            if (input.getTrig())
+            {
+                LOUDNESS_PROCESS_DEBUG(name_ << ": processing SignalBank ...");
+                output_.setTrig(true);
+                processInternal(input);
+            }
+            else
+            {
+                output_.setTrig(false);
+            }
+
+            for (uint i = 0; i < targetModules_.size(); i++)
+                targetModules_[i] -> process(output_);
+        }
     }
 
     void Module::reset()
     {
         //clear output signal
         if(output_.isInitialized())
-            output_.clear();
+            output_.reset();
         
         //call module specific reset
         resetInternal();
@@ -139,9 +151,19 @@ namespace loudness{
         targetModules_.pop_back();
     }
 
+    void Module::setOutputAggregated(bool isOutputAggregated)
+    {
+        isOutputAggregated_ = isOutputAggregated;
+    }
+
     bool Module::isInitialized() const
     {
         return initialized_;
+    }
+
+    bool Module::isOutputAggregated() const
+    {
+        return isOutputAggregated_;
     }
 
     const SignalBank& Module::getOutput() const

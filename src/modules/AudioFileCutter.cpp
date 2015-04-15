@@ -26,6 +26,8 @@ namespace loudness{
         fileName_(fileName),
         frameSize_(frameSize),
         frameSizeInSeconds_(0),
+        duration_(0),
+        fs_(0),
         sndFile_(nullptr)
     {}
     
@@ -75,6 +77,7 @@ namespace loudness{
 
         nFrames_ = ceil(fileInfo.frames / (float)frameSize_);
         duration_ = fileInfo.frames/(Real)fileInfo.samplerate;
+        fs_ = fileInfo.samplerate;
  
         //force audio buffer size to be a multiple of frameSize_
         long long totalAudioSamples = fileInfo.frames * fileInfo.channels;
@@ -106,6 +109,8 @@ namespace loudness{
 
         output_.initialize(fileInfo.channels, 1,
                 frameSize_, fileInfo.samplerate);
+
+        return 1;
     }
 
     void AudioFileCutter::processInternal()
@@ -137,7 +142,7 @@ namespace loudness{
             }  
 
             //clear the output signal bank
-            output_.clear(); 
+            output_.zeroSignals();
 
             //Fill the output signal bank
             int nEars = output_.getNEars();
@@ -181,6 +186,16 @@ namespace loudness{
             bufferIdx_ =  audioBufferSize_;
             sf_seek(sndFile_, 0, SEEK_SET);
         }
+    }
+
+    int AudioFileCutter::getFrameSize() const
+    {
+        return frameSize_;
+    }
+
+    int AudioFileCutter::getFs() const
+    {
+        return fs_;
     }
 
     Real AudioFileCutter::getDuration() const

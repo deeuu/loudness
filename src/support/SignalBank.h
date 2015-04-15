@@ -65,8 +65,16 @@ namespace loudness{
          */
         void initialize(const SignalBank &input);
 
-        /**Clears the contents of SignalBank and sets trig to true.*/
-        void clear();
+        /**Zeros the all signals, sets trig to true and clears the aggregated
+         * signals (if any).*/
+        void reset();
+
+        /** Sets every sample in the SignalBank to zero. */
+        void zeroSignals();
+
+        /** Removes all elements from the vector holding the aggregated signals.
+         * */
+        void emptyAggregatedSignals();
 
         /** Sets the sampling frequency.*/
         void setFs(int fs);
@@ -141,6 +149,9 @@ namespace loudness{
          * Watch your bounds.
          */
         void copySamples(const SignalBank& input);
+
+        /** Aggregates the vector signals_ on each call. */
+        void aggregate();
 
         /** Pull all signals back by nSamples. */
         void pullBack(int nSamples);
@@ -288,6 +299,13 @@ namespace loudness{
             return signals_;
         }
 
+        /** Returns a reference to the aggregates signals (as a flattened
+         * vector). */
+        const RealVec& getAggregatedSignals() const
+        {
+            return aggregatedSignals_;
+        }
+
         /** Returns the centre frequency in Hz of a specific channel. Watch your
          * bounds.
          */
@@ -330,10 +348,10 @@ namespace loudness{
         int nEars_, nChannels_, nSamples_, nTotalSamples_;
         bool trig_, initialized_;
         int fs_;
+        long long reserveSamples_;
         Real frameRate_, channelSpacingInCams_;
-        RealVec signals_;
+        RealVec signals_, aggregatedSignals_;
         RealVec centreFreqs_;
-        IntVec effectiveSignalLengths_;
     }; 
 }
 #endif 

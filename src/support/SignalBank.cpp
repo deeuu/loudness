@@ -31,6 +31,7 @@ namespace loudness{
         initialized_ = false;
         frameRate_ = 0;
         channelSpacingInCams_ = 0;
+        reserveSamples_ = 0;
     }
 
     SignalBank::~SignalBank() {}
@@ -55,6 +56,9 @@ namespace loudness{
 
             centreFreqs_.assign(nChannels_, 0.0);
             signals_.assign(nTotalSamples_, 0.0);
+            aggregatedSignals_.clear();
+            reserveSamples_ = nTotalSamples_ * 1000;
+
             LOUDNESS_DEBUG("SignalBank: Initialised.");
         }
     }
@@ -74,6 +78,8 @@ namespace loudness{
             centreFreqs_ = input.getCentreFreqs();
             channelSpacingInCams_ = input.getChannelSpacingInCams();
             signals_.assign(input.getNTotalSamples(), 0.0);
+            aggregatedSignals_.clear();
+            reserveSamples_ = nTotalSamples_ * 1000;
         }
         else
         {
@@ -82,7 +88,14 @@ namespace loudness{
         }
     }
 
-    void SignalBank::clear()
+    void SignalBank::reset()
+    {
+        signals_.assign(nTotalSamples_, 0.0);
+        aggregatedSignals_.clear();
+        trig_ = true;
+    }
+
+    void SignalBank::zeroSignals()
     {
         signals_.assign(nTotalSamples_, 0.0);
     }
@@ -158,6 +171,12 @@ namespace loudness{
             write += writeHop;
             read += readHop;
         }
+    }
+
+    void SignalBank::aggregate()
+    {  
+        aggregatedSignals_.reserve(reserveSamples_);
+        aggregatedSignals_.insert (aggregatedSignals_.end(), signals_.begin(), signals_.end());
     }
 
     void SignalBank::pullBack(int nSamples)

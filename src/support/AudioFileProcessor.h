@@ -63,14 +63,24 @@ namespace loudness{
 
         void initialize(Model& model);
         void process(Model& model);
-        void processAllFrames(Model& model);
         void appendNFrames(int nFramesToAppend);
-        /** Get the elapsed time consumed by the model when calling
-         * processAllFrames() */
+
+        /** Processes all frames of the audio file and uses the Timer object to
+         * measure elapsed time. */
+        void processAllFrames(Model& model);
+
+        /** Returns the elapsed time that occurs between calling
+         * processAllFrames() and when the returns. */
         Real getProcessingTime();
 
         /** Returns the duration of the audio file in seconds. */
-        Real getDuration();
+        Real getDuration() const;
+
+        /** Returns the time-step (hop size in seconds). */
+        Real getTimeStep() const;
+
+        /** Returns the total number of frames to be processed. */
+        int getNFrames() const;
 
         void reset();
         
@@ -79,7 +89,9 @@ namespace loudness{
         string fileName_;
         int nFrames_, hopSize_;
         AudioFileCutter cutter_;
+        Real timeStep_;
         Timer timer_;
+        vector<string> modelOutputsToSave_;
     };
 }
 #endif

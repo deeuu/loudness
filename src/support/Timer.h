@@ -64,7 +64,7 @@ namespace loudness{
         /**
          * @brief Returns the elapsed time as measured by toc() in seconds.
          */
-        Real getElapsedTime();
+        Real getElapsedTime() const;
 
         /**
          * @brief Returns the resolution of the clock.

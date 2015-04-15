@@ -219,52 +219,72 @@ class LoudnessExtractor:
 class BatchWavFileProcessor:
     """Class for processing multiple wav files using an input loudness model.
 
-    This is essentially a wrapper around LoudnessExtractor. 
-
     All wav files in the directory wavFileDirectory will be processed.
     Dictionaries holding processed data are saved as pickle files for each wavFile.
     """
 
     
     def __init__(self, 
-            model,
-            fs = 32000, 
-            modelOutputsToExtract = [],
-            nInputEars = 1,
             wavFileDirectory = "",
-            saveDirectory = ""):
+            outputDirectory = "",
+            modelOutputsToExtract = []):
 
         self.wavFileDirectory = os.path.abspath(wavFileDirectory)
-        self.saveDirectory = os.path.abspath(saveDirectory)
-        if not self.saveDirectory:
-            raise ValueError("No directory to save processing data")
-
-        self.nInputEars = nInputEars
+        self.outputDirectory = os.path.abspath(outputDirectory)
+        if not self.outputDirectory:
+            raise ValueError("No directory to save processed data")
 
         #Get a list of all wav files in this directory
         self.wavFiles = []
         for file in os.listdir(self.wavFileDirectory):
             if file.endswith(".wav"):
                 self.wavFiles.append(file)
-        self.wavFiles.sort()
+        self.wavFiles.sort() #sort to avoid platform specific order
         if not self.wavFiles:
             raise ValueError("No wav files found")
         
-        self.extractor = LoudnessExtractor(model, fs,
-                modelOutputsToExtract,
-                nInputEars)
+        self.frameTimeOffset = 0
+        self.modelOutputsToExtract = modelOutputsToExtract
 
-    def process(self):
+    def process(self, model):
+
         for wavFile in self.wavFiles:
-            sound = Sound.readFromAudioFile(self.wavFileDirectory + '/' + wavFile)
 
-            print('Processing %s ...' % wavFile)
-            if sound.nChannels != self.nInputEars:
-                print("File %s does not have %d channels...skipping" 
-                        % (wavFile, self.nInputEars))
+            processor = ln.AudioFileProcessor(self.wavFileDirectory + '/' + wavFile)
+            processor.initialize(model)
 
-            self.extractor.process(sound.data)
-            savePath = self.saveDirectory + '/' + wavFile
+            #configure the number of output frames needed
+            self.outputDict['FrameTimes'] = self.frameTimeOffset \
+                + processor.getTimeStep() \
+                * np.arange(1, processor.getNFrames() + 1)
+            
+            #Output SignalBanks
+            outputBanks = []
+            for name in self.modelOutputsToExtract:
+                outputBanks.append(model.getOutputSignalBank(name))
+
+            #output dictionary
+            outputDict = {}
+            for i, name in enumerate(self.modelOutputsToExtract):
+                outputDict[name] = np.zeros((\
+                processor.getNFrames(),
+                outputBanks[i].getNEars(),\
+                outputBanks[i].getNChannels(),\
+                outputBanks[i].getNSamples()))
+
+            #Processing
+            print("Processing file %s ..." % wavFile)
+            for frame in range(processor.getNFrames()):
+
+                processor.process()
+
+                #get output
+                for i, name in enumerate(self.modelOutputsToExtract):
+                    outputDict[name][frame] = outputBanks[i].getSignals()
+
+            #Save to pickle
+            savePath = self.outputDirectory + '/' + wavFile
             savePath, ext = os.path.splitext(savePath)
             print('Saved to %s.pickle ...' % savePath)
-            self.extractor.saveOutputToPickle(savePath)
+            with open(filename + '.pickle', 'wb') as outfile:
+                pickle.dump(outputDict, outfile, protocol=pickle.HIGHEST_PROTOCOL)

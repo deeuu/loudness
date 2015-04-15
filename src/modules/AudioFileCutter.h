@@ -66,13 +66,17 @@ namespace loudness{
         /** Sets the file name of the audio file to be loaded. */
         void setFileName(const string& fileName);
 
-        /**
-         * @brief Returns the duration of the audio file in seconds.
+        /** Returns the frame size (in samples) */
+        int getFrameSize() const;
+
+        /** Returns the sampling frequency of the audio file */
+        int getFs() const;
+
+        /** Returns the duration of the audio file in seconds.
          */
         Real getDuration() const;
 
-        /**
-         * @brief Returns the total number of frames in the audio file.
+        /** Returns the total number of frames in the audio file.
          *
          * The final frame is padded with zeros if the length of the audio file
          * is not an integer multiple of the frame size.
@@ -91,7 +95,7 @@ namespace loudness{
         int nSamplesToLoadPerChannel_, audioBufferSize_, bufferIdx_, frame_;
         SNDFILE* sndFile_;
         vector<float> audioBuffer_;
-        Real duration_, frameSizeInSeconds_;
+        Real frameSizeInSeconds_, duration_, fs_;
 
     };
 }

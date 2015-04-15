@@ -24,6 +24,8 @@ public:
     void setFrameRate(Real frameRate);
     void getFrameRate() const;
     void setChannelSpacingInCams(Real channelSpacingInCams);
+    void aggregate();
+    
     %extend {
 
         PyObject* getSignal(int ear, int channel)
@@ -44,6 +46,14 @@ public:
             ptr = $self -> getSignalReadPointer(0, 0, 0);
             npy_intp dims[3] = {$self -> getNEars(), $self -> getNChannels(), $self -> getNSamples()}; 
             return PyArray_SimpleNewFromData(3, dims, NPY_DOUBLE, (void*)ptr);
+        }
+
+        PyObject* getAggregatedSignals()
+        {
+            const RealVec& vec = $self -> getAggregatedSignals();
+            long long int numFrames = vec.size() / $self -> getNTotalSamples();
+            npy_intp dims[4] = {numFrames, $self -> getNEars(), $self -> getNChannels(), $self -> getNSamples()}; 
+            return PyArray_SimpleNewFromData(4, dims, NPY_DOUBLE, (void*)vec.data());
         }
 
         PyObject* getCentreFreqs()

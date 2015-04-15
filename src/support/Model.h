@@ -86,9 +86,9 @@ namespace loudness{
         */
         void reset();
 
-        /** Sets each modules in the chain to be the target of it's
-         * predecessor. */
-        void configureLinearTargetModuleChain();
+        /** A vector of output names corresponding to the modules whose output
+         * will be aggregated. */
+        void setOutputsToAggregate(const vector<string>& outputsToAggregate);
 
         /**
          * @brief Returns the initialisation state.
@@ -152,12 +152,19 @@ namespace loudness{
     protected:
         virtual bool initializeInternal(const SignalBank &input) = 0;
 
+        /** Sets each modules in the chain to be the target of it's
+         * predecessor. */
+        void configureLinearTargetModuleChain();
+
+        /** Informs modules to aggregate the output SignalBank. */
+        void configureOutputSignalBanksToAggregate();
+
         string name_;
         bool isDynamic_, initialized_;
         int nModules_;
         Real rate_;
         vector<unique_ptr<Module>> modules_;
-        vector<string> outputNames_;
+        vector<string> outputNames_, outputsToAggregate_;
     };
 }
 

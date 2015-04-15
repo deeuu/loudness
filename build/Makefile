@@ -21,6 +21,7 @@ INCS=-I.
 
 SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/thirdParty/spline/Spline.cpp \
+../src/support/Timer.cpp \
 ../src/support/AuditoryTools.cpp \
 ../src/support/SignalBank.cpp \
 ../src/support/Module.cpp \
