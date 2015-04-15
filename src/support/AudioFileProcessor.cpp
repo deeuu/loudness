@@ -67,7 +67,6 @@ namespace loudness{
         }
         timer_.toc();
         cutter_.reset();
-
     }
 
     Real AudioFileProcessor::getProcessingTime()

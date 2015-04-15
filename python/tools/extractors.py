@@ -219,20 +219,33 @@ class LoudnessExtractor:
 class BatchWavFileProcessor:
     """Class for processing multiple wav files using an input loudness model.
 
-    All wav files in the directory wavFileDirectory will be processed.
-    Dictionaries holding processed data are saved as pickle files for each wavFile.
+    All processing takes place on the c++ side.
+
+    Make sure your desired features are configured before calling this function.
+    As an example:
+
+    import loudness as ln
+    model = ln.DynamicLoudnessCH2012()
+    model.setOutputsToAggregate(['ShortTermLoudness', 'LongTermLoudness'])
+
+    processor = BatchWavFileProcessor(wavFileDirectory)
+    processor.process(model)
+
+    All wav files in the directory `wavFileDirectory' will be processed.
+    Dictionaries holding processed data can be saved as .npz files for each
+    wavFile, or as a single pickle file holding all dictionaries if
+    `saveFileName' is given. In the latter case, performance may be sacrified if
+    a large number of audio files are to be processed and/or multiple features
+    are to be extracted.  
     """
 
-    
-    def __init__(self, 
+    def __init__(self,
             wavFileDirectory = "",
-            outputDirectory = "",
-            modelOutputsToExtract = []):
+            saveFileName = None):
 
         self.wavFileDirectory = os.path.abspath(wavFileDirectory)
-        self.outputDirectory = os.path.abspath(outputDirectory)
-        if not self.outputDirectory:
-            raise ValueError("No directory to save processed data")
+        if saveFileName:
+            self.saveFileName = os.path.abspath(saveFileName)
 
         #Get a list of all wav files in this directory
         self.wavFiles = []
@@ -244,47 +257,43 @@ class BatchWavFileProcessor:
             raise ValueError("No wav files found")
         
         self.frameTimeOffset = 0
-        self.modelOutputsToExtract = modelOutputsToExtract
 
     def process(self, model):
+
+        if self.saveFileName:
+            outputDict = {}
 
         for wavFile in self.wavFiles:
 
             processor = ln.AudioFileProcessor(self.wavFileDirectory + '/' + wavFile)
             processor.initialize(model)
 
+            outputDict[wavFile] = {}
             #configure the number of output frames needed
-            self.outputDict['FrameTimes'] = self.frameTimeOffset \
+            outputDict[wavFile]['FrameTimes'] = self.frameTimeOffset \
                 + processor.getTimeStep() \
                 * np.arange(1, processor.getNFrames() + 1)
             
-            #Output SignalBanks
-            outputBanks = []
-            for name in self.modelOutputsToExtract:
-                outputBanks.append(model.getOutputSignalBank(name))
-
-            #output dictionary
-            outputDict = {}
-            for i, name in enumerate(self.modelOutputsToExtract):
-                outputDict[name] = np.zeros((\
-                processor.getNFrames(),
-                outputBanks[i].getNEars(),\
-                outputBanks[i].getNChannels(),\
-                outputBanks[i].getNSamples()))
-
             #Processing
             print("Processing file %s ..." % wavFile)
-            for frame in range(processor.getNFrames()):
+            processor.processAllFrames(model)
 
-                processor.process()
+            #get output
+            outputNames = model.getOutputsToAggregate()
+            for name in outputNames:
+                bank = model.getOutputSignalBank(name)
+                outputDict[wavFile][name] = bank.getAggregatedSignals()
 
-                #get output
-                for i, name in enumerate(self.modelOutputsToExtract):
-                    outputDict[name][frame] = outputBanks[i].getSignals()
+            if not self.saveFileName:
 
-            #Save to pickle
-            savePath = self.outputDirectory + '/' + wavFile
-            savePath, ext = os.path.splitext(savePath)
-            print('Saved to %s.pickle ...' % savePath)
-            with open(filename + '.pickle', 'wb') as outfile:
+                fileName = self.outputDirectory + '/' + wavFile
+                fileName, ext = os.path.splitext(fileName)
+                print('Saved to %s.npz ...' % fileName)
+                np.savez(saveFileName, **outputDict[wavFile])
+                del outputDict[wavFile]
+
+        if self.saveFileName:
+            fileName, ext = os.path.splitext(self.saveFileName)
+            print('Saved to %s.pickle ...' % fileName)
+            with open(fileName + '.pickle', 'wb') as outfile:
                 pickle.dump(outputDict, outfile, protocol=pickle.HIGHEST_PROTOCOL)

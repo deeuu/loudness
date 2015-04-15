@@ -69,12 +69,16 @@ namespace loudness{
          * signals (if any).*/
         void reset();
 
+        /** Returns true if the input SignalBank has the same number of ears,
+         * channels and samples per signal as this SignalBank. */
+        bool hasSameShape(const SignalBank& input);
+
         /** Sets every sample in the SignalBank to zero. */
         void zeroSignals();
 
         /** Removes all elements from the vector holding the aggregated signals.
          * */
-        void emptyAggregatedSignals();
+        void clearAggregatedSignals();
 
         /** Sets the sampling frequency.*/
         void setFs(int fs);

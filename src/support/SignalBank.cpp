@@ -95,9 +95,28 @@ namespace loudness{
         trig_ = true;
     }
 
+    bool SignalBank::hasSameShape(const SignalBank& input)
+    {
+        if ( (input.getNEars() == nEars_) 
+                && (input.getNChannels() == nChannels_)
+                && (input.getNSamples() == nSamples_))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     void SignalBank::zeroSignals()
     {
         signals_.assign(nTotalSamples_, 0.0);
+    }
+
+    void SignalBank::clearAggregatedSignals()
+    {
+        aggregatedSignals_.clear();
     }
 
     void SignalBank::setFs(int fs)

@@ -42,6 +42,11 @@ namespace loudness{
         outputsToAggregate_ = outputsToAggregate;
     }
 
+    const vector<string>& Model::getOutputsToAggregate()
+    {
+        return outputsToAggregate_;
+    }
+
     void Model::configureOutputSignalBanksToAggregate()
     {
         if (isDynamic_)

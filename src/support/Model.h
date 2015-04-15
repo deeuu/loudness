@@ -90,6 +90,8 @@ namespace loudness{
          * will be aggregated. */
         void setOutputsToAggregate(const vector<string>& outputsToAggregate);
 
+        const vector<string>& getOutputsToAggregate();
+
         /**
          * @brief Returns the initialisation state.
          *
