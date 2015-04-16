@@ -54,6 +54,10 @@
 #include "../src/models/SteadyStateLoudnessANSIS342007.h"
 #include "../src/models/DynamicLoudnessGM2002.h"
 #include "../src/models/DynamicLoudnessCH2012.h"
+
+typedef loudness::Real Real;
+typedef loudness::uint unint;
+typedef loudness::RealVec RealVec;
 %}
 
 //Required for integration with numpy arrays

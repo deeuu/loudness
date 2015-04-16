@@ -22,7 +22,8 @@
 namespace loudness{
     
     AudioFileProcessor::AudioFileProcessor(const string& fileName) :
-        cutter_(fileName)
+        cutter_(fileName),
+        gainInDecibels_(0)
     {
         LOUDNESS_DEBUG("AudioFileProcessor: Constructed");
     }
@@ -35,6 +36,7 @@ namespace loudness{
 
         //initialise audio cutter
         cutter_.setFrameSizeInSeconds(1.0 / model.getRate());
+        cutter_.setGainInDecibels(gainInDecibels_);
         cutter_.initialize();
 
         timeStep_ = cutter_.getFrameSize() / (Real) cutter_.getFs();

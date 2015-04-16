@@ -6,6 +6,7 @@ model.setRate(250)
 model.setOutputsToAggregate(['LongTermLoudness'])
 
 processor = ln.AudioFileProcessor('../../wavs/pureTones/pureTone_1000Hz_40dBSPL_32000Hz.wav')
+processor.setGainInDecibels(10)
 processor.initialize(model)
 
 processor.processAllFrames(model)
