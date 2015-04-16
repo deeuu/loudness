@@ -121,10 +121,7 @@ namespace loudness{
                 }
 
                 //convert to dB, subtract 51 here to save operations later
-                if (excitationLin < 1e-10)
-                    compLevel_[i] = -151.0;
-                else
-                    compLevel_[i] = 10*log10(excitationLin)-51;
+                compLevel_[i] = powerToDecibels(excitationLin, 1e-10, -100.0) - 51;
             }
             
             //now the excitation pattern

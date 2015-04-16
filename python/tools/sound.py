@@ -42,15 +42,15 @@ class Sound:
         self.filepath = filename
 
     @staticmethod
-    def readFromAudioFile(filename, mono=True):
+    def readFromAudioFile(filename, mono=False):
         '''
         Calls audiolab to generate Sound object from wav and aiff files.
         If mono is true, returns the left channel only.
         '''
         if ".wav" in filename:
-            data,fs,enc = wavread(filename)
+            data, fs, encoding = wavread(filename)
         elif ".aiff" in filename:
-            data,fs,enc = aiffread(filename)
+            data, fs, encoding = aiffread(filename)
         else: 
             raise ValueError("File extension not .wav or .aiff")
         if (len(data.shape)==2 and mono):
@@ -119,7 +119,7 @@ class Sound:
         '''
         Peak or rms normalise the data to a target value in decibels.
         If 'PEAK', data is normalised according to max |value| in either channel.
-        If 'RMS', data is normalised by computing the rms acrodd both channels.
+        If 'RMS', data is normalised by computing the rms across both channels.
         '''
         gain_db = 0
         if norm_type in ['PEAK', 'peak', 'pk']:
@@ -137,7 +137,7 @@ class Sound:
         '''
         return 20*np.log10(np.max(np.abs(self.data[start:end]))/self.ref)
     
-    def computeRMS(self,start=0, end=None):
+    def computeRMS(self, start=0, end=None):
         '''
         Return the root mean square (rms) of the data across both channels (if two) 
         from the specified sample index start to end.

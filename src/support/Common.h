@@ -34,7 +34,6 @@ namespace loudness{
     using std::vector;
     using std::string;
     using std::unique_ptr;
-}
 
 /*
  * Types
@@ -46,4 +45,5 @@ typedef std::vector<std::vector<Real> > RealVecVec;
 typedef std::vector<int> IntVec;
 typedef std::vector<Real>::iterator RealIter;
 
+}
 #endif

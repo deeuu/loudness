@@ -95,7 +95,7 @@ namespace loudness{
         trig_ = true;
     }
 
-    bool SignalBank::hasSameShape(const SignalBank& input)
+    bool SignalBank::hasSameShape(const SignalBank& input) const
     {
         if ( (input.getNEars() == nEars_) 
                 && (input.getNChannels() == nChannels_)
@@ -107,6 +107,12 @@ namespace loudness{
         {
             return false;
         }
+    }
+
+    void SignalBank::scale(Real gainFactor)
+    {
+        for (int i = 0; i < nTotalSamples_; ++i)
+            signals_[i] *= gainFactor;
     }
 
     void SignalBank::zeroSignals()

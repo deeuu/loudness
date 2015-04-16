@@ -28,6 +28,7 @@ namespace loudness{
         frameSizeInSeconds_(0),
         duration_(0),
         fs_(0),
+        gainInDecibels_(0),
         sndFile_(nullptr)
     {}
     
@@ -107,6 +108,8 @@ namespace loudness{
         bufferIdx_ =  audioBufferSize_;
         audioBuffer_.assign(audioBufferSize_, 0.0);
 
+        linearGain_ = decibelsToAmplitude(gainInDecibels_);
+
         output_.initialize(fileInfo.channels, 1,
                 frameSize_, fileInfo.samplerate);
 
@@ -157,10 +160,18 @@ namespace loudness{
                     inputSignal += nEars;
                 }
             }
+
+            //apply gain
+            output_.scale(linearGain_);
             
             //update buffer index
             bufferIdx_ += output_.getNSamples() * nEars;
         }
+    }
+
+    void AudioFileCutter::setGainInDecibels(Real gainInDecibels)
+    {
+        gainInDecibels_ = gainInDecibels;
     }
 
     void AudioFileCutter::setFrameSize(int frameSize)

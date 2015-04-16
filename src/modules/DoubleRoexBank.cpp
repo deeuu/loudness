@@ -167,7 +167,7 @@ namespace loudness{
                     excitationLinP += wPassive_[i][j] * inputSpectrum[j];
 
                 //convert to dB
-                excitationLog = 10*log10(excitationLinP+LOW_LIMIT_POWER);
+                excitationLog = powerToDecibels(excitationLinP);
 
                 //compute gain
                 gain = maxGdB_[i] - (maxGdB_[i] / (1 + exp(-0.05*(excitationLog-(100-maxGdB_[i]))))) 
@@ -181,7 +181,7 @@ namespace loudness{
                 }
 
                 //convert to linear gain
-                gain = pow(10, gain / 10.0); 
+                gain = decibelsToPower(gain);
 
                 //active filter output
                 for (uint j = 0; j < wActive_[i].size(); ++j)

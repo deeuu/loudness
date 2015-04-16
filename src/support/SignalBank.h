@@ -71,10 +71,13 @@ namespace loudness{
 
         /** Returns true if the input SignalBank has the same number of ears,
          * channels and samples per signal as this SignalBank. */
-        bool hasSameShape(const SignalBank& input);
+        bool hasSameShape(const SignalBank& input) const;
 
         /** Sets every sample in the SignalBank to zero. */
         void zeroSignals();
+
+        /** Multiplies all signals in the SignalBank by gainFactor. */
+        void scale(Real gainFactor);
 
         /** Removes all elements from the vector holding the aggregated signals.
          * */
@@ -331,6 +334,9 @@ namespace loudness{
          * this for modifying the centre frequencies via a pointer. 
          */
         Real* getCentreFreqsWritePointer(int channel);
+
+        void centreFreqsInCams() const;
+        const RealVec& getCentreFreqsInCams() const;
 
         /** Returns the sampling frequency in Hz. */
         int getFs() const;

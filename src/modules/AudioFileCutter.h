@@ -66,6 +66,9 @@ namespace loudness{
         /** Sets the file name of the audio file to be loaded. */
         void setFileName(const string& fileName);
 
+        /** Sets the gain in decibels to be applied to the audio file. */
+        void setGainInDecibels(Real gainInDecibels);
+
         /** Returns the frame size (in samples) */
         int getFrameSize() const;
 
@@ -95,7 +98,7 @@ namespace loudness{
         int nSamplesToLoadPerChannel_, audioBufferSize_, bufferIdx_, frame_;
         SNDFILE* sndFile_;
         vector<float> audioBuffer_;
-        Real frameSizeInSeconds_, duration_, fs_;
+        Real frameSizeInSeconds_, duration_, fs_, gainInDecibels_, linearGain_;
 
     };
 }

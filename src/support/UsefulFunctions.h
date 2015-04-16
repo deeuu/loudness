@@ -23,8 +23,7 @@
 #include <cmath>
 #include <vector>
 #define PI 3.14159265358979323846264338327
-#define LOW_LIMIT_POWER 1e-10
-#define LOW_LIMIT_DB -100
+#define LOWER_LIMIT_DB -100
 
 namespace loudness{
 
@@ -90,6 +89,54 @@ namespace loudness{
     Type nextPowerOfTwo(const Type& value)
     {
         return pow( 2, ceil( log2(value) ) );
+    }
+
+    /** Convert decibels to amplitude.
+     *  If decibels is greater than minValue (default LOWER_LIMIT_DB),
+     *  amplitude is calculated,
+     *  otherwise, clipValue is returned (default zero).
+     */
+    template <typename Type>
+    Type decibelsToAmplitude (const Type decibels,
+                              const Type minValue = (Type)LOWER_LIMIT_DB,
+                              const Type clipValue = (Type)0.0)
+    {
+        return decibels > minValue ? pow(10, decibels / 20.0) : clipValue;
+    }
+
+    /** Convert amplitude to decibels.
+     *  If amplitude is greater than minValue, the decibel is calculated,
+     *  otherwise, clipValue is returned.
+     */
+    template <typename Type>
+    Type amplitudeToDecibels(const Type amplitude,
+                             const Type minValue = (Type)0.0,
+                             const Type clipValue = (Type)LOWER_LIMIT_DB)
+    {
+        return amplitude > minValue ? 20 * log10(amplitude) : clipValue;
+    }
+    /** Convert decibels to power.
+     *  If decibels is greater than minValue, power is calculated,
+     *  otherwise, clipValue is returned.
+     */
+    template <typename Type>
+    Type decibelsToPower (const Type decibels,
+                          const Type minValue = (Type)LOWER_LIMIT_DB,
+                          const Type clipValue = (Type)0.0)
+    {
+        return decibels > minValue ? pow(10, decibels / 10.0) : clipValue;
+    }
+
+    /** Convert power to decibels.
+     *  If power is greater than minValue, the decibel is calculated,
+     *  otherwise, clipValue is returned.
+     */
+    template <typename Type>
+    Type powerToDecibels (const Type power,
+                          const Type minValue = (Type)0.0,
+                          const Type clipValue = (Type)LOWER_LIMIT_DB)
+    {
+        return power > minValue ? 10 * log10(power) : clipValue;
     }
 }
 

@@ -177,10 +177,7 @@ namespace loudness{
                     runningSum -= inputPowerSpectrum[k++];
 
                 //convert to dB, subtract 51 here to save operations later
-                if (runningSum < 1e-10)
-                    compLevel_[i] = -151.0;
-                else
-                    compLevel_[i] = 10*log10(runningSum)-51;
+                compLevel_[i] = powerToDecibels(runningSum, 1e-10, -100.0) - 51;
             }
 
             /*

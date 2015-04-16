@@ -69,9 +69,12 @@ namespace loudness{
          * measure elapsed time. */
         void processAllFrames(Model& model);
 
+        /** Set the gain in decibels to be applied to the audio file. */
+        void setGainInDecibels(Real gainInDecibels);
+
         /** Returns the elapsed time that occurs between calling
          * processAllFrames() and when the returns. */
-        Real getProcessingTime();
+        Real getProcessingTime() const;
 
         /** Returns the duration of the audio file in seconds. */
         Real getDuration() const;
@@ -89,7 +92,7 @@ namespace loudness{
         string fileName_;
         int nFrames_, hopSize_;
         AudioFileCutter cutter_;
-        Real timeStep_;
+        Real timeStep_, gainInDecibels_;
         Timer timer_;
         vector<string> modelOutputsToSave_;
     };

@@ -69,7 +69,12 @@ namespace loudness{
         cutter_.reset();
     }
 
-    Real AudioFileProcessor::getProcessingTime()
+    void AudioFileProcessor::setGainInDecibels(Real gainInDecibels)
+    {
+        gainInDecibels_ = gainInDecibels;
+    }
+
+    Real AudioFileProcessor::getProcessingTime() const
     {
         return timer_.getElapsedTime();
     }
