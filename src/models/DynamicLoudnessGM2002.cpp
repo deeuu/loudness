@@ -210,9 +210,7 @@ namespace loudness{
             //should we use for useHpf for low freqs? default is true
             if (isHPFUsed_)
             {
-                modules_.push_back(unique_ptr<Module> (new Butter(3, 0, 50.0))); 
-                outputNames_.push_back("HPF");
-                LOUDNESS_DEBUG(name_ << ": Using HPF.");
+                modules_.push_back(unique_ptr<Module> (new Butter(3, 0, 50.0)));
             }
         }
         else { //otherwise, load them
@@ -238,15 +236,11 @@ namespace loudness{
             //create module
             if(iir)
             {
-                modules_.push_back(unique_ptr<Module> 
-                        (new IIR(bCoefs, aCoefs))); 
-                outputNames_.push_back("IIR");
+                modules_.push_back(unique_ptr<Module> (new IIR(bCoefs, aCoefs)));
             }
             else
             {
-                modules_.push_back(unique_ptr<Module>
-                        (new FIR(bCoefs))); 
-                outputNames_.push_back("FIR");
+                modules_.push_back(unique_ptr<Module> (new FIR(bCoefs)));
             }
 
             //clean up
@@ -273,17 +267,14 @@ namespace loudness{
         int hopSize = int(input.getFs() / rate_);
         modules_.push_back(unique_ptr<Module> 
                 (new FrameGenerator(windowSizeSamples[0], hopSize, isFirstSampleAtWindowCentre_)));
-        outputNames_.push_back("FrameGenerator");
 
         //windowing: Periodic hann window
         modules_.push_back(unique_ptr<Module>
                 (new Window("hann", windowSizeSamples, true)));
-        outputNames_.push_back("HannWindows");
 
         //power spectrum
         modules_.push_back(unique_ptr<Module> 
-                (new PowerSpectrum(bandFreqsHz, windowSizeSamples, isSpectrumSampledUniformly_))); 
-        outputNames_.push_back("PowerSpectrum");
+                (new PowerSpectrum(bandFreqsHz, windowSizeSamples, isSpectrumSampledUniformly_)));
 
         /*
          * Compression
@@ -291,8 +282,7 @@ namespace loudness{
         if(compressionCriterionInCams_ > 0)
         {
             modules_.push_back(unique_ptr<Module>
-                    (new CompressSpectrum(compressionCriterionInCams_))); 
-            outputNames_.push_back("CompressedPowerSpectrum");
+                    (new CompressSpectrum(compressionCriterionInCams_)));
         }
 
         /*
@@ -308,8 +298,7 @@ namespace loudness{
                 outerEar = "ANSIS342007_DIFFUSEFIELD";
 
             modules_.push_back(unique_ptr<Module> 
-                    (new WeightSpectrum(middleEar, outerEar))); 
-            outputNames_.push_back("WeightedPowerSpectrum");
+                    (new WeightSpectrum(middleEar, outerEar)));
         }
 
         /*
@@ -325,7 +314,7 @@ namespace loudness{
             modules_.push_back(unique_ptr<Module> 
                     (new RoexBankANSIS342007(1.8, 38.9, filterSpacingInCams_)));
         }
-        outputNames_.push_back("ExcitationPattern");
+        outputModules_["ExcitationPattern"] = modules_.back().get();
         
         /*
          * Specific loudness
@@ -334,43 +323,36 @@ namespace loudness{
         modules_.push_back(unique_ptr<Module>
                 (new SpecificLoudnessANSIS342007(isSpecificLoudnessANSIS342007_,
                                                  isBinauralInhibitionUsed_)));
-        outputNames_.push_back("SpecificLoudnessPattern");
 
         /*
          * Binaural inhibition
          */
         if (isBinauralInhibitionUsed_)
         {
-            modules_.push_back(unique_ptr<Module>
-                (new BinauralInhibitionMG2007));
-            outputNames_.push_back("InhibitedSpecificLoudnessPattern");
+            modules_.push_back(unique_ptr<Module> (new BinauralInhibitionMG2007));
         }
-        else
-        {
-            LOUDNESS_DEBUG(name_ << ": No binaural inhibition.");
-        }
+        outputModules_["SpecificLoudnessPattern"] = modules_.back().get();
 
         /*
         * Instantaneous loudness
         */   
-        modules_.push_back(unique_ptr<Module>
-                (new InstantaneousLoudness(1.0, isPresentationDiotic_)));
-        outputNames_.push_back("InstantaneousLoudness");
+        modules_.push_back(unique_ptr<Module> (new InstantaneousLoudness(1.0, isPresentationDiotic_)));
+        outputModules_["InstantaneousLoudness"] = modules_.back().get();
 
         /*
          * Short-term loudness
          */
         modules_.push_back(unique_ptr<Module>
                 (new ARAverager(attackTimeSTL_, releaseTimeSTL_)));
-        outputNames_.push_back("ShortTermLoudness");
+        outputModules_["ShortTermLoudness"] = modules_.back().get();
 
         /*
          * Long-term loudness
          */
         modules_.push_back(unique_ptr<Module>
                 (new ARAverager(attackTimeLTL_, releaseTimeLTL_)));
-        outputNames_.push_back("LongTermLoudness");
-        
+        outputModules_["LongTermLoudness"] = modules_.back().get();
+
         //configure targets
         configureLinearTargetModuleChain();
 

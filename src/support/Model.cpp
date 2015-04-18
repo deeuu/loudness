@@ -31,42 +31,10 @@ namespace loudness{
 
     Model::~Model() {}
 
-    void Model::configureLinearTargetModuleChain()
-    {
-        for (uint i = 0; i < (modules_.size() - 1); i++)
-            modules_[i] -> addTargetModule(*modules_[i + 1]);
-    }
-
-    void Model::setOutputsToAggregate(const vector<string>& outputsToAggregate)
-    {
-        outputsToAggregate_ = outputsToAggregate;
-    }
-
-    const vector<string>& Model::getOutputsToAggregate()
-    {
-        return outputsToAggregate_;
-    }
-
-    void Model::configureOutputSignalBanksToAggregate()
-    {
-        if (isDynamic_)
-        {
-            for (uint i = 0; i < outputsToAggregate_.size(); i++)
-            {
-                int idx = std::find(outputNames_.begin(),
-                        outputNames_.end(),
-                        outputsToAggregate_[i]) - outputNames_.begin();
-
-                if (isPositiveAndLessThanUpper(idx, nModules_))
-                        modules_[idx] -> setOutputAggregated(true);
-            }
-        }
-    }
-
     bool Model::initialize(const SignalBank &input)
     {
+        outputModules_.clear();
         modules_.clear();
-        outputNames_.clear();
 
         if(!initializeInternal(input))
         {
@@ -75,15 +43,14 @@ namespace loudness{
         }
         else
         {
-
             LOUDNESS_DEBUG(name_ << ": initialised.");
 
             nModules_ = (int)modules_.size();
 
-            //initialise all
+            //initialise all from root module
             modules_[0] -> initialize(input);
 
-            configureOutputSignalBanksToAggregate();
+            configureSignalBankAggregation();
 
             LOUDNESS_DEBUG(name_ 
                     << ": Module targets set and initialised.");
@@ -107,36 +74,35 @@ namespace loudness{
             modules_[0] -> reset();
     }
 
-    const SignalBank& Model::getOutputSignalBank(int module) const
+    void Model::configureLinearTargetModuleChain()
     {
-        LOUDNESS_ASSERT(isPositiveAndLessThanUpper(module, nModules_));
-        return modules_[module] -> getOutput();
+        for (uint i = 0; i < (modules_.size() - 1); i++)
+            modules_[i] -> addTargetModule(*modules_[i + 1]);
     }
 
-    const SignalBank& Model::getOutputSignalBank(const string& outputName) const
+    const SignalBank& Model::getOutputSignalBank(const string& outputName)
     {
-        int idx = std::find(outputNames_.begin(), outputNames_.end(), outputName)
-            - outputNames_.begin();
+        auto search = outputModules_.find(outputName);
+        LOUDNESS_ASSERT(search != outputModules_.end());
+        return search -> second -> getOutput();
+    }
 
-        if (!isPositiveAndLessThanUpper(idx, nModules_))
+    void Model::setOutputModulesToAggregate(const vector<string>& outputModulesToAggregate)
+    {
+        outputModulesToAggregate_ = outputModulesToAggregate;
+    }
+
+    void Model::configureSignalBankAggregation()
+    {
+        for (const auto &outputName : outputModulesToAggregate_)
         {
-            LOUDNESS_WARNING(name_ << ": Invalid name. Options are:");
-            for (int i = 0; i < nModules_; i++)
-                std::cerr << outputNames_[i] << std::endl;
-            LOUDNESS_ASSERT(false);
+            auto search = outputModules_.find(outputName);
+            if (search != outputModules_.end())
+            {
+                LOUDNESS_DEBUG(name_ << ": Aggregating : " << search -> first);
+                search -> second -> setOutputAggregated(true);
+            }
         }
-        return modules_[idx] -> getOutput();
-    }
-
-    const string& Model::getOutputName(int module) const
-    {
-        LOUDNESS_ASSERT(isPositiveAndLessThanUpper(module, nModules_));
-        return outputNames_[module];
-    }
-
-    const vector<string>& Model::getOutputNames() const
-    {
-        return outputNames_;
     }
 
     const string& Model::getName() const

@@ -43,13 +43,13 @@ namespace loudness{
         }
     };
 
-    Real soneToPhon(Real sone, bool ansiS3407)
+    Real soneToPhonMGB1997(Real sone, bool isANSIS342007)
     {
 	Real s = log(sone);
 
         if(s>=4.2536654906763038) //>100dB
         {
-            if(ansiS3407)
+            if(isANSIS342007)
             {
                  return 0.15807691374474481*pow(s,4) - 3.3544564637191723*pow(s,3) +
                      26.263239744515747*pow(s,2) - 77.333716130360571*s + 160.22868135292651;

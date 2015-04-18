@@ -66,28 +66,27 @@ namespace loudness{
 
         modules_.push_back(unique_ptr<Module>
                 (new WeightSpectrum(middleEar, outerEar))); 
-        outputNames_.push_back("WeightedPowerSpectrum");
 
         /*
          * Roex filters
          */
         modules_.push_back(unique_ptr<Module>
                 (new RoexBankANSIS342007(1.8, 38.9, filterSpacingInCams_)));
-        outputNames_.push_back("ExcitationPattern");
+        outputModules_["ExcitationPattern"] = modules_.back().get();
         
         /*
          * Specific loudness using high level modification
          */
         modules_.push_back(unique_ptr<Module>
                 (new SpecificLoudnessANSIS342007(true, false)));
-        outputNames_.push_back("SpecificLoudnessPattern");
+        outputModules_["SpecificLoudnessPattern"] = modules_.back().get();
 
         /*
         * Loudness integration 
         */   
         modules_.push_back(unique_ptr<Module>
                 (new InstantaneousLoudness(1.0, isPresentationDiotic_)));
-        outputNames_.push_back("InstantaneousLoudness");
+        outputModules_["InstantaneousLoudness"] = modules_.back().get();
 
         //configure targets
         configureLinearTargetModuleChain();

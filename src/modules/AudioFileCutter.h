@@ -94,11 +94,11 @@ namespace loudness{
         virtual void resetInternal();
 
         string fileName_;
-        int frameSize_, nFrames_;
+        int frameSize_, nFrames_, fs_;
         int nSamplesToLoadPerChannel_, audioBufferSize_, bufferIdx_, frame_;
-        SNDFILE* sndFile_;
         vector<float> audioBuffer_;
-        Real frameSizeInSeconds_, duration_, fs_, gainInDecibels_, linearGain_;
+        Real frameSizeInSeconds_, duration_, gainInDecibels_, linearGain_;
+        SNDFILE* sndFile_;
 
     };
 }

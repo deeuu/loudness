@@ -75,22 +75,24 @@ namespace loudness{
      * inspection of the Figure 9 in Moore et al (1997).
      */
     Real kdB(Real freq);
+
     /**
      * @brief Returns loudness level in phons given loudness in sones.  
      *
-     * Values were calculating by inputting a 1kHz tone at
-     * levels -50-137 dB SPL using the RoexBankANSI07 module with filters
-     * spanning 50-15000 Hz with 0.1 Cam spacing.     
-     * Functions are accurate within +/- 0.22 phon across the entire range and
-     * +/-0.021 between 2 and 2.5 phons (useful for predicting absolute thresholds).
+     * Piecewise polynomials were calculating by inputting a 1kHz tone at levels
+     * -50-137 dB SPL using the RoexBankANSIS342007 module with filters spanning
+     *  50-15000 Hz with 0.1 Cam spacing. Functions are accurate within +/- 0.22
+     *  phon across the entire range and +/-0.021 between 2 and 2.5 phons
+     *  (useful for predicting absolute thresholds).
      *
      * @param sone Loudness in sones.
-     * @param ansiS3407 High level equation according to ANSI S34 2007 (true)
-     * or AES 1997 paper (false).
+     *  
+     * @param isANSIS3407 High level equation according to ANSI S34 2007 (true)
+     * or Moore et al. 1997 paper (false).
      *
      * @return Loudness in phons.
      */
-    Real soneToPhon(Real sone, bool ansiS3407);
+    Real soneToPhonMGB1997(Real sone, bool isANSIS342007);
 
     /**
      * @class OME

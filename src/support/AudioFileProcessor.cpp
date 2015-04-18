@@ -59,6 +59,7 @@ namespace loudness{
 
     void AudioFileProcessor::processAllFrames(Model& model)
     {
+        cutter_.reset();
         model.reset();
         timer_.tic();
         int frame = nFrames_;
@@ -69,6 +70,19 @@ namespace loudness{
         }
         timer_.toc();
         cutter_.reset();
+    }
+
+    void AudioFileProcessor::loadNewAudioFile(const string& fileName)
+    {
+        if (cutter_.isInitialized())
+        {
+            cutter_.setFileName(fileName);
+            cutter_.initialize();
+        }
+        else
+        {
+            LOUDNESS_WARNING("Please initialise this class first.");
+        }
     }
 
     void AudioFileProcessor::setGainInDecibels(Real gainInDecibels)

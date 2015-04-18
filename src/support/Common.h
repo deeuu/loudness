@@ -24,6 +24,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <map>
 #include "Debug.h"
 #include "UsefulFunctions.h"
 
@@ -34,6 +35,7 @@ namespace loudness{
     using std::vector;
     using std::string;
     using std::unique_ptr;
+    using std::map;
 
 /*
  * Types

@@ -50,12 +50,10 @@ namespace loudness{
     public: 
 
         /**
-        * @brief Constructs a model to operate at @a rate Hz.
+        * @brief Constructs a loudness model.
         * 
-        * The frameRate of the SignalBank used to initialise the model
-        * should not be less than @a rate.
-        *
-        * @param rate
+        * @param name Name of the loudness model.
+        * @param isDynamic true if dynamic, false otherwise.
         */
         Model(string name = "Model", bool isDynamic = true);
         virtual ~Model();
@@ -88,9 +86,19 @@ namespace loudness{
 
         /** A vector of output names corresponding to the modules whose output
          * will be aggregated. */
-        void setOutputsToAggregate(const vector<string>& outputsToAggregate);
+        void setOutputModulesToAggregate(const vector<string>& outputModulesToAggregate);
 
-        const vector<string>& getOutputsToAggregate();
+        /** Sets the processing rate in Hz for a dynamic loudness
+         * model. Note that after initialisation, the true processing rate will
+         * be dependent on the sampling frequency and the input buffer size.
+         */
+        void setRate(Real rate);
+
+        /** Returns processing rate in Hz. Note that after
+         * initialisation, the true processing rate will be dependent on the
+         * sampling frequency and the input buffer size.
+         */
+        Real getRate() const;
 
         /**
          * @brief Returns the initialisation state.
@@ -106,45 +114,15 @@ namespace loudness{
          */
         bool isDynamic() const;
 
-        /** Returns a reference to the output SignalBank of a module specified
-         * by index.
+        /** Returns a reference to the output SignalBank of an output module.
          */
-        const SignalBank& getOutputSignalBank(int module) const;
-
-        /** Returns a reference to the output SignalBank of a module specified
-         * by name. The name does not necessarily correspond to the name of the
-         * module class but the one given by the model upon instantiation.
-         */
-        const SignalBank& getOutputSignalBank(const string& outputName) const;
+        const SignalBank& getOutputSignalBank(const string& outputName);
 
         /**
          * @brief Returns the number of initialised modules comprising the
          * model.
          */
         int getNModules() const;
-
-        /** Sets the processing rate in Hz for a dynamic loudness
-         * model. Note that after initialisation, the true processing rate will
-         * be dependent on the sampling frequency and the input buffer size.
-         */
-        void setRate(Real rate);
-
-        /** Returns processing rate in Hz. Note that after
-         * initialisation, the true processing rate will be dependent on the
-         * sampling frequency and the input buffer size.
-         */
-        Real getRate() const;
-
-        /**
-         * @brief Returns the name of a module residing within the model.  
-         * The name does not necessarily correspond to the name of the module
-         * class but the one given by the model upon instantiation.
-         *
-         * @param module Module index.
-         */
-        const string& getOutputName(int module) const;
-
-        const vector<string>& getOutputNames() const;
 
         /**
          * @brief Returns the name of the model.
@@ -159,14 +137,15 @@ namespace loudness{
         void configureLinearTargetModuleChain();
 
         /** Informs modules to aggregate the output SignalBank. */
-        void configureOutputSignalBanksToAggregate();
+        void configureSignalBankAggregation();
 
         string name_;
         bool isDynamic_, initialized_;
         int nModules_;
         Real rate_;
+        vector<string> outputNames_, outputModulesToAggregate_;
         vector<unique_ptr<Module>> modules_;
-        vector<string> outputNames_, outputsToAggregate_;
+        map<string, Module*> outputModules_;
     };
 }
 

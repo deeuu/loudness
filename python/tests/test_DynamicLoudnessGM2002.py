@@ -3,7 +3,7 @@ import numpy as np
 import sys,os
 sys.path.append('../tools/')
 from sound import Sound
-from loudnessExtractor import LoudnessExtractor
+from extractors import LoudnessExtractor
 
 #model = ln.DynamicLoudnessGM2002('../../filterCoefs/32000_IIR_23_freemid.npy')
 model = ln.DynamicLoudnessGM2002();

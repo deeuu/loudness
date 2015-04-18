@@ -164,13 +164,11 @@ namespace loudness{
             {
                 modules_.push_back(unique_ptr<Module> 
                         (new IIR(bCoefs, aCoefs))); 
-                outputNames_.push_back("IIR");
             }
             else
             {
                 modules_.push_back(unique_ptr<Module>
                         (new FIR(bCoefs))); 
-                outputNames_.push_back("FIR");
             }
 
             //clean up
@@ -197,17 +195,14 @@ namespace loudness{
         int hopSize = round(input.getFs() / rate_);
         modules_.push_back(unique_ptr<Module> 
                 (new FrameGenerator(windowSizeSamples[0], hopSize, isFirstSampleAtWindowCentre_)));
-        outputNames_.push_back("FrameGenerator");
         
         //configure windowing: Periodic hann window
         modules_.push_back(unique_ptr<Module>
                 (new Window("hann", windowSizeSamples, true)));
-        outputNames_.push_back("HannWindows");
 
         //power spectrum
         modules_.push_back(unique_ptr<Module> 
                 (new PowerSpectrum(bandFreqsHz, windowSizeSamples, isSpectrumSampledUniformly_))); 
-        outputNames_.push_back("PowerSpectrum");
 
         /*
          * Compression
@@ -216,7 +211,6 @@ namespace loudness{
         {
             modules_.push_back(unique_ptr<Module>
                     (new CompressSpectrum(compressionCriterionInCams_))); 
-            outputNames_.push_back("CompressedPowerSpectrum");
         }
 
         /*
@@ -231,7 +225,6 @@ namespace loudness{
 
             modules_.push_back(unique_ptr<Module> 
                     (new WeightSpectrum(middleEar, outerEar))); 
-            outputNames_.push_back("WeightedPowerSpectrum");
         }
 
         /*
@@ -244,14 +237,12 @@ namespace loudness{
         {
             doubleRoexBankfactor = 1.53e-8;
             instantaneousLoudnessFactor = 1.0;
-            outputNames_.push_back("SpecificLoudnessPattern");
             LOUDNESS_DEBUG(name_ << ": Excitation pattern will be scaled for specific loudness");
         }
         else
         {
             doubleRoexBankfactor = 1.0;
             instantaneousLoudnessFactor = 1.53e-8;
-            outputNames_.push_back("ExcitationPattern");
         }
 
         isBinauralInhibitionUsed_ = isBinauralInhibitionUsed_
@@ -272,12 +263,12 @@ namespace loudness{
         {
             modules_.push_back(unique_ptr<Module> 
                     (new BinauralInhibitionMG2007));
-            outputNames_.push_back("InhibitedSpecificLoudnessPattern");
         }
         else
         {
             LOUDNESS_DEBUG(name_ << ": No binaural inhibition.");
         }
+        outputModules_["SpecificLoudnessPattern"] = modules_.back().get();
         
         /*
         * Instantaneous loudness
@@ -285,21 +276,21 @@ namespace loudness{
         modules_.push_back(unique_ptr<Module>
                 (new InstantaneousLoudness(instantaneousLoudnessFactor, 
                                            isPresentationDiotic_)));
-        outputNames_.push_back("InstantaneousLoudness");
+        outputModules_["InstantaneousLoudness"] = modules_.back().get();
 
         /*
          * Short-term loudness
          */
         modules_.push_back(unique_ptr<Module>
                 (new ARAverager(attackTimeSTL_, releaseTimeSTL_)));
-        outputNames_.push_back("ShortTermLoudness");
+        outputModules_["ShortTermLoudness"] = modules_.back().get();
 
         /*
          * Long-term loudness
          */
         modules_.push_back(unique_ptr<Module>
                 (new ARAverager(attackTimeLTL_, releaseTimeLTL_)));
-        outputNames_.push_back("LongTermLoudness");
+        outputModules_["LongTermLoudness"] = modules_.back().get();
         
         //configure targets
         configureLinearTargetModuleChain();

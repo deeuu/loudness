@@ -65,8 +65,15 @@ namespace loudness{
         void process(Model& model);
         void appendNFrames(int nFramesToAppend);
 
+        /** Loads an new audio file but does not check the previous number of
+         * channels or sampling frequency. Thus, bad things might happen if the
+         * input model has been initialised according to a different
+         * specification. */
+        void loadNewAudioFile(const string& fileName);
+
         /** Processes all frames of the audio file and uses the Timer object to
-         * measure elapsed time. */
+         * measure elapsed time. This function will call model.reset() before
+         * processing the audio file, but not after. */
         void processAllFrames(Model& model);
 
         /** Set the gain in decibels to be applied to the audio file. */

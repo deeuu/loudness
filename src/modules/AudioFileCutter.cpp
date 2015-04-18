@@ -25,9 +25,10 @@ namespace loudness{
         Module("AudioFileCutter"),
         fileName_(fileName),
         frameSize_(frameSize),
+        nFrames_(0),
+        fs_(0),
         frameSizeInSeconds_(0),
         duration_(0),
-        fs_(0),
         gainInDecibels_(0),
         sndFile_(nullptr)
     {}
