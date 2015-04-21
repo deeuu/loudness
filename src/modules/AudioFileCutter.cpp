@@ -94,8 +94,6 @@ namespace loudness{
                     / (float)frameSize_) * frameSize_;
         } 
 
-        std::cout << nSamplesToLoadPerChannel_ << std::endl;
-
         audioBufferSize_ = fileInfo.channels * nSamplesToLoadPerChannel_;
 
         LOUDNESS_DEBUG(name_ 
