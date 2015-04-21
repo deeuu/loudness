@@ -80,7 +80,7 @@ namespace loudness{
             modules_[i] -> addTargetModule(*modules_[i + 1]);
     }
 
-    const SignalBank& Model::getOutputSignalBank(const string& outputName)
+    const SignalBank& Model::getOutputModuleSignalBank(const string& outputName)
     {
         auto search = outputModules_.find(outputName);
         LOUDNESS_ASSERT(search != outputModules_.end());
@@ -90,6 +90,11 @@ namespace loudness{
     void Model::setOutputModulesToAggregate(const vector<string>& outputModulesToAggregate)
     {
         outputModulesToAggregate_ = outputModulesToAggregate;
+    }
+
+    const vector<string>& Model::getOutputModulesToAggregate() const
+    {
+        return outputModulesToAggregate_;
     }
 
     void Model::configureSignalBankAggregation()

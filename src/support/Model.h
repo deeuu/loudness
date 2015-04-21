@@ -116,7 +116,11 @@ namespace loudness{
 
         /** Returns a reference to the output SignalBank of an output module.
          */
-        const SignalBank& getOutputSignalBank(const string& outputName);
+        const SignalBank& getOutputModuleSignalBank(const string& outputName);
+
+        /** Returns a vector of output names corresponding to the modules whose output
+         * will be aggregated. */
+        const vector<string>& getOutputModulesToAggregate() const;
 
         /**
          * @brief Returns the number of initialised modules comprising the
@@ -143,9 +147,9 @@ namespace loudness{
         bool isDynamic_, initialized_;
         int nModules_;
         Real rate_;
-        vector<string> outputNames_, outputModulesToAggregate_;
         vector<unique_ptr<Module>> modules_;
         map<string, Module*> outputModules_;
+        vector<string> outputModulesToAggregate_;
     };
 }
 

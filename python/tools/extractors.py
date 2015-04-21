@@ -53,7 +53,7 @@ class LoudnessExtractor:
         self.outputDict = {}
         self.modelOutputsToExtract = modelOutputsToExtract
         for name in modelOutputsToExtract:
-            self.outputBanks.append(self.model.getOutputSignalBank(name))
+            self.outputBanks.append(self.model.getOutputModuleSignalBank(name))
         self.nSamplesToPadStart = 0
         self.nSamplesToPadEnd = int(0.2*self.fs)#see below
         self.frameTimeOffset = 0
@@ -257,15 +257,24 @@ class BatchWavFileProcessor:
             raise ValueError("No wav files found")
         
         self.frameTimeOffset = 0
+        self.audioFilesHaveSameSpec = False
 
     def process(self, model):
 
         self.outputDict = {}
 
+        processor = ln.AudioFileProcessor(self.wavFileDirectory 
+                + '/' + self.wavFiles[0])
+
+        if self.audioFilesHaveSameSpec:
+            processor.initialize(model)
+
         for wavFile in self.wavFiles:
 
-            processor = ln.AudioFileProcessor(self.wavFileDirectory + '/' + wavFile)
-            processor.initialize(model)
+            processor.loadNewAudioFile(self.wavFileDirectory 
+                    + '/' + wavFile)
+            if not self.audioFilesHaveSameSpec:
+                processor.initialize(model)
 
             self.outputDict[wavFile] = {}
             #configure the number of output frames needed
@@ -278,9 +287,9 @@ class BatchWavFileProcessor:
             processor.processAllFrames(model)
 
             #get output
-            outputNames = model.getOutputsToAggregate()
+            outputNames = model.getOutputModulesToAggregate()
             for name in outputNames:
-                bank = model.getOutputSignalBank(name)
+                bank = model.getOutputModuleSignalBank(name)
                 self.outputDict[wavFile][name] = bank.getAggregatedSignals()
 
             if self.saveSeperateFiles:
