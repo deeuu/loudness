@@ -1,9 +1,9 @@
-import os
-import pickle
+import os, pickle
 import numpy as np
 import loudness as ln
 from sound import Sound
 import matplotlib.pyplot as plt
+import h5py
 
 class LoudnessExtractor:
     '''Convienience class for processing numpy arrays.
@@ -165,12 +165,13 @@ class LoudnessExtractor:
             if type(modelOutputsToSave) is not list:
                     modelOutputsToSave = [modelOutputsToSave]
 
-            nFrames = self.outputDict['FrameTimes'].size
-            dataToSave = self.outputDict['FrameTimes'].reshape((nFrames, 1))
+            dataToSave = self.outputDict['FrameTimes'].reshape((-1, 1))
+            header = ['FrameTimes']
             for name in modelOutputsToSave:
+                header.append(',' + name)
                 for ear in range(self.outputDict[name].shape[1]):
                     dataToSave = np.hstack((dataToSave, \
-                        self.outputDict[name][:, ear, 0, 0]))
+                        self.outputDict[name][:, ear, 0, 0].reshape(-1,1)))
 
             filename, ext = os.path.splitext(filename)
             np.savetxt(filename + '.csv', dataToSave,\
@@ -228,24 +229,19 @@ class BatchWavFileProcessor:
     model = ln.DynamicLoudnessCH2012()
     model.setOutputsToAggregate(['ShortTermLoudness', 'LongTermLoudness'])
 
-    processor = BatchWavFileProcessor(wavFileDirectory)
+    processor = BatchWavFileProcessor(wavFileDirectory, hdf5Filename)
     processor.process(model)
 
-    All wav files in the directory `wavFileDirectory' will be processed.  if
-    `saveSeperateFiles' is True, dictionaries holding processed data can be
-    saved as .npz files for each wavFile. If false, the composite dictionary is
-    available as the member BatchWavFileProcessor.outputDict and can be saved to
-    a single pickle file by calling saveToPickle. In this latter case,
-    performance may be sacrified if a large number of audio files are to be
-    processed and/or multiple features are to be extracted.  
+    All wav files in the directory `wavFileDirectory' will be processed and
+    processed data will be saved as `hdf5Filename'.
     """
 
     def __init__(self,
                  wavFileDirectory = "",
-                 saveSeperateFiles = True):
+                 filename = ""):
 
         self.wavFileDirectory = os.path.abspath(wavFileDirectory)
-        self.saveSeperateFiles = saveSeperateFiles
+        self.filename = os.path.abspath(filename)
 
         #Get a list of all wav files in this directory
         self.wavFiles = []
@@ -258,30 +254,36 @@ class BatchWavFileProcessor:
         
         self.frameTimeOffset = 0
         self.audioFilesHaveSameSpec = False
+        self.numFramesToAppend = 0
 
     def process(self, model):
 
-        self.outputDict = {}
+        h5File = h5py.File(self.filename, 'w')
 
-        processor = ln.AudioFileProcessor(self.wavFileDirectory 
-                + '/' + self.wavFiles[0])
+        processor = ln.AudioFileProcessor(\
+                self.wavFileDirectory + '/' + self.wavFiles[0])
 
         if self.audioFilesHaveSameSpec:
             processor.initialize(model)
 
         for wavFile in self.wavFiles:
+            
+            #Create new group
+            wavFileGroup = h5File.create_group(wavFile)
 
-            processor.loadNewAudioFile(self.wavFileDirectory 
-                    + '/' + wavFile)
+            processor.loadNewAudioFile(\
+                    self.wavFileDirectory + '/' + wavFile)
             if not self.audioFilesHaveSameSpec:
                 processor.initialize(model)
 
-            self.outputDict[wavFile] = {}
+            processor.appendNFrames(self.numFramesToAppend)
+
             #configure the number of output frames needed
-            self.outputDict[wavFile]['FrameTimes'] = self.frameTimeOffset \
-                + processor.getTimeStep() \
-                * np.arange(1, processor.getNFrames() + 1)
-            
+            wavFileGroup.create_dataset('FrameTimes', \
+                    data = self.frameTimeOffset \
+                    + processor.getTimeStep() \
+                    * np.arange(1, processor.getNFrames() + 1))
+
             #Processing
             print("Processing file %s ..." % wavFile)
             processor.processAllFrames(model)
@@ -290,20 +292,6 @@ class BatchWavFileProcessor:
             outputNames = model.getOutputModulesToAggregate()
             for name in outputNames:
                 bank = model.getOutputModuleSignalBank(name)
-                self.outputDict[wavFile][name] = bank.getAggregatedSignals()
-
-            if self.saveSeperateFiles:
-
-                fileName = self.wavFileDirectory + '/' + wavFile
-                fileName, ext = os.path.splitext(fileName)
-                print('Saved to %s.npz ...' % fileName)
-                np.savez(fileName + '.npz', **self.outputDict[wavFile])
-                del self.outputDict[wavFile]
-
-    def saveToPickle(self, fileName):
-
-        if self.outputDict.keys():
-            fileName, ext = os.path.splitext(fileName)
-            print('Saved to %s.pickle ...' % fileName)
-            with open(fileName + '.pickle', 'wb') as outfile:
-                pickle.dump(self.outputDict, outfile, protocol=pickle.HIGHEST_PROTOCOL)
+                wavFileGroup.create_dataset(name, data =
+                        bank.getAggregatedSignals())
+        h5File.close()

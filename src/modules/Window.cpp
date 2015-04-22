@@ -71,11 +71,11 @@ namespace loudness{
             parallelWindows_ = true;
             nOutputChannels = nWindows_;
             //if so, calculate the delay
-            int alignmentSample = ceil((largestWindowSize_-1)/2.0);
+            int alignmentSample = largestWindowSize_ / 2;
             LOUDNESS_DEBUG(name_ << ": Alignment sample = " << alignmentSample);
             for(int w=1; w<nWindows_; w++)
             {
-                int thisCentreSample = ceil((length_[w]-1)/2.0);
+                int thisCentreSample = length_[w] / 2;
                 int thisWindowOffset = alignmentSample - thisCentreSample;
                 windowOffset_.push_back(thisWindowOffset);
                 LOUDNESS_DEBUG(name_ << ": Centre sample for window " << w << " = " << thisCentreSample);
