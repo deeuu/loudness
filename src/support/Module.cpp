@@ -104,11 +104,6 @@ namespace loudness{
     {
         if (initialized_) 
         {
-            if (isOutputAggregated_)
-            {
-                LOUDNESS_PROCESS_DEBUG(name_ << ": Aggregating output SignalBank.");
-                output_.aggregate();
-            }
 
             if (input.getTrig())
             {
@@ -119,6 +114,12 @@ namespace loudness{
             else
             {
                 output_.setTrig(false);
+            }
+
+            if (isOutputAggregated_)
+            {
+                LOUDNESS_PROCESS_DEBUG(name_ << ": Aggregating output SignalBank.");
+                output_.aggregate();
             }
 
             for (uint i = 0; i < targetModules_.size(); i++)

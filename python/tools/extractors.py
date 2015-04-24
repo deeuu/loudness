@@ -287,8 +287,8 @@ class BatchWavFileProcessor:
 
             #configure the number of output frames needed
             wavFileGroup.create_dataset('FrameTimes',\
-                    data = self.frameTimeOffset\
-                    * np.arange(0, processor.getNFrames()))
+                    data = self.frameTimeOffset +
+                    np.arange(processor.getNFrames()) * processor.getTimeStep())
 
             #Processing
             print("Processing file %s ..." % wavFile)
