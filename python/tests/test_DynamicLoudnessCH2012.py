@@ -9,7 +9,7 @@ model = ln.DynamicLoudnessCH2012()
 
 outputsOfInterest = ["InstantaneousLoudness", "ShortTermLoudness", "LongTermLoudness"]
 extractor = LoudnessExtractor(model, 32000, outputsOfInterest, 2)
-extractor.frameTimeOffset = -0.064
+extractor.frameTimeOffset = -0.064 + extractor.timeStep #align time 0 with centre of window
 
 signal = Sound.tone([1000, 3000], dur = 1.0, fs = 32e3)
 signal.useDBSPL()

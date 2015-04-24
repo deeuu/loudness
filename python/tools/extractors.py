@@ -17,10 +17,10 @@ class LoudnessExtractor:
     listed in `modelOutputsToExtract'.
 
     Processing frames are per hop size, which is dictated by the rate of the
-    model. Frame times are relative to the first sample of the input signal. For
-    example, consider a hop size of 48 @ fs = 48kHz, then the first output frame
-    is available at time 0.001s. You can offset the frame times using self.frameTimeOffset.
-    '''
+    model. Frame times start at time 0 and increment at the hop size in seconds.
+    For example, consider a hop size of 48 @ fs = 48kHz, the frame time
+    corresponding to the first and second frame would be 0 and 1ms respectively.
+    You can offset the frame times using self.frameTimeOffset.  '''
 
     def __init__(self, model,
             fs = 32000, modelOutputsToExtract = [], nInputEars = 1):
@@ -91,8 +91,9 @@ class LoudnessExtractor:
 
         #configure the number of output frames needed
         nOutputFrames = int(np.ceil(self.inputSignal.size / float(self.hopSize)))
-        self.outputDict['FrameTimes'] = self.frameTimeOffset + self.timeStep + \
-                np.arange(nOutputFrames) * self.hopSize / float(self.fs)
+        self.outputDict['FrameTimes'] = self.frameTimeOffset +\
+                                        np.arange(nOutputFrames) *\
+                                        self.hopSize / float(self.fs)
 
         #outputs
         for i, name in enumerate(self.modelOutputsToExtract):
@@ -234,6 +235,12 @@ class BatchWavFileProcessor:
 
     All wav files in the directory `wavFileDirectory' will be processed and
     processed data will be saved as `hdf5Filename'.
+    
+    Processing frames are per hop size, which is dictated by the rate of the
+    model. Frame times start at time 0 and increment at the hop size in seconds.
+    For example, consider a hop size of 48 @ fs = 48kHz, the frame time
+    corresponding to the first and second frame would be 0 and 1ms respectively.
+    You can offset the frame times using self.frameTimeOffset.  '''
     """
 
     def __init__(self,
@@ -279,10 +286,9 @@ class BatchWavFileProcessor:
             processor.appendNFrames(self.numFramesToAppend)
 
             #configure the number of output frames needed
-            wavFileGroup.create_dataset('FrameTimes', \
-                    data = self.frameTimeOffset \
-                    + processor.getTimeStep() \
-                    * np.arange(1, processor.getNFrames() + 1))
+            wavFileGroup.create_dataset('FrameTimes',\
+                    data = self.frameTimeOffset\
+                    * np.arange(0, processor.getNFrames()))
 
             #Processing
             print("Processing file %s ..." % wavFile)
