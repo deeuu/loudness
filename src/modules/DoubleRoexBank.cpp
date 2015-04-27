@@ -26,13 +26,15 @@ namespace loudness{
             Real camHi,
             Real camStep,
             Real scalingFactor,
-            bool isExcitationPatternInterpolated) : 
+            bool isExcitationPatternInterpolated,
+            bool isInterpolationCubic) : 
         Module("DoubleRoexBank"),
         camLo_(camLo), 
         camHi_(camHi),
         camStep_(camStep),
         scalingFactor_(scalingFactor),
-        isExcitationPatternInterpolated_(isExcitationPatternInterpolated)
+        isExcitationPatternInterpolated_(isExcitationPatternInterpolated),
+        isInterpolationCubic_(isInterpolationCubic)
     {}
 
     DoubleRoexBank::~DoubleRoexBank() {}
@@ -200,7 +202,7 @@ namespace loudness{
             //Interpolate to estimate 0.1~Cam res excitation pattern
             if (isExcitationPatternInterpolated_)
             {
-                spline_.set_points(cams_, logExcitation_);
+                spline_.set_points(cams_, logExcitation_, isInterpolationCubic_);
 
                 for (int i = 0; i < 388; ++i)
                     outputExcitationPattern[i] = exp(spline_(camLo_ + i * 0.1));

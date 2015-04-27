@@ -22,10 +22,13 @@
 
 namespace loudness{
 
-    FastRoexBank::FastRoexBank(Real camStep, bool isExcitationPatternInterpolated) :
+    FastRoexBank::FastRoexBank(Real camStep,
+            bool isExcitationPatternInterpolated,
+            bool isInterpolationCubic) :
         Module("FastRoexBank"),
         camStep_(camStep),
-        isExcitationPatternInterpolated_(isExcitationPatternInterpolated)
+        isExcitationPatternInterpolated_(isExcitationPatternInterpolated),
+        isInterpolationCubic_(isInterpolationCubic)
     {}
 
     FastRoexBank::~FastRoexBank() {}
@@ -227,7 +230,9 @@ namespace loudness{
              */
             if(isExcitationPatternInterpolated_)
             {
-                spline_.set_points(cams_, excitationLevel_);
+                spline_.set_points(cams_,
+                        excitationLevel_,
+                        isInterpolationCubic_);
                 for(int i=0; i < 372; i++)
                 {
                     excitationLin = exp(spline_(1.8 + i*0.1));

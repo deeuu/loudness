@@ -58,9 +58,15 @@ namespace loudness{
          * on the Cam scale.
          * 
          * @param camStep Interval between adjacent filters on the cam Scale.
-         * @param interp Set true to interpolate the excitation pattern.
+         * @param isExcitationPatternInterpolated Set true to interpolate the
+         * excitation pattern.  
+         * @param isInterpolationCubic Set true for cubic
+         * interpolation, false for linear. Only applies if
+         * isExcitationPatternInterpolated is true;
          */
-        FastRoexBank(Real camStep = 0.1, bool interpolateEcitationPattern = false);
+        FastRoexBank(Real camStep = 0.1,
+                bool isExcitationPatternInterpolated = false,
+                bool isInterpolationCubic = true);
 
         virtual ~FastRoexBank();
 
@@ -75,7 +81,7 @@ namespace loudness{
         void generateRoexTable(int size = 1024);
 
         Real camStep_;
-        bool isExcitationPatternInterpolated_;
+        bool isExcitationPatternInterpolated_, isInterpolationCubic_;
         int nFilters_, roexIdxLimit_;
         Real step_;
         vector<vector<int> > rectBinIndices_;
