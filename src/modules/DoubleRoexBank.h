@@ -54,12 +54,21 @@ namespace loudness{
          * @param camLo Frequency of the first double roex filter in Cams.
          * @param camHi Frequency of the last double roex filter in Cams.
          * @param camStep Interval between adjacent filters on the cam Scale.
+         * @param scalingFactor A scalar applied to the output excitation
+         * pattern (default is 1).
+         * @param isExcitationPatternInterpolated Set true to interpolate the
+         * excitation pattern.  
+         * @param isInterpolationCubic Set true for cubic
+         * interpolation, false for linear. Only applies if
+         * isExcitationPatternInterpolated is true;
+         
          */
         DoubleRoexBank(Real camLo = 1.5,
                 Real camHi = 40.2,
                 Real camStep = 0.1,
                 Real scalingFactor = 1.0,
-                bool isExcitationPatternInterpolated = false);
+                bool isExcitationPatternInterpolated = false,
+                bool isInterpolationCubic = true);
 
         virtual ~DoubleRoexBank();
 
@@ -72,7 +81,7 @@ namespace loudness{
         virtual void resetInternal();
 
         Real camLo_, camHi_, camStep_, scalingFactor_;
-        bool isExcitationPatternInterpolated_;
+        bool isExcitationPatternInterpolated_, isInterpolationCubic_;
         int nFilters_;
         RealVec maxGdB_, thirdGainTerm_, cams_, logExcitation_;
         RealVecVec wPassive_, wActive_;

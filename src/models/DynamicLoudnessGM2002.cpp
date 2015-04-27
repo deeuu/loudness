@@ -90,6 +90,11 @@ namespace loudness{
         isExcitationPatternInterpolated_ = isExcitationPatternInterpolated;
     }
 
+    void DynamicLoudnessGM2002::setInterpolationCubic(bool isInterpolationCubic)
+    {
+        isInterpolationCubic_ = isInterpolationCubic;
+    }
+
     void DynamicLoudnessGM2002::setFilterSpacingInCams(Real filterSpacingInCams)
     {
         filterSpacingInCams_ = filterSpacingInCams;
@@ -144,6 +149,7 @@ namespace loudness{
         setResponseDiffuseField(false);
         setSpectrumSampledUniformly(true);
         setExcitationPatternInterpolated(false);
+        setInterpolationCubic(true);
         setFilterSpacingInCams(0.25);
         setCompressionCriterionInCams(0.0);
         setRoexBankFast(false);
@@ -307,7 +313,9 @@ namespace loudness{
         if(isRoexBankFast_)
         {
             modules_.push_back(unique_ptr<Module>
-                    (new FastRoexBank(filterSpacingInCams_, isExcitationPatternInterpolated_)));
+                    (new FastRoexBank(filterSpacingInCams_,
+                                      isExcitationPatternInterpolated_,
+                                      isInterpolationCubic_)));
         }
         else
         {

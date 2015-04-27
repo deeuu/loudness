@@ -82,6 +82,11 @@ namespace loudness{
         isExcitationPatternInterpolated_ = isExcitationPatternInterpolated;
     }
 
+    void DynamicLoudnessCH2012::setInterpolationCubic(bool isInterpolationCubic)
+    {
+        isInterpolationCubic_ = isInterpolationCubic;
+    }
+
     void DynamicLoudnessCH2012::setSpecificLoudnessOutput(bool isSpecificLoudnessOutput)
     {
         isSpecificLoudnessOutput_ = isSpecificLoudnessOutput;
@@ -109,6 +114,7 @@ namespace loudness{
         setResponseDiffuseField(false);
         setSpectrumSampledUniformly(true);
         setExcitationPatternInterpolated(false);
+        setInterpolationCubic(true);
         setSpecificLoudnessOutput(true);
         setBinauralInhibitionUsed(true);
         setPresentationDiotic(true);
@@ -254,7 +260,8 @@ namespace loudness{
                 (new DoubleRoexBank(1.5, 40.2,
                                     filterSpacingInCams_,
                                     doubleRoexBankfactor,
-                                    isExcitationPatternInterpolated_)));
+                                    isExcitationPatternInterpolated_,
+                                    isInterpolationCubic_)));
 
         /*
          * Binaural inhibition

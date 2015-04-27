@@ -105,6 +105,8 @@ namespace loudness{
 
             void setExcitationPatternInterpolated(bool isExcitationPatternInterpolated);
 
+            void setInterpolationCubic(bool isInterpolationCubic);
+
             void setPresentationDiotic(bool isPresentationDiotic);
 
             void setBinauralInhibitionUsed(bool isBinauralInhibitionUsed);
@@ -128,7 +130,8 @@ namespace loudness{
             Real filterSpacingInCams_, compressionCriterionInCams_;
             Real attackTimeSTL_, releaseTimeSTL_;
             Real attackTimeLTL_, releaseTimeLTL_;
-            bool isSpectrumSampledUniformly_, isExcitationPatternInterpolated_, isPresentationDiotic_;
+            bool isSpectrumSampledUniformly_, isExcitationPatternInterpolated_;
+            bool isInterpolationCubic_, isPresentationDiotic_;
             bool isSpecificLoudnessOutput_, isBinauralInhibitionUsed_;
             bool isResponseDiffuseField_, isFirstSampleAtWindowCentre_;
     }; 
