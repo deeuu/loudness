@@ -65,9 +65,9 @@ namespace loudness{
         isHPFUsed_ = isHPFUsed;
     }
 
-    void DynamicLoudnessGM2002::setResponseDiffuseField(bool isResponseDiffuseField)
+    void DynamicLoudnessGM2002::setOuterEarType(const OME::Filter& outerEarType)
     {
-        isResponseDiffuseField_ = isResponseDiffuseField;
+        outerEarType_ = outerEarType;
     }
 
     void DynamicLoudnessGM2002::setPresentationDiotic(bool isPresentationDiotic)
@@ -146,7 +146,7 @@ namespace loudness{
         //common to all
         setRate(1000);
         setHPFUsed(false);
-        setResponseDiffuseField(false);
+        setOuterEarType(OME::ANSIS342007_FREEFIELD);
         setSpectrumSampledUniformly(true);
         setExcitationPatternInterpolated(false);
         setInterpolationCubic(true);
@@ -285,7 +285,7 @@ namespace loudness{
         /*
          * Compression
          */
-        if(compressionCriterionInCams_ > 0)
+        if((compressionCriterionInCams_ > 0) && (!isSpectrumSampledUniformly_))
         {
             modules_.push_back(unique_ptr<Module>
                     (new CompressSpectrum(compressionCriterionInCams_)));
@@ -296,15 +296,13 @@ namespace loudness{
          */
         if (weightSpectrum)
         {
-            string middleEar = "ANSIS342007";
-            string outerEar = "ANSIS342007_FREEFIELD";
+            OME::Filter middleEar = OME::ANSIS342007_MIDDLE_EAR;
+
             if (isHPFUsed_)
-                middleEar = "ANSIS342007_HPF";
-            if (isResponseDiffuseField_)
-                outerEar = "ANSIS342007_DIFFUSEFIELD";
+                middleEar = OME::ANSIS342007_MIDDLE_EAR_HPF;
 
             modules_.push_back(unique_ptr<Module> 
-                    (new WeightSpectrum(middleEar, outerEar)));
+                    (new WeightSpectrum(middleEar, outerEarType_)));
         }
 
         /*

@@ -21,6 +21,7 @@
 #define STEADYSTATELOUDNESSANSIS342007_H
 
 #include "../support/Model.h"
+#include "../support/AuditoryTools.h"
 #include <string>
 
 namespace loudness{
@@ -52,7 +53,7 @@ namespace loudness{
 
             void setPresentationDiotic(bool isPresentationDiotic);
 
-            void setResponseDiffuseField(bool isResponseDiffuseField);
+            void setOuterEarType(const OME::Filter outerEarType);
 
             void setfilterSpacingInCams(Real filterSpacingInCams);
             
@@ -60,7 +61,8 @@ namespace loudness{
             virtual bool initializeInternal(const SignalBank &input);
 
             Real filterSpacingInCams_;
-            bool isPresentationDiotic_, isResponseDiffuseField_;
+            bool isPresentationDiotic_;
+            OME::Filter outerEarType_;
     }; 
 }
 

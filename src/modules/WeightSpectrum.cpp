@@ -27,7 +27,7 @@ namespace loudness{
         usingOME_(false)
     {}
 
-    WeightSpectrum::WeightSpectrum(const string& middleEarType, const string& outerEarType) :
+    WeightSpectrum::WeightSpectrum(const OME::Filter& middleEarType, const OME::Filter& outerEarType) :
         Module("WeightSpectrum"),
         ome_(middleEarType, outerEarType),
         usingOME_(true)

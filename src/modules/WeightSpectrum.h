@@ -54,7 +54,7 @@ namespace loudness{
          * @param middleEarType The middle ear type.
          * @param outerEarType The outer ear type.
          */
-        WeightSpectrum(const string& middleEarType,const string& outerEarType);
+        WeightSpectrum(const OME::Filter& middleEarType,const OME::Filter& outerEarType);
 
         virtual ~WeightSpectrum();
 

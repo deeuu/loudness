@@ -30,7 +30,7 @@ namespace loudness{
     {
         //Default parameters
         setPresentationDiotic(true);
-        setResponseDiffuseField(false);
+        setOuterEarType(OME::Filter::ANSIS342007_FREEFIELD);
         setfilterSpacingInCams(0.1);
     }
 
@@ -43,9 +43,9 @@ namespace loudness{
         isPresentationDiotic_ = isPresentationDiotic;
     }
 
-    void SteadyStateLoudnessANSIS342007::setResponseDiffuseField(bool isResponseDiffuseField)
+    void SteadyStateLoudnessANSIS342007::setOuterEarType(const OME::Filter outerEarType)
     {
-        isResponseDiffuseField_ = isResponseDiffuseField;
+        outerEarType_ = outerEarType;
     }
 
     void SteadyStateLoudnessANSIS342007::setfilterSpacingInCams(Real filterSpacingInCams)
@@ -59,13 +59,8 @@ namespace loudness{
         /*
          * Weighting filter
          */
-        string middleEar = "ANSIS342007";
-        string outerEar = "ANSIS342007_FREEFIELD";
-        if(isResponseDiffuseField_)
-            outerEar = "ANSIS342007_DIFFUSEFIELD";
-
         modules_.push_back(unique_ptr<Module>
-                (new WeightSpectrum(middleEar, outerEar))); 
+                (new WeightSpectrum(OME::Filter::ANSIS342007_MIDDLE_EAR, outerEarType_))); 
 
         /*
          * Roex filters

@@ -78,7 +78,7 @@ namespace loudness{
         }
     }
     
-    OME::OME(const string& middleEarType, const string& outerEarType) :
+    OME::OME(const Filter& middleEarType, const Filter& outerEarType) :
         middleEarType_(middleEarType),
         outerEarType_(outerEarType)
     {
@@ -138,43 +138,48 @@ namespace loudness{
         middleEarFreqPoints_.assign(freqs, freqs + 41);
 
         //Middle ear
-        if(middleEarType_ == "ANSIS342007")
-            middleEardB_.assign(midANSI, midANSI + 41);
-        else if(middleEarType_ == "ANSIS342007_HPF")
-            middleEardB_.assign(midANSI, midANSI + 41);
-        else if(middleEarType_ == "CHGM2011")
-            middleEardB_.assign(midChenEtAl, midChenEtAl + 41);
-        else
-            middleEarType_ = "";
+        switch (middleEarType_)
+        {
+            case ANSIS342007_MIDDLE_EAR :
+                middleEardB_.assign(midANSI, midANSI + 41);
+                break;
+            case ANSIS342007_MIDDLE_EAR_HPF :
+                middleEardB_.assign(midANSI, midANSI + 41);
+                break;
+            case CHGM2011_MIDDLE_EAR :
+                middleEardB_.assign(midChenEtAl, midChenEtAl + 41);
+                break;
+            default:
+                middleEarType_ = NONE;
+                break;
+        }
 
-        //Outer ear
-        if(outerEarType_ == "ANSIS342007_FREEFIELD")
+        switch (outerEarType_)
         {
-            outerEardB_.assign(freeANSI, freeANSI + 41);
-            outerEarFreqPoints_ = middleEarFreqPoints_;
-        }
-        else if(outerEarType_ == "ANSIS342007_DIFFUSEFIELD")
-        {
-            outerEardB_.assign(diffuseANSI, diffuseANSI + 41);
-            outerEarFreqPoints_ = middleEarFreqPoints_;
-        }
-        else if(outerEarType_ == "DT990")
-        {
-            outerEardB_.assign(dt990, dt990 + 86);
-            outerEarFreqPoints_.assign(phoneFreqs, phoneFreqs + 86);
-        }
-        else
-        {
-            outerEarType_ = "";
+            case ANSIS342007_FREEFIELD:
+                outerEardB_.assign(freeANSI, freeANSI + 41);
+                outerEarFreqPoints_ = middleEarFreqPoints_;
+                break;
+            case ANSIS342007_DIFFUSEFIELD:
+                outerEardB_.assign(diffuseANSI, diffuseANSI + 41);
+                outerEarFreqPoints_ = middleEarFreqPoints_;
+                break;
+            case BD_DT990:
+                outerEardB_.assign(dt990, dt990 + 86);
+                outerEarFreqPoints_.assign(phoneFreqs, phoneFreqs + 86);
+                break;
+            default:
+                outerEarType_ = NONE;
+                break;
         }
     }
 
-    void OME::setMiddleEarType(const string& middleEarType)
+    void OME::setMiddleEarType(const Filter& middleEarType)
     {
         middleEarType_ = middleEarType;
     }
 
-    void OME::setOuterEarType(const string& outerEarType)
+    void OME::setOuterEarType(const Filter& outerEarType)
     {
         outerEarType_ = outerEarType;
     }
@@ -196,13 +201,13 @@ namespace loudness{
             spline s;
 
             //middle ear
-            if(!middleEarType_.empty())
+            if(middleEarType_ != NONE)
             {
                 s.set_points(middleEarFreqPoints_, middleEardB_);
 
                 for (uint i=0; i < freqs.size(); i++)
                 {
-                    if((freqs[i]<=75) && (middleEarType_ == "ANSIS342007_HPF"))
+                    if((freqs[i]<=75) && (middleEarType_ == ANSIS342007_MIDDLE_EAR_HPF))
                             response_[i] = -14.6; //Post HPF correction
                     else if(freqs[i] >= middleEarFreqPoints_[40])
                         response_[i] = middleEardB_[40];
@@ -216,7 +221,7 @@ namespace loudness{
             }
 
             //outer ear
-            if(!outerEarType_.empty())
+            if(outerEarType_ != NONE)
             {
                 Real lastFreq = outerEarFreqPoints_.back();
                 Real lastDataPoint = outerEardB_.back();

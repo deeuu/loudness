@@ -16,50 +16,47 @@ def plotResponse(freqPoints, dataPoints,
     plt.title(title)
     plt.show()
 
-def plotMiddleEar(author="", ylim = (-40,0)):
+def plotMiddleEar(filterType, ylim = (-40,0)):
     freqs = np.arange(20, 20000, 2)
-    ome = ln.OME(author, "")
+    ome = ln.OME(filterType, ln.OME.NONE)
     ome.interpolateResponse(freqs)
     response = ome.getResponse()
     freqPoints = ome.getMiddleEarFreqPoints()
     dataPoints = ome.getMiddleEardB()
-    plotResponse(freqPoints, dataPoints, \
-            freqs, response, ylim,\
-            title = "Middle ear : " + author)
+    plotResponse(freqPoints, dataPoints,
+            freqs, response, ylim)
 
-def plotOuterEar(author="", ylim = (-40,0)):
+def plotOuterEar(filterType, ylim = (-40,0)):
     freqs = np.arange(20, 20000, 2)
-    ome = ln.OME("", author)
+    ome = ln.OME(ln.OME.NONE, filterType)
     ome.interpolateResponse(freqs)
     response = ome.getResponse()
     freqPoints = ome.getOuterEarFreqPoints()
     dataPoints = ome.getOuterEardB()
     plotResponse(freqPoints, dataPoints, \
-            freqs, response, ylim,\
-            title = "Outer ear : " + author)
+            freqs, response, ylim)
 
-def plotCombined(author="",fieldType="", ylim = (-40, 10)):
+def plotCombined(middleFilterType, outerFilterType, ylim = (-40, 10)):
     freqs = np.arange(20,20000,2)
-    ome = ln.OME(author, fieldType)
+    ome = ln.OME(middleFilterType, outerFilterType)
     ome.interpolateResponse(freqs)
     response = ome.getResponse()
-    plotResponse(None, None, \
-            freqs, response, ylim,\
-            title = "Middle ear : " + author + " Outer ear : " + fieldType)
+    plotResponse(None, None,
+            freqs, response, ylim)
 
 plt.figure(1)
-plotMiddleEar("ANSIS342007", (-40, 0))
+plotMiddleEar(ln.OME.ANSIS342007_MIDDLE_EAR, (-40, 0))
 plt.figure(2)
-plotMiddleEar("CHGM2011", (-40, 10))
+plotMiddleEar(ln.OME.CHGM2011_MIDDLE_EAR, (-40, 10))
 plt.figure(2)
-plotMiddleEar("ANSIS342007_HPF", (-40, 0))
+plotMiddleEar(ln.OME.ANSIS342007_MIDDLE_EAR_HPF, (-40, 0))
 plt.figure(3)
-plotOuterEar("ANSIS342007_FREEFIELD", (-5, 20))
+plotOuterEar(ln.OME.ANSIS342007_FREEFIELD, (-5, 20))
 plt.figure(4)
-plotOuterEar("ANSIS342007_DIFFUSEFIELD", (-5, 20))
+plotOuterEar(ln.OME.ANSIS342007_DIFFUSEFIELD, (-5, 20))
 plt.figure(5)
-plotOuterEar("DT990", (-10, 10))
+plotOuterEar(ln.OME.BD_DT990, (-10, 10))
 plt.figure(6)
-plotCombined("ANSIS342007", "ANSIS342007_FREEFIELD", (-40, 10))
+plotCombined(ln.OME.ANSIS342007_MIDDLE_EAR, ln.OME.ANSIS342007_FREEFIELD, (-40, 10))
 plt.figure(7)
-plotCombined("ANSI_S34_2007", "DT990", (-40, 10))
+plotCombined(ln.OME.ANSIS342007_MIDDLE_EAR, ln.OME.BD_DT990, (-40, 10))

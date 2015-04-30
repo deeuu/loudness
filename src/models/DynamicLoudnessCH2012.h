@@ -21,6 +21,7 @@
 #define DYNAMICLOUDNESSCH2012_H
 
 #include "../support/Model.h"
+#include "../support/AuditoryTools.h"
 
 namespace loudness{
 
@@ -111,7 +112,7 @@ namespace loudness{
 
             void setBinauralInhibitionUsed(bool isBinauralInhibitionUsed);
 
-            void setResponseDiffuseField(bool isResponseDiffuseField);
+            void setOuterEarType(const OME::Filter& outerEarType);
 
             void setFirstSampleAtWindowCentre(bool isFirstSampleAtWindowCentre);
 
@@ -133,7 +134,8 @@ namespace loudness{
             bool isSpectrumSampledUniformly_, isExcitationPatternInterpolated_;
             bool isInterpolationCubic_, isPresentationDiotic_;
             bool isSpecificLoudnessOutput_, isBinauralInhibitionUsed_;
-            bool isResponseDiffuseField_, isFirstSampleAtWindowCentre_;
+            bool isFirstSampleAtWindowCentre_;
+            OME::Filter outerEarType_;
     }; 
 }
 

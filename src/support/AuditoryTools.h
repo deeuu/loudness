@@ -112,7 +112,6 @@ namespace loudness{
      * 1. Free-field to ear drum (frontal-incedence)
      * 2. Diffuse-field to ear drum (frontal-incedence)
      *
-     * @todo Add BeyerDynamic DT990 response
      * @todo Add Sennheiser HD600 response
      *
      * @return 
@@ -121,12 +120,22 @@ namespace loudness{
     class OME{
         public:
 
+            enum Filter{
+                NONE,
+                CHGM2011_MIDDLE_EAR,
+                ANSIS342007_MIDDLE_EAR,
+                ANSIS342007_MIDDLE_EAR_HPF,
+                ANSIS342007_FREEFIELD,
+                ANSIS342007_DIFFUSEFIELD,
+                BD_DT990
+            };
+
             OME(){};
-            OME(const string& middleEarType, const string& outerEarType);
+            OME(const Filter& middleEarType, const Filter& outerEarType);
             ~OME() {};
 
-            void setMiddleEarType(const string& middleEarType);
-            void setOuterEarType(const string& outerEarType);
+            void setMiddleEarType(const Filter& middleEarType);
+            void setOuterEarType(const Filter& outerEarType);
             bool interpolateResponse(const RealVec &freqs);
             const RealVec& getResponse() const;
             const RealVec& getMiddleEardB() const;
@@ -136,7 +145,7 @@ namespace loudness{
 
         private:
             void getData();
-            string middleEarType_, outerEarType_;
+            Filter middleEarType_, outerEarType_;
             RealVec middleEarFreqPoints_, outerEarFreqPoints_;
             RealVec middleEardB_, outerEardB_, response_;
     };

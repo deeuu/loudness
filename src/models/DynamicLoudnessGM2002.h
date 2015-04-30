@@ -21,6 +21,7 @@
 #define DYNAMICLOUDNESSGM2002_H
 
 #include "../support/Model.h"
+#include "../support/AuditoryTools.h"
 
 namespace loudness{
 
@@ -127,7 +128,7 @@ namespace loudness{
 
             void setHPFUsed(bool isHPFUsed);
 
-            void setResponseDiffuseField(bool isResponseDiffuseField);
+            void setOuterEarType(const OME::Filter& outerEarType);
 
             void setSpecificLoudnessANSIS342007(bool isSpecificLoudnessANSIS342007_);
 
@@ -149,9 +150,10 @@ namespace loudness{
             Real attackTimeLTL_, releaseTimeLTL_;
             bool isRoexBankFast_, isExcitationPatternInterpolated_, isInterpolationCubic_;
             bool isSpectrumSampledUniformly_, isPresentationDiotic_;
-            bool  isBinauralInhibitionUsed_, isHPFUsed_, isResponseDiffuseField_;
+            bool  isBinauralInhibitionUsed_, isHPFUsed_;
             bool isSpecificLoudnessANSIS342007_, isFirstSampleAtWindowCentre_;
             string pathToFilterCoefs_;
+            OME::Filter outerEarType_;
     }; 
 }
 
