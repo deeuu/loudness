@@ -21,19 +21,19 @@
 
 namespace loudness{
 
-    Window::Window(const string &windowType, const IntVec &length, bool periodic) :
-        Module("Window"),
-        windowType_(windowType),
-        length_(length),
-        periodic_(periodic),
-        normalisation_("energy"),
-        ref_(2e-5)
+    Window::Window(const WindowType& windowType, const IntVec &length, bool periodic) 
+        : Module("Window"),
+          windowType_(windowType),
+          length_(length),
+          periodic_(periodic),
+          normalisation_(ENERGY),
+          ref_(2e-5)
     {}
-    Window::Window(const string &windowType, int length, bool periodic) :
+    Window::Window(const WindowType& windowType, int length, bool periodic) :
         Module("Window"),
         windowType_(windowType),
         periodic_(periodic),
-        normalisation_("energy"),
+        normalisation_(ENERGY),
         ref_(2e-5)
     {
        length_.assign(1, length); 
@@ -138,22 +138,29 @@ namespace loudness{
         }
     }
 
-    void Window::generateWindow(RealVec &window, const string &windowType, bool periodic)
+    void Window::generateWindow(RealVec &window, const WindowType& windowType, bool periodic)
     {
-        if((windowType == "hann") || (windowType == "hanning"))
-            hann(window, periodic);
-        else
-            LOUDNESS_ASSERT(false, "Window does not exist.");
+        switch (windowType_)
+        {
+            case HANN:
+                hann(window, periodic);
+                LOUDNESS_DEBUG(name_ << ": Using a Hann window.");
+                break;
+            default:
+                hann(window, periodic);
+                LOUDNESS_DEBUG(name_ << ": Using a Hann window.");
+                break;
+        }
     }
 
-    void Window::setNormalisation(const string &normalisation)
+    void Window::setNormalisation(const Normalisation& normalisation)
     {
         normalisation_ = normalisation;
     }
 
-    void Window::normaliseWindow(RealVec &window, const string &normalisation, double ref)
+    void Window::normaliseWindow(RealVec &window, const Normalisation& normalisation, double ref)
     {
-        if((!normalisation.empty()) && (normalisation != "none"))
+        if (normalisation != NONE)
         {
             double x = 0.0;
             double sum = 0.0, sumSquares = 0.0;
@@ -165,18 +172,19 @@ namespace loudness{
                  sum += x;
                  sumSquares += x*x;
             }
-            if (normalisation == "energy")
+
+            switch (normalisation)
             {
-                normFactor = sqrt(wSize/sumSquares);
-            }
-            else if (normalisation == "amplitude")
-            {
-                normFactor = wSize/sum;
-            }
-            else 
-            {
-                LOUDNESS_WARNING(name_ << ": Normalisation must be `energy' or `amplitude', using `energy'");
-                normFactor = sqrt(wSize/sumSquares);
+                case (ENERGY):
+                    normFactor = sqrt(wSize/sumSquares);
+                    LOUDNESS_DEBUG(name_ << ": Normalising for energy.");
+                    break;
+                case (AMPLITUDE):
+                    normFactor = wSize/sum;
+                    LOUDNESS_DEBUG(name_ << ": Normalising for amplitude.");
+                    break;
+                default:
+                    normFactor = sqrt(wSize/sumSquares);
             }
 
             normFactor /= ref;

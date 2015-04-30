@@ -45,13 +45,23 @@ namespace loudness{
     {
     public:
 
+        enum WindowType{
+            HANN
+        };
+
+        enum Normalisation{
+            NONE,
+            ENERGY,
+            AMPLITUDE
+        };
+
         /** Constructs a Window object for generating a single frame.
          *
          * @param windowType The type of window to apply.
          * @param length The length of the window in samples.
          * @param periodic Periodic if true, symmetric otherwise.
          */
-        Window(const string &windowType, int length, bool periodic);
+        Window(const WindowType& windowType, int length, bool periodic);
 
         /** Constructs a Window object for generating a multiple frames.
          *
@@ -59,7 +69,7 @@ namespace loudness{
          * @param length A vector of window lengths in samples.
          * @param periodic Periodic if true, symmetric otherwise.
          */
-        Window(const string &windowType, const IntVec& length, bool periodic);
+        Window(const WindowType& windowType, const IntVec& length, bool periodic);
         Window();
         virtual ~Window();
 
@@ -69,22 +79,22 @@ namespace loudness{
          * @param normalisation A string dictating the normalisation factor
          * applied to the window(s). 
          *
-         * If "energy", the window is normalised such according to:
+         * If ENERGY, the window is normalised such according to:
          * mean(window^2) = 1.0
          * This is useful for energy conservation when computing the power
          * spectrum of a windowed segment.
          *
-         * If "amplitude", the window is normalised according to:
+         * If AMPLITUDE, the window is normalised according to:
          * mean(window) = 1.0
          * This is useful for preserving the peak amplitude of an input sinusoid
          * when computing the magnitude spectrum of a windowed segment.
          *
          */
-        void normaliseWindow(RealVec &window, const string &normalisation, Real ref);
-        void setNormalisation(const string &normalisation);
+        void normaliseWindow(RealVec &window, const Normalisation& normalisation, Real ref);
+        void setNormalisation(const Normalisation& normalisation);
 
         //Window functions are available for naughty method swiping
-        void generateWindow(RealVec &window, const string &windowType, bool periodic);
+        void generateWindow(RealVec &window, const WindowType& windowType, bool periodic);
 
         void setRef(const Real ref);
 
@@ -98,10 +108,10 @@ namespace loudness{
         //window functions
         void hann(RealVec &window, bool periodic);
 
-        string windowType_;
+        WindowType windowType_;
         IntVec length_;
         bool periodic_, alignOutput_;
-        string normalisation_;
+        Normalisation normalisation_;
         Real ref_;
         int nWindows_, largestWindowSize_;
         bool parallelWindows_;

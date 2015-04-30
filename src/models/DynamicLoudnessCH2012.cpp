@@ -204,7 +204,7 @@ namespace loudness{
         
         //configure windowing: Periodic hann window
         modules_.push_back(unique_ptr<Module>
-                (new Window("hann", windowSizeSamples, true)));
+                (new Window(Window::HANN, windowSizeSamples, true)));
 
         //power spectrum
         modules_.push_back(unique_ptr<Module> 
