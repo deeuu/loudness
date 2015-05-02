@@ -24,7 +24,7 @@
 #include <sndfile.h>
 
 //We can exceed this but only by +frameSize
-#define MAX_BUFFER_SIZE 192000
+#define MAX_BUFFER_SIZE 8192
 
 namespace loudness{
 
