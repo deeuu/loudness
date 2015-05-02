@@ -61,7 +61,7 @@ namespace loudness{
         audioBufferBank_.initialize(input.getNEars(), input.getNChannels(), inputBufferSize, input.getFs());
         
         if (startAtCentreOfFrame_)
-            writeIdx_ = ceil((frameSize_-1)/2.0);
+            writeIdx_ = frameSize_ / 2.0;
         else
             writeIdx_ = 0;
 
@@ -78,7 +78,7 @@ namespace loudness{
 
     void FrameGenerator::processInternal(const SignalBank &input)
     {
-        //pull all signals back by overlap samples
+        //pull all signals back by hop samples
         if(writeIdx_ == frameSize_)
         {
             output_.pullBack(hopSize_);
@@ -120,6 +120,11 @@ namespace loudness{
 
     void FrameGenerator::resetInternal()
     {
+        if (startAtCentreOfFrame_)
+            writeIdx_ = frameSize_ / 2.0;
+        else
+            writeIdx_ = 0;
+
         remainingSamples_ = 0;
         audioBufferBank_.zeroSignals();
     }
