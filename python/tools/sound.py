@@ -2,6 +2,7 @@ import numpy as np
 from scipy.signal import lfilter
 from audiolab import aiffread, wavread, wavwrite
 import matplotlib.pyplot as plt
+import matplotlib.mlab as mlab
 
 '''
 A class for generating, manipulating and loading audio files.
@@ -226,8 +227,37 @@ class Sound:
         '''
         for chn in xrange(self.nChannels):
             plt.plot(np.arange(self.nSamples)/float(self.fs), self.data[:,chn])
-        plt.xlabel("Time, s")
-        plt.ylabel("Amplitude, linear")
+        plt.xlabel("Time, seconds")
+        plt.ylabel("Amplitude (linear)")
+
+    def plotWaveformAndSpectrogram(self, 
+            nFFT = 1024, 
+            overlapFactor = 0.5, 
+            xlim = None, 
+            title = ""):
+
+        t = np.arange(self.nSamples)/float(self.fs)
+        combined = np.sum(self.data, 1)
+
+        ax1 = plt.subplot(211)
+        ax1.set_title(title)
+        ax1.plot(t, combined)
+        ax1.set_ylabel("Amplitude (linear)")
+
+        ax2 = plt.subplot(212, sharex = ax1)
+        pxx, freqs, bins, im = ax2.specgram(combined, NFFT=nFFT, Fs=self.fs,
+                noverlap = int(nFFT * overlapFactor))
+
+        ax2.set_ylim(0, self.fs / 2)
+        ax2.set_ylabel("Frequency, Hz")
+        ax2.set_xlabel("Time, seconds")
+
+        if xlim is not None:
+            ax2.set_xlim(xlim)
+        else:
+            ax2.set_xlim(0,t[-1])
+
+        plt.show()
 
     def __mul__(self, sound):
         '''
@@ -242,6 +272,13 @@ class Sound:
         '''
         if (sound.data.shape == self.data.shape):
             self.data *= sound.data
+
+    def __add__(self, sound):
+        '''
+        Sum the data of two sounds and return the resulting sound object.
+        '''
+        if (sound.data.shape == self.data.shape) and (sound.fs==self.fs):
+            return Sound(self.data + sound.data, self.fs)
 
     def segment(self, start=0, end=None):
         self.data = self.data[start:end]
