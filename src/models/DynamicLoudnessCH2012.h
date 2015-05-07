@@ -110,6 +110,8 @@ namespace loudness{
 
             void setPresentationDiotic(bool isPresentationDiotic);
 
+            void setPeakSTLFollowerUsed(bool isPeakSTLFollowerUsed);
+
             void setBinauralInhibitionUsed(bool isBinauralInhibitionUsed);
 
             void setOuterEarType(const OME::Filter& outerEarType);
@@ -134,7 +136,7 @@ namespace loudness{
             bool isSpectrumSampledUniformly_, isExcitationPatternInterpolated_;
             bool isInterpolationCubic_, isPresentationDiotic_;
             bool isSpecificLoudnessOutput_, isBinauralInhibitionUsed_;
-            bool isFirstSampleAtWindowCentre_;
+            bool isFirstSampleAtWindowCentre_, isPeakSTLFollowerUsed_;
             OME::Filter outerEarType_;
     }; 
 }

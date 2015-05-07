@@ -33,6 +33,7 @@
 #include "../modules/BinauralInhibitionMG2007.h"
 #include "../modules/InstantaneousLoudness.h"
 #include "../modules/ARAverager.h"
+#include "../modules/PeakFollower.h"
 #include "DynamicLoudnessGM2002.h"
 
 namespace loudness{
@@ -63,6 +64,11 @@ namespace loudness{
     void DynamicLoudnessGM2002::setHPFUsed(bool isHPFUsed)
     {
         isHPFUsed_ = isHPFUsed;
+    }
+
+    void DynamicLoudnessGM2002::setPeakSTLFollowerUsed(bool isPeakSTLFollowerUsed)
+    {
+        isPeakSTLFollowerUsed_ = isPeakSTLFollowerUsed;
     }
 
     void DynamicLoudnessGM2002::setOuterEarType(const OME::Filter& outerEarType)
@@ -146,6 +152,7 @@ namespace loudness{
         //common to all
         setRate(1000);
         setHPFUsed(false);
+        setPeakSTLFollowerUsed(false);
         setOuterEarType(OME::ANSIS342007_FREEFIELD);
         setSpectrumSampledUniformly(true);
         setExcitationPatternInterpolated(false);
@@ -342,7 +349,8 @@ namespace loudness{
         /*
         * Instantaneous loudness
         */   
-        modules_.push_back(unique_ptr<Module> (new InstantaneousLoudness(1.0, isPresentationDiotic_)));
+        modules_.push_back(unique_ptr<Module> 
+                (new InstantaneousLoudness(1.0, isPresentationDiotic_)));
         outputModules_["InstantaneousLoudness"] = modules_.back().get();
 
         /*
@@ -361,6 +369,15 @@ namespace loudness{
 
         //configure targets
         configureLinearTargetModuleChain();
+
+        //Option to provide PeakFollower
+        if (isPeakSTLFollowerUsed_)
+        {
+            modules_.push_back(unique_ptr<Module> (new PeakFollower(2.0)));
+            outputModules_["PeakShortTermLoudness"] = modules_.back().get();
+            outputModules_["ShortTermLoudness"] -> 
+                addTargetModule (*outputModules_["PeakShortTermLoudness"]);
+        }
 
         return 1;
     }

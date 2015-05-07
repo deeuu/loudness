@@ -66,7 +66,7 @@ namespace loudness{
                 {
                     Real absX = abs (x[smp]);
 
-                    if (absX > yPrev)
+                    if (absX >= yPrev)
                         y[smp] = absX;
                     else
                         y[smp] = yPrev - releaseCoef_ * yPrev;

@@ -31,11 +31,13 @@ namespace loudness{
      * the instantaneous loudness (integrated specific loudness). 
      *
      * For input SignalBanks with one ear but simulating diotic presentation,
-     * then you can set dioticPresentation true for simple
-     * doubling of loudness. If dioticPresentation is true and there are
-     * multiple ears, then both specific loudness patterns are summed to a
-     * single value. If dioticPresentation is false and there are multiple
-     * ears, then this module outputs one instantaneous loudness value per ear.
+     * set dioticPresentation true for simple doubling of loudness.
+     * If dioticPresentation is true and there are
+     * two ears, then both specific loudness patterns are summed to a
+     * single value. If dioticPresentation is false and there are two
+     * ears, then this module outputs one instantaneous loudness value per ear
+     * as well as the overall instantaneous loudness. In this case, the output
+     * SignalBank will have three ears.
      */
     class InstantaneousLoudness : public Module
     {

@@ -11,7 +11,7 @@ processor.initialize(model)
 
 processor.processAllFrames(model)
 
-bankSTL = model.getOutputSignalBank('LongTermLoudness')
+bankSTL = model.getOutputModuleSignalBank('LongTermLoudness')
 aggregatedFrames = bankSTL.getAggregatedSignals()
 
 plt.plot(aggregatedFrames.flatten())
