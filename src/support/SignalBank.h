@@ -79,6 +79,12 @@ namespace loudness{
         /** Multiplies all signals in the SignalBank by gainFactor. */
         void scale(Real gainFactor);
 
+        /** Multiplies all signals in the specified ear by gainFactor. */
+        void scale(int ear, Real gainFactor);
+
+        /** Multiplies the signal in the specified ear and channel by gainFactor. */
+        void scale(int ear, int channel, Real gainFactor);
+
         /** Removes all elements from the vector holding the aggregated signals.
          * */
         void clearAggregatedSignals();

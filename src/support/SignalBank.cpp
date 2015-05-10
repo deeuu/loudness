@@ -115,6 +115,22 @@ namespace loudness{
             signals_[i] *= gainFactor;
     }
 
+    void SignalBank::scale(int ear, Real gainFactor)
+    {
+        int start = ear * nChannels_ * nSamples_;
+        int end = start + nChannels_ * nSamples_;
+        for (int i = start; i < end; ++i)
+            signals_[i] *= gainFactor;
+    }
+
+    void SignalBank::scale(int ear, int channel, Real gainFactor)
+    {
+        int start = ear * nChannels_ * nSamples_ + channel * nSamples_;
+        int end = start + nSamples_;
+        for (int i = start; i < end; ++i)
+            signals_[i] *= gainFactor;
+    }
+
     void SignalBank::zeroSignals()
     {
         signals_.assign(nTotalSamples_, 0.0);
