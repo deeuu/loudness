@@ -262,6 +262,9 @@ namespace loudness{
 
         /*
          * Multi-resolution spectrogram
+         * 10 Hz to include energy caused by sidebands for frequencies near
+         * 20Hz but exclude DC.
+         * 15001 Hz so top frequencies included.
          */
         RealVec bandFreqsHz {10, 80, 500, 1250, 2540, 4050, 15001};
 

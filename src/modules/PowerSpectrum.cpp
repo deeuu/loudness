@@ -21,12 +21,14 @@
 
 namespace loudness{
 
-    PowerSpectrum::PowerSpectrum(const RealVec& bandFreqsHz, const vector<int>& windowSizes, bool sampleSpectrumUniformly):
-        Module("PowerSpectrum"),
-        bandFreqsHz_(bandFreqsHz),
-        windowSizes_(windowSizes),
-        sampleSpectrumUniformly_(sampleSpectrumUniformly),
-        normalisation_("averageEnergy")
+    PowerSpectrum::PowerSpectrum(const RealVec& bandFreqsHz,
+                                 const vector<int>& windowSizes, 
+                                 bool sampleSpectrumUniformly)
+        :   Module("PowerSpectrum"),
+            bandFreqsHz_(bandFreqsHz),
+            windowSizes_(windowSizes),
+            sampleSpectrumUniformly_(sampleSpectrumUniformly),
+            normalisation_(AVERAGE_ENERGY)
     {}
 
     PowerSpectrum::~PowerSpectrum()
@@ -74,11 +76,8 @@ namespace loudness{
             bandBinIndices_[i].resize(2);
             //These are NOT the nearest components but satisfies f_k in [f_lo, f_hi)
             bandBinIndices_[i][0] = ceil(bandFreqsHz_[i]*fftSize[i]/fs);
-            LOUDNESS_DEBUG(name_ << ": band low : " << bandBinIndices_[i][0]);
             bandBinIndices_[i][1] = ceil(bandFreqsHz_[i+1]*fftSize[i]/fs)-1;
-            LOUDNESS_DEBUG(name_ << ": band hi : " << bandBinIndices_[i][1]);
-
-            LOUDNESS_ASSERT(bandBinIndices_[i][1]>0,
+            LOUDNESS_ASSERT(bandBinIndices_[i][1]>0, 
                     name_ << ": No components found in band number " << i);
 
             //exclude DC and Nyquist if found
@@ -96,10 +95,21 @@ namespace loudness{
             }
 
             //Power spectrum normalisation
-            if(normalisation_ == "averageEnergy")
-                normFactor_[i] = 2.0/(fftSize[i] * windowSizes_[i]);
-            else
-                normFactor_[i] = 2.0/fftSize[i];
+            switch (normalisation_)
+            {
+                case NONE:
+                    normFactor_[i] = 1.0;
+                    break;
+                case ENERGY:
+                    normFactor_[i] = 2.0/fftSize[i];
+                    break;
+                case AVERAGE_ENERGY:
+                    normFactor_[i] = 2.0/(fftSize[i] * windowSizes_[i]);
+                    break;
+                default:
+                    normFactor_[i] = 2.0/fftSize[i];
+            }
+
             LOUDNESS_DEBUG(name_ << ": Normalisation factor : " << normFactor_[i]);
         }
 
@@ -128,6 +138,12 @@ namespace loudness{
             j = bandBinIndices_[i][0];
             while(j <= bandBinIndices_[i][1])
                 output_.setCentreFreq(k++, (j++)*fs/(Real)fftSize[i]);
+
+            LOUDNESS_DEBUG(name_ 
+                    << ": Freq Hz (band low): " 
+                    << fs * bandBinIndices_[i][0] / float(fftSize[i]) 
+                    << ": Freq Hz (band high): " 
+                    << fs * bandBinIndices_[i][1] / float(fftSize[i])); 
         }
 
         return 1;
@@ -166,7 +182,7 @@ namespace loudness{
     void PowerSpectrum::resetInternal()
     {}
 
-    void PowerSpectrum::setNormalisation(const string &normalisation)
+    void PowerSpectrum::setNormalisation(const Normalisation normalisation)
     {
         normalisation_ = normalisation;
     }
