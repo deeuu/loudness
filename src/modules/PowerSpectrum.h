@@ -64,7 +64,13 @@ namespace loudness{
     class PowerSpectrum: public Module
     {
     public:
-
+    
+        enum Normalisation{
+            NONE,
+            ENERGY,
+            AVERAGE_ENERGY
+        };
+ 
         /**
          * @brief Constructs a PowerSpectrum object.
          *
@@ -79,7 +85,7 @@ namespace loudness{
 
         virtual ~PowerSpectrum();
 
-        void setNormalisation(const string &normalisation);
+        void setNormalisation(const Normalisation normalisation);
 
     private:
         virtual bool initializeInternal(const SignalBank &input);
@@ -91,7 +97,7 @@ namespace loudness{
         RealVec bandFreqsHz_, normFactor_;
         vector<int> windowSizes_;
         bool sampleSpectrumUniformly_;
-        string normalisation_;
+        Normalisation normalisation_;
         vector<vector<int> > bandBinIndices_; 
         vector<unique_ptr<FFT>> ffts_;
     };
