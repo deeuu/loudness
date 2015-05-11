@@ -292,7 +292,7 @@ namespace loudness{
         /*
          * Compression
          */
-        if((compressionCriterionInCams_ > 0) && (!isSpectrumSampledUniformly_))
+        if((compressionCriterionInCams_ > 0) && (isSpectrumSampledUniformly_))
         {
             modules_.push_back(unique_ptr<Module>
                     (new CompressSpectrum(compressionCriterionInCams_)));
