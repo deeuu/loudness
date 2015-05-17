@@ -35,6 +35,7 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/modules/Butter.cpp \
 ../src/modules/Biquad.cpp \
 ../src/modules/ARAverager.cpp \
+../src/modules/PeakFollower.cpp \
 ../src/modules/SMA.cpp \
 ../src/modules/FrameGenerator.cpp \
 ../src/modules/Window.cpp \

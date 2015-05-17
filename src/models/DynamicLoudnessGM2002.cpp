@@ -91,6 +91,11 @@ namespace loudness{
         isSpectrumSampledUniformly_ = isSpectrumSampledUniformly;
     }
 
+    void DynamicLoudnessGM2002::setSpectralResolutionDoubled(bool isSpectralResolutionDoubled)
+    {
+        isSpectralResolutionDoubled_ = isSpectralResolutionDoubled;
+    }
+
     void DynamicLoudnessGM2002::setExcitationPatternInterpolated(bool isExcitationPatternInterpolated)
     {
         isExcitationPatternInterpolated_ = isExcitationPatternInterpolated;
@@ -155,6 +160,7 @@ namespace loudness{
         setPeakSTLFollowerUsed(false);
         setOuterEarType(OME::ANSIS342007_FREEFIELD);
         setSpectrumSampledUniformly(true);
+        setSpectralResolutionDoubled(false);
         setExcitationPatternInterpolated(false);
         setInterpolationCubic(true);
         setFilterSpacingInCams(0.25);
@@ -275,6 +281,8 @@ namespace loudness{
         //are aligned.
         for (int w = 0; w < 6; w++)
         {
+            if (isSpectralResolutionDoubled_)
+                windowSizeSecs[w] *= 2;
             windowSizeSamples[w] = (int)round(windowSizeSecs[w] * input.getFs());
             windowSizeSamples[w] += windowSizeSamples[w]%2;
         }
