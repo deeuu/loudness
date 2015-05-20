@@ -33,6 +33,7 @@ namespace loudness{
     {
         LOUDNESS_ASSERT(input.getNChannels() > 1, name_ << ": Insufficient number of channels.");
 
+
         /*
          * This code is sloppy due to along time spent figuring how 
          * to implement the damn thing.
@@ -42,8 +43,9 @@ namespace loudness{
          */
         int nChannels = input.getNChannels();
         int i=0, binIdxPrev = 0;
-        Real dif = freqToCam(input.getCentreFreq(1)) - freqToCam(input.getCentreFreq(0));
-        int groupSize = max(2.0, floor(alpha_/(dif)));
+        Real dif = freqToCam(input.getCentreFreq(1)) - 
+                   freqToCam(input.getCentreFreq(0));
+        int groupSize = max(2.0, std::floor(alpha_/(dif)));
         int groupSizePrev = groupSize;
         vector<int> groupSizeStore, binIdx;
 
@@ -81,10 +83,11 @@ namespace loudness{
                  *  in attempt to maintain alpha spacing, I'm not 100% but the algorithm
                  *  seems to satisfy various criteria
                  */
-                if(store<nChannels)
+                if((store > 0) && (store < nChannels))
                 {
-                    dif = freqToCam(input.getCentreFreq(store)) - freqToCam(input.getCentreFreq(store-1));
-                    groupSize = std::max((double)groupSize, floor(alpha_/dif));
+                    dif = freqToCam(input.getCentreFreq(store)) - 
+                          freqToCam(input.getCentreFreq(store-1));
+                    groupSize = max((double)groupSize, std::floor(alpha_/dif));
                 }
 
                 //fill variables
@@ -109,6 +112,8 @@ namespace loudness{
         //add the final frequency
         if(binIdx[binIdx.size()-1] < nChannels)
             binIdx.push_back(nChannels);
+
+        LOUDNESS_DEBUG(name_ << ": Hi Dom");
 
         //PART 2
         //compressed spectrum
