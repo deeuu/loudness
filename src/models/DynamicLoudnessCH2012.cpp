@@ -129,7 +129,7 @@ namespace loudness{
         setCompressionCriterionInCams(0.0);
         attackTimeSTL_ = 0.016;
         releaseTimeSTL_ = 0.032;
-        attackTimeLTL_ = 0.01;
+        attackTimeLTL_ = 0.1;
         releaseTimeLTL_ = 2.0;
 
         if (setName == "faster")

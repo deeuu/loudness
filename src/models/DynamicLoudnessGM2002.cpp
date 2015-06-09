@@ -178,7 +178,7 @@ namespace loudness{
             {
                 setRoexBankFast(true);
                 setExcitationPatternInterpolated(true);
-                setCompressionCriterionInCams(0.3);
+                setCompressionCriterionInCams(0.8);
                 LOUDNESS_DEBUG(name_ << ": Using faster params for Glasberg and Moore's 2002 model.");
             }
             else if (setName == "recent")
@@ -192,7 +192,7 @@ namespace loudness{
             }
             else if (setName == "recentAndFaster")
             {
-                configureSmoothingTimes("GM2003");
+                configureSmoothingTimes("MGS2003");
                 setSpecificLoudnessANSIS342007(true);
                 setRoexBankFast(true);
                 setExcitationPatternInterpolated(true);
