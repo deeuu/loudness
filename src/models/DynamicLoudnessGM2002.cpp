@@ -138,6 +138,7 @@ namespace loudness{
             releaseTimeSTL_ = -0.001/log(1-0.02);
             attackTimeLTL_ = -0.001/log(1-0.01);
             releaseTimeLTL_ = -0.001/log(1-0.0005);
+            LOUDNESS_DEBUG(name_ << ": Time-constants from 2002 paper");
         }
         else if (author == "MGS2003")
         {
@@ -145,6 +146,7 @@ namespace loudness{
             releaseTimeSTL_  = -0.001/log(1-0.02);
             attackTimeLTL_ = -0.001/log(1-0.01);
             releaseTimeLTL_ = -0.001/log(1-0.005);
+            LOUDNESS_DEBUG(name_ << ": Modified time-constants from 2003 paper");
         }
         else
         {
