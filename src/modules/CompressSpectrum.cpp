@@ -113,8 +113,6 @@ namespace loudness{
         if(binIdx[binIdx.size()-1] < nChannels)
             binIdx.push_back(nChannels);
 
-        LOUDNESS_DEBUG(name_ << ": Hi Dom");
-
         //PART 2
         //compressed spectrum
         RealVec cfs;
@@ -153,14 +151,13 @@ namespace loudness{
 
         //check
         #if defined(DEBUG)
-        Real freqLimit;
+        Real freqLimit = 0.0;
         for(unsigned int i=0; i<cfs.size()-1; i++)
         {
             if((freqToCam(cfs[i+1])-freqToCam(cfs[i])) > alpha_)
                 freqLimit = cfs[i];
         }
-        LOUDNESS_DEBUG("CompressSpectrum: Criterion satisfied above "
-                << freqLimit << " Hz.");
+        LOUDNESS_DEBUG("CompressSpectrum: Criterion satisfied above " << freqLimit << " Hz.");
         #endif
 
         //set output SignalBank
