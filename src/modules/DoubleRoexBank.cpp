@@ -51,7 +51,7 @@ namespace loudness{
         }
 
         //number of roex filters to use
-        nFilters_ = round((camHi_-camLo_)/camStep_)+1; //+1 inclusive
+        nFilters_ = std::floor((camHi_ - camLo_) / camStep_) + 1;
 
         LOUDNESS_DEBUG(name_
                 << ": interpolation applied: " << isExcitationPatternInterpolated_

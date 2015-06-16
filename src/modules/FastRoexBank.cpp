@@ -88,11 +88,9 @@ namespace loudness{
          */
 
         //number of roex filters to use
-        //+1 inclusive, can exceed end value if fractional part of 
-        //argument to round is >=0.5
         Real camLo = 1.8;
         Real camHi = 38.9;
-        nFilters_ = round((camHi-camLo)/camStep_)+1; 
+        nFilters_ = std::floor((camHi - camLo) / camStep_) + 1;
 
         LOUDNESS_DEBUG(name_
                 << ": interpolation applied: " << isExcitationPatternInterpolated_
