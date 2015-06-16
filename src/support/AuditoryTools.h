@@ -28,7 +28,7 @@ namespace loudness{
      * @brief Returns the ERB of the auditory filter for normally hearing
      * listeners at centre frequency @a freq in Hz.
      *
-     * See ANSI S3.04-2007 sec 3.5
+     * See ANSI S3.04-2007 sec 3.5 Eq (1)
      *
      * @param freq Centre frequency in Hz.
      *
@@ -42,7 +42,7 @@ namespace loudness{
     /**
      * @brief Converts frequency in Hz to corresponding ERB number in Cams.
      *
-     * See ANSI S3.04-2007 sec 3.5
+     * See ANSI S3.04-2007 sec 3.5 Eq (4)
      *
      * @param freq Frequency in Hz.
      *
