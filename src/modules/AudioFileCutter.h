@@ -66,7 +66,10 @@ namespace loudness{
         /** Sets the file name of the audio file to be loaded. */
         void setFileName(const string& fileName);
 
-        /** Sets the gain in decibels to be applied to the audio file. */
+        /** Sets the gain in decibels to be applied to the audio file.
+         *  gainInDecibels will be applied each time this class is initialised
+         *  and when loadNewAudioFile is called.
+         * */
         void setGainInDecibels(Real gainInDecibels);
 
         /** Returns the frame size (in samples) */

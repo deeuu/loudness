@@ -77,6 +77,7 @@ namespace loudness{
         if (cutter_.isInitialized())
         {
             cutter_.setFileName(fileName);
+            cutter_.setGainInDecibels(gainInDecibels_);
             cutter_.initialize();
             nFrames_ = cutter_.getNFrames();
         }

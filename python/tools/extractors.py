@@ -219,7 +219,7 @@ class LoudnessExtractor:
                         np.percentile(loudnessVec, 25, 0)
 
 class BatchWavFileProcessor:
-    """Class for processing multiple wav files using an input loudness model.
+    """Class for processing multiple wav files using a given loudness model.
 
     All processing takes place on the c++ side.
 
@@ -234,7 +234,7 @@ class BatchWavFileProcessor:
     processor.process(model)
 
     All wav files in the directory `wavFileDirectory' will be processed and
-    processed data will be saved as `hdf5Filename'.
+    data will be saved as `hdf5Filename' (a hdf5 file).
     
     Processing frames are per hop size, which is dictated by the rate of the
     model. Frame times start at time 0 and increment at the hop size in seconds.
@@ -262,6 +262,7 @@ class BatchWavFileProcessor:
         self.frameTimeOffset = 0
         self.audioFilesHaveSameSpec = False
         self.numFramesToAppend = 0
+        self.gainInDecibels = 0
 
     def process(self, model):
 
@@ -278,6 +279,7 @@ class BatchWavFileProcessor:
             #Create new group
             wavFileGroup = h5File.create_group(wavFile)
 
+            processor.setGainInDecibels(self.gainInDecibels)
             processor.loadNewAudioFile(\
                     self.wavFileDirectory + '/' + wavFile)
             if not self.audioFilesHaveSameSpec:
