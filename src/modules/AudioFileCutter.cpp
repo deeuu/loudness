@@ -107,6 +107,7 @@ namespace loudness{
         bufferIdx_ =  audioBufferSize_;
         audioBuffer_.assign(audioBufferSize_, 0.0);
 
+        LOUDNESS_DEBUG(name_ << ": gain (dB): " << gainInDecibels_);
         linearGain_ = decibelsToAmplitude(gainInDecibels_);
 
         output_.initialize(fileInfo.channels, 1,
