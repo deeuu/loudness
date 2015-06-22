@@ -127,6 +127,7 @@ namespace loudness{
 
         remainingSamples_ = 0;
         audioBufferBank_.zeroSignals();
+        output_.setTrig(false);
     }
 
     int FrameGenerator::getFrameSize() const

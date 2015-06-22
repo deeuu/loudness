@@ -39,6 +39,7 @@ if __name__ == "__main__":
                 "../src/modules/FrameGenerator.cpp",
                 "../src/modules/Window.cpp",
                 "../src/modules/PowerSpectrum.cpp",
+                "../src/modules/HoppingGoertzelDFT.cpp",
                 "../src/modules/WeightSpectrum.cpp",
                 "../src/modules/CompressSpectrum.cpp",
                 "../src/modules/RoexBankANSIS342007.cpp",

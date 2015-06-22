@@ -39,6 +39,7 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/modules/SMA.cpp \
 ../src/modules/FrameGenerator.cpp \
 ../src/modules/Window.cpp \
+../src/modules/HoppingGoertzelDFT.cpp \
 ../src/modules/PowerSpectrum.cpp \
 ../src/modules/WeightSpectrum.cpp \
 ../src/modules/CompressSpectrum.cpp \
