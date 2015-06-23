@@ -62,4 +62,3 @@ if np.allclose(spectrumLoudness[:,:,0], spectrumNumpy):
     print "Numpy vs loudness power spectrum test: successful"
 else:
     print "Numpy vs loudness power spectrum test: unsuccessful"
-
