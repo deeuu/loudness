@@ -4,11 +4,13 @@ namespace loudness{
     
     HoppingGoertzelDFT::HoppingGoertzelDFT(const RealVec& frequencyBandEdges,
                 const vector<int>& windowSizes,
-                int hopSize) :
+                int hopSize,
+                bool isHannWindowUsed) :
             Module("HoppingGoertzelDFT"),
             frequencyBandEdges_(frequencyBandEdges),
             windowSizes_ (windowSizes),
-            hopSize_ (hopSize)
+            hopSize_ (hopSize),
+            isHannWindowUsed_ (isHannWindowUsed)
     {}
 
     HoppingGoertzelDFT::~HoppingGoertzelDFT() {}
@@ -22,7 +24,7 @@ namespace loudness{
         // bin indices of components at the band edges
         vector< vector<int>> bandEdgeIdx (nWindows_, vector<int> (2, 0));
         largestWindowSize_ = 0;
-        int nBins = 0;
+        int nBins = 0, nAdditionalBins = 0;
         for (int w = 0; w < nWindows_; ++w)
         {
             // These are NOT the nearest components but satisfies f_k in [f_lo, f_hi)
@@ -31,26 +33,49 @@ namespace loudness{
             bandEdgeIdx[w][1] = std::ceil (frequencyBandEdges_[w + 1] * windowSizes_[w] / fs);
             LOUDNESS_DEBUG(name_ << ": LoFreq: " << bandEdgeIdx[w][0] * fs / (Real)windowSizes_[w]);
             LOUDNESS_DEBUG(name_ << ": HiFreq: " << bandEdgeIdx[w][1] * fs / (Real)windowSizes_[w]);
+            int highestBin = windowSizes_[w] / 2;
 
-            if (bandEdgeIdx[w][1] == 0)
-            {
-                LOUDNESS_ERROR (name_ << ": No components found in band number ");
-                return 0;
-            }
-            else if (bandEdgeIdx[w][1] <= bandEdgeIdx[w][0])
-            {
-                LOUDNESS_ERROR (name_ << ": upper band edge is not > lower band edge!");
-                return 0;
-            }
+            LOUDNESS_ASSERT(bandEdgeIdx[w][1] != 0, ": No components found in band number ");
+            LOUDNESS_ASSERT(bandEdgeIdx[w][1] >= bandEdgeIdx[w][0],
+                ": upper band edge is not > lower band edge!");
+            LOUDNESS_ASSERT(bandEdgeIdx[w][1] <= highestBin,
+                    ": upper band edge is > highest positive frequency.");
 
+            nBins += bandEdgeIdx[w][1] - bandEdgeIdx[w][0];
             if (windowSizes_[w] > largestWindowSize_)
                 largestWindowSize_ = windowSizes_[w];
-            nBins += bandEdgeIdx[w][1] - bandEdgeIdx[w][0];
+
+            // windowing constraints
+            if (isHannWindowUsed_)
+            {
+                if (bandEdgeIdx[w][0] == 0)
+                {
+                    LOUDNESS_ERROR (name_ 
+                            << ": This implementation does not support windowing with DC.");
+                    return 0;
+                }
+                if (bandEdgeIdx[w][1] == highestBin)
+                {
+                    LOUDNESS_ERROR (name_
+                            << ": This implementation does not support windowing with the highest positive frequency.");
+                    return 0;
+                }
+                bandEdgeIdx[w][0] -= 1;
+                bandEdgeIdx[w][1] += 1;
+                nAdditionalBins += 2;
+            }
+
+            LOUDNESS_DEBUG(name_
+                << ": bin lo : " << bandEdgeIdx[w][0]
+                << ", bin hi : " << bandEdgeIdx[w][1]);
         }
 
+        int nTotalBins = nBins + nAdditionalBins;
         LOUDNESS_DEBUG (name_ 
                 << ": Total number of bins comprising the spectrum: " 
-                << nBins);
+                << nBins
+                << ": Total number os bins used by this algorithm: "
+                << nTotalBins);
 
         // in order to simplify the alignment of windows, make the delay line an
         // integer multiple of the input block size.
@@ -63,10 +88,10 @@ namespace loudness{
         configureDelayLineIndices();
 
         // Goertzel filter variables
-        sine_.assign (nBins, 0.0);
-        cosineTimes2_.assign (nBins, 0.0);
-        vPrev_.assign (input.getNEars(), RealVec (nBins, 0.0));
-        vPrev2_.assign (input.getNEars(), RealVec (nBins, 0.0));
+        sine_.assign (nTotalBins, 0.0);
+        cosineTimes2_.assign (nTotalBins, 0.0);
+        vPrev_.assign (input.getNEars(), RealVec (nTotalBins, 0.0));
+        vPrev2_.assign (input.getNEars(), RealVec (nTotalBins, 0.0));
         binIdxForGoertzels_.assign (nWindows_, vector<int> (2, 0));
 
         // output bank
@@ -75,14 +100,20 @@ namespace loudness{
         output_.setTrig (false);
 
         // Complete arrays
-        int k = 0;
+        int k = 0, k2 = 0;
         for (int w = 0; w < nWindows_; ++w)
         {
             binIdxForGoertzels_[w][0] = k;
             for (int j = bandEdgeIdx[w][0]; j < bandEdgeIdx[w][1]; ++j, ++k)
             {
                 // bin frequency in Hz
-                output_.setCentreFreq (k, j * fs / (Real)windowSizes_[w]);
+                if (isHannWindowUsed_)
+                {
+                    if ((j > bandEdgeIdx[w][0]) && (j < (bandEdgeIdx[w][1] - 1)))
+                        output_.setCentreFreq (k2++, j * fs / (Real)windowSizes_[w]);
+                }
+                else
+                    output_.setCentreFreq (k2++, j * fs / (Real)windowSizes_[w]);
 
                 // filter coefficients
                 Real phi = 2.0 * PI * j / (Real)windowSizes_[w];
@@ -92,6 +123,7 @@ namespace loudness{
                 cosineTimes2_[k] = 2.0 * cosPhi;
             }
             binIdxForGoertzels_[w][1] = k;
+
         }
 
         nSamplesUntilTrigger_ = largestWindowSize_;
@@ -151,21 +183,11 @@ namespace loudness{
             // compute the complex-real multiplication
             if(tempNSamplesUntilTrigger_ == 0)
             {
-                for (int ear = 0; ear < input.getNEars(); ++ear)
-                {
-                    // write to the output signal bank using a single pointer
-                    Real* y = output_.getSignalWritePointer(0, 0, 0);
-                    for (int w = 0; w < nWindows_; ++w)
-                    {
-                        for (int k = binIdxForGoertzels_[w][0]; k < binIdxForGoertzels_[w][0]; ++k)
-                        {
-                            // real
-                            *(y++) = 0.5 * cosineTimes2_[k] * vPrev_[ear][k] - vPrev2_[ear][k];
-                            // imag
-                            *(y++) = sine_[k] * vPrev_[ear][k];	
-                        }
-                    }
-                }
+                if (isHannWindowUsed_)
+                    calculateSpectrumAndApplyHannWindow(input.getNEars());
+                else
+                    calculateSpectrum(input.getNEars());
+                
                 tempNSamplesUntilTrigger_ = hopSize_;
                 output_.setTrig (true);
             }
@@ -212,5 +234,54 @@ namespace loudness{
                     << readIdx_[w][1]);
         }
     }
+    void HoppingGoertzelDFT::calculateSpectrum(int nEars)
+    {
+        for (int ear = 0; ear < nEars; ++ear)
+        {
+            // write to the output signal bank using a single pointer
+            Real* y = output_.getSignalWritePointer(ear, 0, 0);
+            for (int w = 0; w < nWindows_; ++w)
+            {
+                for (int k = binIdxForGoertzels_[w][0]; k < binIdxForGoertzels_[w][1]; ++k)
+                {
+                    *(y++) = 0.5 * cosineTimes2_[k] * vPrev_[ear][k] - vPrev2_[ear][k];
+                    *(y++) = sine_[k] * vPrev_[ear][k];	
+                }
+            }
+        }
+    }
 
+    void HoppingGoertzelDFT::calculateSpectrumAndApplyHannWindow(int nEars)
+    {
+        for (int ear = 0; ear < nEars; ++ear)
+        {
+            // write to the output signal bank using a single pointer
+            Real* y = output_.getSignalWritePointer(ear, 0, 0);
+            for (int w = 0; w < nWindows_; ++w)
+            {
+                int firstBinInBand = binIdxForGoertzels_[w][0];
+                int lastBinInBand = binIdxForGoertzels_[w][1];
+                int i = 0;
+                RealVec reals(3, 0.0), imags(3, 0.0);
+                for (int k = firstBinInBand; k < lastBinInBand; ++k)
+                { 
+                    reals[i] = 0.5 * cosineTimes2_[k] * vPrev_[ear][k] - vPrev2_[ear][k];
+                    imags[i++] = sine_[k] * vPrev_[ear][k];	
+
+                    if (i == 3)
+                    {
+                                // X_k-1      X_k+1            X_k
+                        *(y++) = (-reals[0] - reals[2] + 2.0 * reals[1]);
+                        *(y++) = (-imags[0] - imags[2] + 2.0 * imags[1]);
+                        reals[0] = reals[1];
+                        reals[1] = reals[2];
+                        imags[0] = imags[1];
+                        imags[1] = imags[2];
+                        i = 2;
+                    }
+                }
+            }
+        }
+    }
 }
+

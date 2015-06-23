@@ -32,16 +32,22 @@ namespace loudness{
      *  vector<Real> bandFrequencies = {50, 1000, 5000};
      *  vector<int> windowSizes = {1024, 512};
      *  int hopSize = 256;
-     *  HoppingGoertzelDFT object(bandFrequencies, windowSizes, hopSize)
+     *  HoppingGoertzelDFT object(bandFrequencies, windowSizes, hopSize, false)
      *
      * Will construct a HoppingGoertzelDFT object which uses a transform length
      * of 1024 samples for all DFT bins in the interval [50~Hz, 1000~Hz), and a
-     * transform length of 512 samples for bins in the interval [1000~Hz, 5000~Hz).
-     * The complex spectrum is updated every 256 samples.
+     * transform length of 512 samples for bins in the interval [1000~Hz,
+     * 5000~Hz).  The complex spectrum is updated every 256 samples. The last
+     * parameter (false) is a booleon that determines if the spectrum is
+     * smoothed using a hann window in the frequency domain. If this is true,
+     * the hann windowed spectrum will have a gain of four applied as a result
+     * of the simplified hann window coefficients used for the convolution.
      *
      * - The hop size must be equal to or greater than the number of samples in
      * the input SignalBank used to construct the object. 
      * - The window size must be equal to or greater than the hop size.
+     * - If isHannWindowUsed is true, the spectral coefficients are increased by
+     *   a factor of four as a result of the windowing procedure. 
      */
 
     class HoppingGoertzelDFT : public Module
@@ -50,7 +56,8 @@ namespace loudness{
     public:
         HoppingGoertzelDFT(const RealVec& frequencyBandEdges,
                 const vector<int>& windowSizes,
-                int hopSize);
+                int hopSize,
+                bool isHannWindowUsed);
         virtual ~HoppingGoertzelDFT();
 
     private:
@@ -60,10 +67,13 @@ namespace loudness{
         virtual void processInternal(){};
         virtual void resetInternal();
         void configureDelayLineIndices();
+        void calculateSpectrum(int nEars);
+        void calculateSpectrumAndApplyHannWindow(int nEars);
 
         RealVec frequencyBandEdges_;
         vector<int> windowSizes_;
         int hopSize_;
+        bool isHannWindowUsed_;
         int nSamplesUntilTrigger_, tempNSamplesUntilTrigger_, writeIdx_;
         int nWindows_, delayLineSize_, largestWindowSize_;
         vector< vector<int>> binIdxForGoertzels_, readIdx_;
