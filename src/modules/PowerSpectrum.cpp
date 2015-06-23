@@ -70,13 +70,15 @@ namespace loudness{
         bandBinIndices_.resize(nWindows);
         normFactor_.resize(nWindows);
         int fs = input.getFs();
+        int nBins = 0;
         for(int i=0; i<nWindows; i++)
         {
             //bin indices to use for compiled spectrum
             bandBinIndices_[i].resize(2);
             //These are NOT the nearest components but satisfies f_k in [f_lo, f_hi)
             bandBinIndices_[i][0] = ceil(bandFreqsHz_[i]*fftSize[i]/fs);
-            bandBinIndices_[i][1] = ceil(bandFreqsHz_[i+1]*fftSize[i]/fs)-1;
+            // use < bandBinIndices_[i][1] to exclude upper bin
+            bandBinIndices_[i][1] = ceil(bandFreqsHz_[i+1]*fftSize[i]/fs);
             LOUDNESS_ASSERT(bandBinIndices_[i][1]>0, 
                     name_ << ": No components found in band number " << i);
 
@@ -87,12 +89,14 @@ namespace loudness{
                 LOUDNESS_WARNING(name_ << ": DC found...excluding.");
                 bandBinIndices_[i][0] = 1;
             }
-            if(bandBinIndices_[i][1] >= nyqIdx)
+            if((bandBinIndices_[i][1]-1) >= nyqIdx)
             {
                 LOUDNESS_WARNING(name_ << 
                         ": Bin is >= nyquist...excluding.");
-                bandBinIndices_[i][1] = nyqIdx-1;
+                bandBinIndices_[i][1] = nyqIdx;
             }
+
+            nBins += bandBinIndices_[i][1]-bandBinIndices_[i][0];
 
             //Power spectrum normalisation
             switch (normalisation_)
@@ -113,17 +117,7 @@ namespace loudness{
             LOUDNESS_DEBUG(name_ << ": Normalisation factor : " << normFactor_[i]);
         }
 
-        //count total number of bins and ensure no overlap
-        int nBins = 0;
-        for(int i=1; i<nWindows; i++)
-        {
-            while((bandBinIndices_[i][0]*fs/fftSize[i]) <= (bandBinIndices_[i-1][1]*fs/fftSize[i-1]))
-                bandBinIndices_[i][0] += 1;
-            nBins += bandBinIndices_[i-1][1]-bandBinIndices_[i-1][0] + 1;
-        }
-        
         //total number of bins in the output spectrum
-        nBins += bandBinIndices_[nWindows-1][1]-bandBinIndices_[nWindows-1][0] + 1;
         LOUDNESS_DEBUG(name_ 
                 << ": Total number of bins comprising the output spectrum: " << nBins);
 
@@ -136,14 +130,14 @@ namespace loudness{
         for(int i=0; i<nWindows; i++)
         {
             j = bandBinIndices_[i][0];
-            while(j <= bandBinIndices_[i][1])
+            while(j < bandBinIndices_[i][1])
                 output_.setCentreFreq(k++, (j++)*fs/(Real)fftSize[i]);
 
             LOUDNESS_DEBUG(name_ 
-                    << ": Freq Hz (band low): " 
+                    << ": Included freq Hz (band low): " 
                     << fs * bandBinIndices_[i][0] / float(fftSize[i]) 
-                    << ": Freq Hz (band high): " 
-                    << fs * bandBinIndices_[i][1] / float(fftSize[i])); 
+                    << ": Included freq Hz (band high): " 
+                    << fs * (bandBinIndices_[i][1] - 1) / float(fftSize[i])); 
         }
 
         return 1;
@@ -169,7 +163,7 @@ namespace loudness{
                 //Extract components from band and compute powers
                 Real re, im;
                 int bin = bandBinIndices_[chn][0];
-                while(bin <= bandBinIndices_[chn][1])
+                while(bin < bandBinIndices_[chn][1])
                 {
                     re = ffts_[fftIdx] -> getReal(bin);
                     im = ffts_[fftIdx] -> getImag(bin++);

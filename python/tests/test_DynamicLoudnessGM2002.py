@@ -15,10 +15,11 @@ outputsOfInterest = ["InstantaneousLoudness",
                      "ShortTermLoudness", 
                      "LongTermLoudness", 
                      "PeakShortTermLoudness"]
-extractor = LoudnessExtractor(model, 48e3, outputsOfInterest, 2)
+fs = 32000
+extractor = LoudnessExtractor(model, fs, outputsOfInterest, 2)
 extractor.frameTimeOffset = -0.032 + extractor.timeStep #align time 0 with centre of window
 
-signal = Sound.tone([1000, 1000], dur = 1.0, fs = 48e3)
+signal = Sound.tone([1000, 1000], dur = 1.0, fs = fs)
 signal.useDBSPL()
 signal.normalise(40, "RMS")
 signal.applyRamp(0.1)
