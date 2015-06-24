@@ -5,12 +5,15 @@ namespace loudness{
     HoppingGoertzelDFT::HoppingGoertzelDFT(const RealVec& frequencyBandEdges,
                 const vector<int>& windowSizes,
                 int hopSize,
-                bool isHannWindowUsed) :
+                bool isHannWindowUsed,
+                bool isPowerSpectrum) :
             Module("HoppingGoertzelDFT"),
             frequencyBandEdges_(frequencyBandEdges),
             windowSizes_ (windowSizes),
             hopSize_ (hopSize),
-            isHannWindowUsed_ (isHannWindowUsed)
+            isHannWindowUsed_ (isHannWindowUsed),
+            isPowerSpectrum_ (isPowerSpectrum),
+            reference_ (2e-5)
     {}
 
     HoppingGoertzelDFT::~HoppingGoertzelDFT() {}
@@ -95,7 +98,15 @@ namespace loudness{
         binIdxForGoertzels_.assign (nWindows_, vector<int> (2, 0));
 
         // output bank
-        output_.initialize (input.getNEars(), nBins, 2, fs);
+        if (isPowerSpectrum_)
+        {
+            output_.initialize (input.getNEars(), nBins, 1, fs);
+            normFactors_.assign (nWindows_, 1.0);
+        }
+        else
+        {
+            output_.initialize (input.getNEars(), nBins, 2, fs);
+        }
         output_.setFrameRate (fs / (Real)hopSize_);
         output_.setTrig (false);
 
@@ -123,7 +134,16 @@ namespace loudness{
                 cosineTimes2_[k] = 2.0 * cosPhi;
             }
             binIdxForGoertzels_[w][1] = k;
-
+            if (isPowerSpectrum_)
+            {
+                Real refSquared = reference_ * reference_;
+                Real windowSizeSquared = windowSizes_[w] * windowSizes_[w];
+                normFactors_[w] = 2.0 / (refSquared * windowSizeSquared);
+                // 3/8 for hann window and 0.0625 for gain of 16 introduced by
+                // selected coefficients
+                if (isHannWindowUsed_)
+                    normFactors_[w] *= (3.0 * 0.0625) / 8.0;
+            }
         }
 
         nSamplesUntilTrigger_ = largestWindowSize_;
@@ -184,9 +204,19 @@ namespace loudness{
             if(tempNSamplesUntilTrigger_ == 0)
             {
                 if (isHannWindowUsed_)
-                    calculateSpectrumAndApplyHannWindow(input.getNEars());
+                {
+                    if (isPowerSpectrum_)
+                        calculatePowerSpectrumAndApplyHannWindow(input.getNEars());
+                    else
+                        calculateSpectrumAndApplyHannWindow(input.getNEars());
+                }
                 else
-                    calculateSpectrum(input.getNEars());
+                {
+                    if (isPowerSpectrum_)
+                        calculatePowerSpectrum(input.getNEars());
+                    else
+                        calculateSpectrum(input.getNEars());
+                }
                 
                 tempNSamplesUntilTrigger_ = hopSize_;
                 output_.setTrig (true);
@@ -234,45 +264,61 @@ namespace loudness{
                     << readIdx_[w][1]);
         }
     }
+
     void HoppingGoertzelDFT::calculateSpectrum(int nEars)
     {
         for (int ear = 0; ear < nEars; ++ear)
         {
-            // write to the output signal bank using a single pointer
-            Real* y = output_.getSignalWritePointer(ear, 0, 0);
+            int chn = 0;
             for (int w = 0; w < nWindows_; ++w)
             {
                 for (int k = binIdxForGoertzels_[w][0]; k < binIdxForGoertzels_[w][1]; ++k)
                 {
-                    *(y++) = 0.5 * cosineTimes2_[k] * vPrev_[ear][k] - vPrev2_[ear][k];
-                    *(y++) = sine_[k] * vPrev_[ear][k];	
+                    Real* y = output_.getSignalWritePointer(ear, chn++);
+                    *y = 0.5 * cosineTimes2_[k] * vPrev_[ear][k] - vPrev2_[ear][k];
+                    *(++y) = sine_[k] * vPrev_[ear][k];	
                 }
             }
         }
     }
 
-    void HoppingGoertzelDFT::calculateSpectrumAndApplyHannWindow(int nEars)
+    void HoppingGoertzelDFT::calculatePowerSpectrum(int nEars)
     {
         for (int ear = 0; ear < nEars; ++ear)
         {
-            // write to the output signal bank using a single pointer
-            Real* y = output_.getSignalWritePointer(ear, 0, 0);
+            Real* y = output_.getSingleSampleWritePointer (ear, 0);
             for (int w = 0; w < nWindows_; ++w)
             {
-                int firstBinInBand = binIdxForGoertzels_[w][0];
-                int lastBinInBand = binIdxForGoertzels_[w][1];
+                for (int k = binIdxForGoertzels_[w][0]; k < binIdxForGoertzels_[w][1]; ++k)
+                {
+                    Real real = 0.5 * cosineTimes2_[k] * vPrev_[ear][k] - vPrev2_[ear][k];
+                    Real imag = sine_[k] * vPrev_[ear][k];	
+                    *(y++) = normFactors_[w] * (real * real + imag * imag);
+                }
+            }
+        }
+    }
+
+    void HoppingGoertzelDFT::calculateSpectrumAndApplyHannWindow (int nEars)
+    {
+        for (int ear = 0; ear < nEars; ++ear)
+        {
+            int chn = 0;
+            for (int w = 0; w < nWindows_; ++w)
+            {
                 int i = 0;
                 RealVec reals(3, 0.0), imags(3, 0.0);
-                for (int k = firstBinInBand; k < lastBinInBand; ++k)
+                for (int k = binIdxForGoertzels_[w][0]; k < binIdxForGoertzels_[w][1]; ++k)
                 { 
                     reals[i] = 0.5 * cosineTimes2_[k] * vPrev_[ear][k] - vPrev2_[ear][k];
                     imags[i++] = sine_[k] * vPrev_[ear][k];	
 
                     if (i == 3)
                     {
-                                // X_k-1      X_k+1            X_k
-                        *(y++) = (-reals[0] - reals[2] + 2.0 * reals[1]);
-                        *(y++) = (-imags[0] - imags[2] + 2.0 * imags[1]);
+                        Real* y = output_.getSignalWritePointer(ear, chn++);
+                                     // X_k-1           X_k+1            X_k
+                        *y =     (-0.25*reals[0] - 0.25*reals[2] + 0.5 * reals[1]);
+                        *(++y) = (-0.25*imags[0] - 0.25*imags[2] + 0.5 * imags[1]);
                         reals[0] = reals[1];
                         reals[1] = reals[2];
                         imags[0] = imags[1];
@@ -282,6 +328,42 @@ namespace loudness{
                 }
             }
         }
+    }
+
+    void HoppingGoertzelDFT::calculatePowerSpectrumAndApplyHannWindow (int nEars)
+    {
+        for (int ear = 0; ear < nEars; ++ear)
+        {
+            Real* y = output_.getSingleSampleWritePointer (ear, 0);
+            for (int w = 0; w < nWindows_; ++w)
+            {
+                int i = 0;
+                RealVec reals(3, 0.0), imags(3, 0.0);
+                for (int k = binIdxForGoertzels_[w][0]; k < binIdxForGoertzels_[w][1]; ++k)
+                { 
+                    reals[i] = 0.5 * cosineTimes2_[k] * vPrev_[ear][k] - vPrev2_[ear][k];
+                    imags[i++] = sine_[k] * vPrev_[ear][k];	
+
+                    if (i == 3)
+                    {
+                                   // X_k-1      X_k+1            X_k
+                        Real real = (-reals[0] - reals[2] + 2.0 * reals[1]);
+                        Real imag = (-imags[0] - imags[2] + 2.0 * imags[1]);
+                        *(y++) = normFactors_[w] * (real * real + imag * imag);
+                        reals[0] = reals[1];
+                        reals[1] = reals[2];
+                        imags[0] = imags[1];
+                        imags[1] = imags[2];
+                        i = 2;
+                    }
+                }
+            }
+        }
+    }
+
+    void HoppingGoertzelDFT::setReference (Real reference)
+    {
+        reference_ = reference;
     }
 }
 
