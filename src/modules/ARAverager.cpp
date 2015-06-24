@@ -41,8 +41,12 @@ namespace loudness{
 
         LOUDNESS_DEBUG(name_ << ": Input frame rate: "
                 << input.getFrameRate()
+                << ". Attack time: "
+                << attackTime_
                 << ". Attack coefficient: "
                 << attackCoef_
+                << ". Release time: "
+                << releaseTime_
                 << ". Release coefficient: "
                 << releaseCoef_);
 
