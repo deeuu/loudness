@@ -13,6 +13,7 @@ namespace loudness{
             hopSize_ (hopSize),
             isHannWindowUsed_ (isHannWindowUsed),
             isPowerSpectrum_ (isPowerSpectrum),
+            isFirstSampleAtWindowCentre_ (true),
             reference_ (2e-5)
     {}
 
@@ -34,8 +35,11 @@ namespace loudness{
             bandEdgeIdx[w][0] = std::ceil (frequencyBandEdges_[w] * windowSizes_[w] / fs);
             // use < bandEdgeIdx[w][1] to exclude f_hi
             bandEdgeIdx[w][1] = std::ceil (frequencyBandEdges_[w + 1] * windowSizes_[w] / fs);
-            LOUDNESS_DEBUG(name_ << ": LoFreq: " << bandEdgeIdx[w][0] * fs / (Real)windowSizes_[w]);
-            LOUDNESS_DEBUG(name_ << ": HiFreq: " << bandEdgeIdx[w][1] * fs / (Real)windowSizes_[w]);
+
+            LOUDNESS_DEBUG(name_ 
+                    << ": LoFreq: " << bandEdgeIdx[w][0] * fs / (Real)windowSizes_[w]
+                    << ": HiFreq: " << (bandEdgeIdx[w][1] - 1) * fs / (Real)windowSizes_[w]);
+
             int highestBin = windowSizes_[w] / 2;
 
             LOUDNESS_ASSERT(bandEdgeIdx[w][1] != 0, ": No components found in band number ");
@@ -67,17 +71,13 @@ namespace loudness{
                 bandEdgeIdx[w][1] += 1;
                 nAdditionalBins += 2;
             }
-
-            LOUDNESS_DEBUG(name_
-                << ": bin lo : " << bandEdgeIdx[w][0]
-                << ", bin hi : " << bandEdgeIdx[w][1]);
         }
 
         int nTotalBins = nBins + nAdditionalBins;
         LOUDNESS_DEBUG (name_ 
-                << ": Total number of bins comprising the spectrum: " 
+                << ": Total number of bins comprising the output spectrum: " 
                 << nBins
-                << ": Total number os bins used by this algorithm: "
+                << ": Total number of bins used by this algorithm: "
                 << nTotalBins);
 
         // in order to simplify the alignment of windows, make the delay line an
@@ -139,15 +139,13 @@ namespace loudness{
                 Real refSquared = reference_ * reference_;
                 Real windowSizeSquared = windowSizes_[w] * windowSizes_[w];
                 normFactors_[w] = 2.0 / (refSquared * windowSizeSquared);
-                // 3/8 for hann window and 0.0625 for gain of 16 introduced by
-                // selected coefficients
+                // 3/8 for hann window and 16 for gain introduced by
+                // selected hann coefficients
                 if (isHannWindowUsed_)
-                    normFactors_[w] *= (3.0 * 0.0625) / 8.0;
+                    normFactors_[w] /= 16.0 * 0.375;
             }
         }
 
-        nSamplesUntilTrigger_ = largestWindowSize_;
-        tempNSamplesUntilTrigger_ = nSamplesUntilTrigger_;
 
         return 1;
     }
@@ -162,15 +160,16 @@ namespace loudness{
         // Write to the delay line
         for (int ear = 0; ear < input.getNEars(); ++ear)
         {
-            const Real* x = input.getSignalReadPointer(ear, 0, 0);
+            const Real* x = input.getSignalReadPointer(ear, 0);
+            Real* delay = &delayLine_[ear][writeIdx_];
             for (int smp = 0; smp < nSamplesToProcess; ++smp)
-                delayLine_[ear][writeIdx_++] = x[smp];
-            writeIdx_ = writeIdx_ % delayLineSize_;
+                delay[smp] = x[smp];
         }
+        writeIdx_ = (writeIdx_ + nSamplesToProcess) % delayLineSize_;
 
         // number of samples to process until DFT is ready
-        if (tempNSamplesUntilTrigger_ <= nRemainingSamples)
-            nSamplesToProcess = tempNSamplesUntilTrigger_;
+        if (nSamplesUntilTrigger_ <= nRemainingSamples)
+            nSamplesToProcess = nSamplesUntilTrigger_;
 
         // Goertzel resonators
         while (nRemainingSamples)
@@ -179,12 +178,13 @@ namespace loudness{
             {
                 for (int w = 0; w < nWindows_; ++w)
                 {
+                    int idx1 = readIdx_[w][0];
+                    int idx2 = readIdx_[w][1];
                     for (int smp = 0; smp < nSamplesToProcess; ++smp)
                     {
-                        Real comb = delayLine_[ear][readIdx_[w][0]]
-                            - delayLine_[ear][readIdx_[w][1]];
-                        readIdx_[w][0] = (readIdx_[w][0] + 1) % delayLineSize_;
-                        readIdx_[w][1] = (readIdx_[w][1] + 1) % delayLineSize_;
+                        Real comb = delayLine_[ear][idx1] - delayLine_[ear][idx2];
+                        ++idx1 = idx1 % delayLineSize_;
+                        ++idx2 = idx2 % delayLineSize_;
 
                         // compute v[n] for each frequency
                         for (int k = binIdxForGoertzels_[w][0]; k < binIdxForGoertzels_[w][1]; ++k)
@@ -198,10 +198,17 @@ namespace loudness{
                 }
             }
 
-            tempNSamplesUntilTrigger_ -= nSamplesToProcess;
+            // update delay indices
+            for (int w = 0; w < nWindows_; ++w)
+            {
+                readIdx_[w][0] = (readIdx_[w][0] + nSamplesToProcess) % delayLineSize_;
+                readIdx_[w][1] = (readIdx_[w][1] + nSamplesToProcess) % delayLineSize_;
+            }
+
+            nSamplesUntilTrigger_ -= nSamplesToProcess;
 
             // compute the complex-real multiplication
-            if(tempNSamplesUntilTrigger_ == 0)
+            if(nSamplesUntilTrigger_ == 0)
             {
                 if (isHannWindowUsed_)
                 {
@@ -218,7 +225,7 @@ namespace loudness{
                         calculateSpectrum(input.getNEars());
                 }
                 
-                tempNSamplesUntilTrigger_ = hopSize_;
+                nSamplesUntilTrigger_ = hopSize_;
                 output_.setTrig (true);
             }
             nRemainingSamples -= nSamplesToProcess;
@@ -242,13 +249,17 @@ namespace loudness{
             }
         }
         output_.setTrig (false);
-        tempNSamplesUntilTrigger_ = nSamplesUntilTrigger_;
         configureDelayLineIndices();
     }
 
     void HoppingGoertzelDFT::configureDelayLineIndices()
     {
         writeIdx_ = 0;
+        if (isFirstSampleAtWindowCentre_)
+            nSamplesUntilTrigger_ = largestWindowSize_ / 2;
+        else
+            nSamplesUntilTrigger_ = largestWindowSize_;
+
         for (int w = 0; w < nWindows_; ++w)
         {
             readIdx_[w][0] = (delayLineSize_ - 
@@ -256,6 +267,7 @@ namespace loudness{
                 delayLineSize_;
             readIdx_[w][1] = (delayLineSize_ + readIdx_[w][0] - windowSizes_[w]) %
                 delayLineSize_;
+
             LOUDNESS_DEBUG(name_ << ": window : "
                     << w
                     << ", start idx: "
@@ -364,6 +376,11 @@ namespace loudness{
     void HoppingGoertzelDFT::setReference (Real reference)
     {
         reference_ = reference;
+    }
+
+    void HoppingGoertzelDFT::setFirstSampleAtWindowCentre (bool isFirstSampleAtWindowCentre)
+    {
+        isFirstSampleAtWindowCentre_ = isFirstSampleAtWindowCentre;
     }
 }
 

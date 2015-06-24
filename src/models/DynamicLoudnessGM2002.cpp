@@ -25,6 +25,7 @@
 #include "../modules/IIR.h"
 #include "../modules/Window.h"
 #include "../modules/PowerSpectrum.h"
+#include "../modules/HoppingGoertzelDFT.h"
 #include "../modules/CompressSpectrum.h"
 #include "../modules/WeightSpectrum.h"
 #include "../modules/FastRoexBank.h"
@@ -89,6 +90,11 @@ namespace loudness{
     void DynamicLoudnessGM2002::setSpectrumSampledUniformly(bool isSpectrumSampledUniformly)
     {
         isSpectrumSampledUniformly_ = isSpectrumSampledUniformly;
+    }
+
+    void DynamicLoudnessGM2002::setHoppingGoertzelDFTUsed (bool isHoppingGoertzelDFTUsed)
+    {
+        isHoppingGoertzelDFTUsed_ = isHoppingGoertzelDFTUsed;
     }
 
     void DynamicLoudnessGM2002::setSpectralResolutionDoubled(bool isSpectralResolutionDoubled)
@@ -162,6 +168,7 @@ namespace loudness{
         setPeakSTLFollowerUsed(false);
         setOuterEarType(OME::ANSIS342007_FREEFIELD);
         setSpectrumSampledUniformly(true);
+        setHoppingGoertzelDFTUsed(false);
         setSpectralResolutionDoubled(false);
         setExcitationPatternInterpolated(false);
         setInterpolationCubic(true);
@@ -180,6 +187,7 @@ namespace loudness{
             {
                 setRoexBankFast(true);
                 setExcitationPatternInterpolated(true);
+                setFilterSpacingInCams(1.25);
                 setCompressionCriterionInCams(0.8);
                 LOUDNESS_DEBUG(name_ << ": Using faster params for Glasberg and Moore's 2002 model.");
             }
@@ -198,7 +206,8 @@ namespace loudness{
                 setSpecificLoudnessANSIS342007(true);
                 setRoexBankFast(true);
                 setExcitationPatternInterpolated(true);
-                setCompressionCriterionInCams(0.3);
+                setFilterSpacingInCams(1.25);
+                setCompressionCriterionInCams(0.8);
                 LOUDNESS_DEBUG(name_
                         << ": Using faster params and "
                         << "updated time-constants from 2003 paper and "
@@ -278,29 +287,47 @@ namespace loudness{
 
         //window spec
         RealVec windowSizeSecs {0.064, 0.032, 0.016, 0.008, 0.004, 0.002};
-        vector<int> windowSizeSamples(6,0);
+        vector<int> windowSizeSamples(6, 0);
         //round to nearest sample and force to be even such that centre samples
-        //are aligned.
+        //are aligned (using periodic Hann window)
         for (int w = 0; w < 6; w++)
         {
             if (isSpectralResolutionDoubled_)
                 windowSizeSecs[w] *= 2;
             windowSizeSamples[w] = (int)round(windowSizeSecs[w] * input.getFs());
-            windowSizeSamples[w] += windowSizeSamples[w]%2;
+            windowSizeSamples[w] += windowSizeSamples[w] % 2;
         }
 
-        //Frame generator
-        int hopSize = int(input.getFs() / rate_);
-        modules_.push_back(unique_ptr<Module> 
-                (new FrameGenerator(windowSizeSamples[0], hopSize, isFirstSampleAtWindowCentre_)));
-
-        //windowing: Periodic hann window
-        modules_.push_back(unique_ptr<Module>
-                (new Window(Window::HANN, windowSizeSamples, true)));
-
+        // hop size to the nearest sample
+        int hopSize = round(input.getFs() / rate_);
+        
         //power spectrum
-        modules_.push_back(unique_ptr<Module> 
-                (new PowerSpectrum(bandFreqsHz, windowSizeSamples, isSpectrumSampledUniformly_)));
+        if (isHoppingGoertzelDFTUsed_)
+        {
+            compressionCriterionInCams_ = 0;
+            modules_.push_back(unique_ptr<Module> 
+                    (new HoppingGoertzelDFT(bandFreqsHz,
+                                            windowSizeSamples,
+                                            hopSize,
+                                            true,
+                                            true)));
+        }
+        else
+        {
+            modules_.push_back(unique_ptr<Module> 
+                    (new FrameGenerator(windowSizeSamples[0],
+                                        hopSize,
+                                        isFirstSampleAtWindowCentre_)));
+
+            //windowing: Periodic hann window
+            modules_.push_back(unique_ptr<Module>
+                    (new Window(Window::HANN, windowSizeSamples, true)));
+
+            modules_.push_back(unique_ptr<Module> 
+                    (new PowerSpectrum(bandFreqsHz,
+                                       windowSizeSamples,
+                                       isSpectrumSampledUniformly_)));
+        }
 
         /*
          * Compression

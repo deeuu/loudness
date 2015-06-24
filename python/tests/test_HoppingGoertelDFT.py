@@ -39,25 +39,10 @@ HGDFT.initialize(bankIn)
 bankOut = HGDFT.getOutput()
 
 x = np.random.randn(windowSizes[0] * 48)
-nFrames = int((x.size - windowSizes[0]) / float(hopSize)) + 1
+nFrames = int((x.size - windowSizes[0]/2) / float(hopSize)) + 1
 
 sFFT = np.zeros((nFrames, nTotalBins))
 sHGDFT = np.zeros((nFrames, nTotalBins))
-
-for frame in range(nFrames):
-    binStart = 0
-    for i in range(nBands):
-        start = frame * hopSize + windowStart[i]
-        end = start + windowSizes[i]
-        fftBuf = x[start:end].copy()
-        if applyHannWindow:
-            fftBuf *= hannWindows[i]
-        X = np.fft.fft(fftBuf)
-        binEnd = binStart + nBins[i]
-        sFFT[frame, binStart:binEnd] = (normFactors[i] *
-                np.abs(X[bins[i][0]:bins[i][1]])**2)
-
-        binStart += binEnd
 
 nBlocks = int(x.size / float(blockSize))
 frame = 0
@@ -71,6 +56,24 @@ for block in range(nBlocks):
         flattenedSignal = bankOut.getSignals().flatten()
         sHGDFT[frame, :] = flattenedSignal
         frame += 1
+
+# add half window zeros so window is centred at sample 0
+x = np.hstack((np.zeros(windowSizes[0] / 2), x))
+for frame in range(nFrames):
+    binStart = 0
+    for i in range(nBands):
+        start = frame * hopSize + windowStart[i]
+        end = start + windowSizes[i]
+        if applyHannWindow:
+            fftBuf = x[start:end] * hannWindows[i]
+        else:
+            fftBuf = x[start:end]
+        X = np.fft.fft(fftBuf)
+        binEnd = binStart + nBins[i]
+        sFFT[frame, binStart:binEnd] = (normFactors[i] *
+                np.abs(X[bins[i][0]:bins[i][1]])**2)
+
+        binStart += binEnd
 
 sFFT = sFFT.flatten()
 sHGDFT = sHGDFT.flatten()

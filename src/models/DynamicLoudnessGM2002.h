@@ -122,6 +122,8 @@ namespace loudness{
 
             void setSpectrumSampledUniformly(bool isSpectrumSampledUniformly);
 
+            void setHoppingGoertzelDFTUsed (bool isHoppingGoertzelDFTUsed);
+
             void setSpectralResolutionDoubled(bool isSpectralResolutionDoubled);
 
             void setPresentationDiotic(bool isPresentationDiotic);
@@ -153,7 +155,8 @@ namespace loudness{
             Real attackTimeSTL_, releaseTimeSTL_;
             Real attackTimeLTL_, releaseTimeLTL_;
             bool isRoexBankFast_, isExcitationPatternInterpolated_, isInterpolationCubic_;
-            bool isSpectrumSampledUniformly_, isSpectralResolutionDoubled_, isPresentationDiotic_;
+            bool isSpectrumSampledUniformly_, isHoppingGoertzelDFTUsed_;
+            bool isSpectralResolutionDoubled_, isPresentationDiotic_;
             bool  isBinauralInhibitionUsed_, isHPFUsed_;
             bool isSpecificLoudnessANSIS342007_, isFirstSampleAtWindowCentre_;
             bool isPeakSTLFollowerUsed_;

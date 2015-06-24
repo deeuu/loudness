@@ -75,6 +75,7 @@ namespace loudness{
                 bool isPowerSpectrum);
         virtual ~HoppingGoertzelDFT();
         void setReference (Real reference);
+        void setFirstSampleAtWindowCentre (bool isFirstSampleAtWindowCentre);
 
     private:
         virtual bool initializeInternal(const SignalBank &input);
@@ -91,9 +92,9 @@ namespace loudness{
         RealVec frequencyBandEdges_;
         vector<int> windowSizes_;
         int hopSize_;
-        bool isHannWindowUsed_, isPowerSpectrum_;
+        bool isHannWindowUsed_, isPowerSpectrum_, isFirstSampleAtWindowCentre_;
         Real reference_;
-        int nSamplesUntilTrigger_, tempNSamplesUntilTrigger_, writeIdx_;
+        int nSamplesUntilTrigger_, writeIdx_;
         int nWindows_, delayLineSize_, largestWindowSize_;
         vector< vector<int>> binIdxForGoertzels_, readIdx_;
         RealVec sine_, cosineTimes2_, normFactors_;
