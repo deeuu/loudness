@@ -99,7 +99,9 @@ class LoudnessExtractor:
         self.timeStep = float(self.hopSize) / fs
         self.inputBuf = ln.SignalBank()
         self.inputBuf.initialize(self.nInputEars, 1, self.hopSize, self.fs)
-        if outputs:
+        if outputs is not None:
+            if type(outputs) is not list:
+                outputs = [outputs]
             self.model.setOutputModulesToAggregate(outputs)
         if not self.model.initialize(self.inputBuf):
             raise ValueError("Problem initialising the model!")
