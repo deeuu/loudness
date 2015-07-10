@@ -21,18 +21,17 @@
 
 namespace loudness{
 
-    SignalBank::SignalBank()
-    { 
-        nEars_ = 0;
-        nChannels_ = 0;
-        nSamples_ = 0;
-        fs_ = 0;
-        trig_ = 0;
-        initialized_ = false;
-        frameRate_ = 0;
-        channelSpacingInCams_ = 0;
-        reserveSamples_ = 0;
-    }
+    SignalBank::SignalBank() :
+        nEars_(0),
+        nChannels_(0),
+        nSamples_(0),
+        fs_(0)
+        trig_(false),
+        initialized_(false),
+        frameRate_(0),
+        channelSpacingInCams_(0),
+        reserveSamples_(0)
+    {}
 
     SignalBank::~SignalBank() {}
 

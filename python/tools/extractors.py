@@ -5,6 +5,59 @@ from sound import Sound
 import matplotlib.pyplot as plt
 import h5py
 
+class StationaryLoudnessExtractor:
+
+    def __init__(self, model, outputs):
+
+        if model.isDynamic():
+            raise ValueError("Model cannot be dynamic")
+        self.model = model
+        if type(outputs) is not list:
+            self.outputs = [outputs]
+        else:
+            self.outputs = outputs
+        self.outputDict = {}
+        self.outputDict['Frequencies'] = np.array([])
+        self.nEars = 0
+        self.bank = ln.SignalBank()
+
+    def process(self, frequencies, intensityLevels):
+
+        if (frequencies.size == 0) or (intensityLevels.size == 0):
+            raise ValueError("Must have at least one input component")
+
+        if intensityLevels.ndim == 1:
+            intensities = 10**(intensityLevels.reshape((-1, 1)) / 10.0)
+        else:
+            intensities = 10**(intensityLevels / 10.0)
+
+        if intensities.shape[0] != frequencies.size:
+            raise ValueError("Number of component intensities does not match"+
+                " number of component frequencies")
+
+        self.outputDict['IntensityLevels'] = np.squeeze(intensityLevels)
+
+        nComponents = frequencies.size
+        nEars = intensities.shape[1]
+
+        if (np.all(self.outputDict['Frequencies'] != frequencies) or
+                (nEars != self.nEars)):
+            self.bank.initialize(nEars, nComponents, 1, 1)
+            self.bank.setCentreFreqs(frequencies)
+            self.outputDict['Frequencies'] = frequencies
+            self.nEars = nEars
+            self.model.initialize(self.bank)
+
+        self.bank.setSignals(intensities.reshape((nEars, nComponents, 1)))
+        
+        self.model.process(self.bank)
+
+        for name in self.outputs:
+            outputBank = self.model.getOutputModuleSignalBank(name)
+            self.outputDict[name] = (np.squeeze(outputBank.getSignals())).copy()
+
+        self.model.reset()
+
 class LoudnessExtractor:
     '''Convienience class for processing numpy arrays.
     This class can be used to extract features of an input array using a
@@ -16,27 +69,27 @@ class LoudnessExtractor:
     The output is stored in a dictionary with keys corresponding to the features
     listed in `modelOutputsToExtract'.
 
-    Processing frames are per hop size, which is dictated by the rate of the
+    Processing frames are per hop size, which is determined by the rate of the
     model. Frame times start at time 0 and increment at the hop size in seconds.
     For example, consider a hop size of 48 @ fs = 48kHz, the frame time
     corresponding to the first and second frame would be 0 and 1ms respectively.
     You can offset the frame times using self.frameTimeOffset.  '''
 
     def __init__(self, model,
-            fs = 32000, modelOutputsToExtract = [], nInputEars = 1):
+            fs = 32000, 
+            nInputEars = 1,
+            outputs = None):
         ''' 
-        Model   : The input loudness model - must be dynamic.
-        fs      : The sampling frequency
-        nInputEars  : Number of ears used by the input array to be analysed.
-        modelOutputsToExtract   : A list of features output by the model to
-                                  extract.
+        Model   
+            The input loudness model - must be dynamic.
+        fs   
+            The sampling frequency
+        nInputEars
+            Number of ears used by the input array to be analysed.
         '''
 
         if not model.isDynamic():
             raise ValueError("Model must be dynamic.")
-
-        if type(modelOutputsToExtract) is not list:
-                modelOutputsToExtract = [modelOutputsToExtract]
 
         self.model = model
         self.fs = int(fs)
@@ -46,14 +99,12 @@ class LoudnessExtractor:
         self.timeStep = float(self.hopSize) / fs
         self.inputBuf = ln.SignalBank()
         self.inputBuf.initialize(self.nInputEars, 1, self.hopSize, self.fs)
+        if outputs:
+            self.model.setOutputModulesToAggregate(outputs)
         if not self.model.initialize(self.inputBuf):
             raise ValueError("Problem initialising the model!")
 
-        self.outputBanks = []
         self.outputDict = {}
-        self.modelOutputsToExtract = modelOutputsToExtract
-        for name in modelOutputsToExtract:
-            self.outputBanks.append(self.model.getOutputModuleSignalBank(name))
         self.nSamplesToPadStart = 0
         self.nSamplesToPadEnd = int(0.2*self.fs)#see below
         self.frameTimeOffset = 0
@@ -64,7 +115,7 @@ class LoudnessExtractor:
 
     def process(self, inputSignal):
         '''
-        Process the numpy array 'inputSignal' using a dynamic loudness
+        Process the numpy array `inputSignal' using a dynamic loudness
         model.  For stereo signals, the input signal must have two dimensions
         with shape (nSamples x 2).  For monophonic signals, the input signal can
         be 2D, i.e. (nSamples x 1), or one dimensional.  
@@ -84,40 +135,34 @@ class LoudnessExtractor:
 
         '''Pad end so that we can obtain analysis over the last sample, 
         No neat way to do this at the moment so assume 0.2ms is enough.'''
-        self.inputSignal = np.concatenate((\
-            np.zeros((self.nInputEars, 1, self.nSamplesToPadStart)), \
-            self.inputSignal,\
+        self.inputSignal = np.concatenate((
+            np.zeros((self.nInputEars, 1, self.nSamplesToPadStart)),
+            self.inputSignal,
             np.zeros((self.nInputEars, 1, self.nSamplesToPadEnd))), 2)
 
         #configure the number of output frames needed
         nOutputFrames = int(np.ceil(self.inputSignal.size / float(self.hopSize)))
-        self.outputDict['FrameTimes'] = self.frameTimeOffset +\
-                                        np.arange(nOutputFrames) *\
-                                        self.hopSize / float(self.fs)
-
-        #outputs
-        for i, name in enumerate(self.modelOutputsToExtract):
-            self.outputDict[name] = np.zeros((\
-                nOutputFrames,
-                self.outputBanks[i].getNEars(),\
-                self.outputBanks[i].getNChannels(),\
-                self.outputBanks[i].getNSamples()))
+        self.outputDict['FrameTimes'] = (self.frameTimeOffset +
+                                        np.arange(nOutputFrames) *
+                                        self.hopSize / float(self.fs))
 
         #One process call every hop samples
         for frame in range(nOutputFrames):
 
             #Any overlap is generated c++ side, so just fill the input
             #SignalBank with new blocks
-            startIdx = frame*self.hopSize
+            startIdx = frame * self.hopSize
             endIdx = startIdx + self.hopSize
             self.inputBuf.setSignals(self.inputSignal[:, :, startIdx:endIdx])
 
             #Process the input buffer
             self.model.process(self.inputBuf)
 
-            #get output if output buffer is ready
-            for i, name in enumerate(self.modelOutputsToExtract):
-                self.outputDict[name][frame] = self.outputBanks[i].getSignals()
+        #get outputs
+        outputNames = self.model.getOutputModulesToAggregate()
+        for name in outputNames:
+            bank = self.model.getOutputModuleSignalBank(name)
+            self.outputDict[name] = np.squeeze(bank.getAggregatedSignals())
 
         #Processing complete so clear internal states
         self.model.reset()
@@ -127,7 +172,7 @@ class LoudnessExtractor:
         '''
         Plots the input waveform and the features listed in
         `modelOutputsToPlot'. These features should have been extracted when
-        calling `process()' and should have one sample per ear and frame, i.e.
+        calling `process()' and should have one sample per ear and frame, i.e.,
         each feature should be one vector of loudness values per ear.
         '''
         if self.processed:
@@ -146,8 +191,7 @@ class LoudnessExtractor:
 
             for name in modelOutputsToPlot:
                 for ear in range(self.outputDict[name].shape[1]):
-                    ax2.plot(self.outputDict['FrameTimes'],\
-                            self.outputDict[name][:, ear, 0, 0].flatten())
+                    ax2.plot(self.outputDict['FrameTimes'], self.outputDict[name])
             ax2.set_ylabel("Loudness")
             ax2.set_xlabel("Time, seconds")
             plt.tight_layout()
@@ -301,5 +345,5 @@ class BatchWavFileProcessor:
             for name in outputNames:
                 bank = model.getOutputModuleSignalBank(name)
                 wavFileGroup.create_dataset(name, data =
-                        bank.getAggregatedSignals())
+                        np.squeeze(bank.getAggregatedSignals()))
         h5File.close()

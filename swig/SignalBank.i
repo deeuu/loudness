@@ -21,6 +21,8 @@ public:
     inline Real getCentreFreq(int channel) const;
     inline bool getTrig();
     inline void setTrig(bool trig);
+    void reset();
+    void zeroSignals();
     void setFrameRate(Real frameRate);
     void getFrameRate() const;
     void setChannelSpacingInCams(Real channelSpacingInCams);
