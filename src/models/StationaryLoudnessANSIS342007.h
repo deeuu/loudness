@@ -17,8 +17,8 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#ifndef STEADYSTATELOUDNESSANSIS342007_H
-#define STEADYSTATELOUDNESSANSIS342007_H
+#ifndef StationaryLOUDNESSANSIS342007_H
+#define StationaryLOUDNESSANSIS342007_H
 
 #include "../support/Model.h"
 #include "../support/AuditoryTools.h"
@@ -37,21 +37,24 @@ namespace loudness{
      *
      * It should be noted that this model makes use of polynomials to
      * approximate the variables involved in the specific loudness calculations,
-     * rather than interpolation as used in the standard. See AuditoryTools to
-     * see how the specific loudness parameters are computed.
+     * rather than interpolation as used in the standard. See
+     * SpecificLoudnessANSIS342007 to see how the specific loudness parameters
+     * are computed.
      *
      * REFERENCES:
      *
      * ANSI. (2007). ANSI S3.4-2007. Procedure for the Computation of Loudness of
      * Steady Sounds.
      */
-    class SteadyStateLoudnessANSIS342007 : public Model
+    class StationaryLoudnessANSIS342007 : public Model
     {
         public:
-            SteadyStateLoudnessANSIS342007();
-            virtual ~SteadyStateLoudnessANSIS342007();
+            StationaryLoudnessANSIS342007();
+            virtual ~StationaryLoudnessANSIS342007();
 
             void setPresentationDiotic(bool isPresentationDiotic);
+
+            void setBinauralInhibitionUsed(bool isBinauralInhibitionUsed);
 
             void setOuterEarType(const OME::Filter outerEarType);
 
@@ -61,7 +64,7 @@ namespace loudness{
             virtual bool initializeInternal(const SignalBank &input);
 
             Real filterSpacingInCams_;
-            bool isPresentationDiotic_;
+            bool isPresentationDiotic_, isBinauralInhibitionUsed_;
             OME::Filter outerEarType_;
     }; 
 }

@@ -20,42 +20,47 @@
 #include "../modules/WeightSpectrum.h"
 #include "../modules/RoexBankANSIS342007.h"
 #include "../modules/SpecificLoudnessANSIS342007.h"
+#include "../modules/BinauralInhibitionMG2007.h"
 #include "../modules/InstantaneousLoudness.h"
-#include "SteadyStateLoudnessANSIS342007.h"
+#include "StationaryLoudnessANSIS342007.h"
 
 namespace loudness{
 
-    SteadyStateLoudnessANSIS342007::SteadyStateLoudnessANSIS342007() :
-        Model("SteadyStateLoudnessANSIS342007", false)
+    StationaryLoudnessANSIS342007::StationaryLoudnessANSIS342007() :
+        Model("StationaryLoudnessANSIS342007", false)
     {
         //Default parameters
-        setPresentationDiotic(true);
         setOuterEarType(OME::Filter::ANSIS342007_FREEFIELD);
         setfilterSpacingInCams(0.1);
+        setPresentationDiotic(true);
+        setBinauralInhibitionUsed(false);
     }
 
-    SteadyStateLoudnessANSIS342007::~SteadyStateLoudnessANSIS342007()
-    {
-    }
+    StationaryLoudnessANSIS342007::~StationaryLoudnessANSIS342007()
+    {}
 
-    void SteadyStateLoudnessANSIS342007::setPresentationDiotic(bool isPresentationDiotic)
+    void StationaryLoudnessANSIS342007::setPresentationDiotic(bool isPresentationDiotic)
     {
         isPresentationDiotic_ = isPresentationDiotic;
     }
 
-    void SteadyStateLoudnessANSIS342007::setOuterEarType(const OME::Filter outerEarType)
+    void StationaryLoudnessANSIS342007::setBinauralInhibitionUsed(bool isBinauralInhibitionUsed)
+    {
+        isBinauralInhibitionUsed_ = isBinauralInhibitionUsed;
+    }
+
+    void StationaryLoudnessANSIS342007::setOuterEarType(const OME::Filter outerEarType)
     {
         outerEarType_ = outerEarType;
     }
 
-    void SteadyStateLoudnessANSIS342007::setfilterSpacingInCams(Real filterSpacingInCams)
+    void StationaryLoudnessANSIS342007::setfilterSpacingInCams(Real filterSpacingInCams)
     {
         filterSpacingInCams_ = filterSpacingInCams;
     }
 
-    bool SteadyStateLoudnessANSIS342007::initializeInternal(const SignalBank &input)
+    bool StationaryLoudnessANSIS342007::initializeInternal(const SignalBank &input)
     {
-
         /*
          * Weighting filter
          */
@@ -70,16 +75,25 @@ namespace loudness{
         outputModules_["ExcitationPattern"] = modules_.back().get();
         
         /*
-         * Specific loudness using high level modification
+         * Specific loudness
          */
+        isBinauralInhibitionUsed_ = isBinauralInhibitionUsed_ * (input.getNEars() == 2);
         modules_.push_back(unique_ptr<Module>
-                (new SpecificLoudnessANSIS342007(true, false)));
+                (new SpecificLoudnessANSIS342007(true, isBinauralInhibitionUsed_)));
+
+        /*
+         * Binaural inhibition
+         */
+        if (isBinauralInhibitionUsed_)
+        {
+            modules_.push_back(unique_ptr<Module> (new BinauralInhibitionMG2007));
+        }
         outputModules_["SpecificLoudnessPattern"] = modules_.back().get();
 
         /*
-        * Loudness integration 
-        */   
-        modules_.push_back(unique_ptr<Module>
+         * Instantaneous loudness
+         */   
+        modules_.push_back(unique_ptr<Module> 
                 (new InstantaneousLoudness(1.0, isPresentationDiotic_)));
         outputModules_["InstantaneousLoudness"] = modules_.back().get();
 

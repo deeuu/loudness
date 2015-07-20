@@ -50,7 +50,7 @@ if __name__ == "__main__":
                 "../src/modules/InstantaneousLoudness.cpp",
                 "../src/modules/ARAverager.cpp",
                 "../src/modules/PeakFollower.cpp",
-                "../src/models/SteadyStateLoudnessANSIS342007.cpp",
+                "../src/models/StationaryLoudnessANSIS342007.cpp",
                 "../src/models/DynamicLoudnessGM2002.cpp",
                 "../src/models/DynamicLoudnessCH2012.cpp"
             ],

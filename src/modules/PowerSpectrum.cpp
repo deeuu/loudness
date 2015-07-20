@@ -28,7 +28,8 @@ namespace loudness{
             bandFreqsHz_(bandFreqsHz),
             windowSizes_(windowSizes),
             sampleSpectrumUniformly_(sampleSpectrumUniformly),
-            normalisation_(AVERAGE_ENERGY)
+            normalisation_(AVERAGE_POWER),
+            referenceValue_(2e-5)
     {}
 
     PowerSpectrum::~PowerSpectrum()
@@ -99,19 +100,20 @@ namespace loudness{
             nBins += bandBinIndices_[i][1]-bandBinIndices_[i][0];
 
             //Power spectrum normalisation
+            Real refSquared = referenceValue_ * referenceValue_;
             switch (normalisation_)
             {
                 case NONE:
-                    normFactor_[i] = 1.0;
+                    normFactor_[i] = 1.0 / refSquared;
                     break;
                 case ENERGY:
-                    normFactor_[i] = 2.0/fftSize[i];
+                    normFactor_[i] = 2.0/(fftSize[i] * refSquared);
                     break;
-                case AVERAGE_ENERGY:
-                    normFactor_[i] = 2.0/(fftSize[i] * windowSizes_[i]);
+                case AVERAGE_POWER:
+                    normFactor_[i] = 2.0/(fftSize[i] * windowSizes_[i] * refSquared);
                     break;
                 default:
-                    normFactor_[i] = 2.0/fftSize[i];
+                    normFactor_[i] = 2.0/(fftSize[i] * refSquared);
             }
 
             LOUDNESS_DEBUG(name_ << ": Normalisation factor : " << normFactor_[i]);
@@ -179,5 +181,10 @@ namespace loudness{
     void PowerSpectrum::setNormalisation(const Normalisation normalisation)
     {
         normalisation_ = normalisation;
+    }
+
+    void PowerSpectrum::setReferenceValue(Real referenceValue)
+    {
+        referenceValue_ = referenceValue;
     }
 }

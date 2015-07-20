@@ -25,9 +25,9 @@ namespace loudness{
         nEars_(0),
         nChannels_(0),
         nSamples_(0),
-        fs_(0)
         trig_(false),
         initialized_(false),
+        fs_(0),
         frameRate_(0),
         channelSpacingInCams_(0),
         reserveSamples_(0)

@@ -4,16 +4,17 @@ import sys,os
 sys.path.append('../../tools/')
 from usefulFunctions import *
 from extractors import StationaryLoudnessExtractor
+from predictors import StationaryLoudnessISOThresholdPredictor, freqsISO, thresholdsISO
 import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
 
-    model = ln.SteadyStateLoudnessANSIS342007()
+    model = ln.StationaryLoudnessANSIS342007()
     feature = 'InstantaneousLoudness'
     extractor = StationaryLoudnessExtractor(model, feature)
 
     '''
-    Pure tone tests
+    Pure tones
     '''
     #Table 7
     levels = np.array([0, 1, 2, 3, 4, 5, 7.5])
@@ -27,68 +28,69 @@ if __name__ == '__main__':
     for i, level in enumerate(levels):
         extractor.process(np.array([1000.0]), np.array([level]))
         measured[i] = extractor.outputDict[feature]
-    writeToCSVFile(levels, expected, measured, './data/SteadyStateLoudnessANSIS342007_1kHz.csv')
+    writeTo3ColumnCSVFile(levels, expected, measured,
+            './data/StationaryLoudnessANSIS342007_PureTonesEX1.csv')
 
-    #Pure tones: Example 2
+    #Example 2
     levels = np.array([20, 40, 60, 80]);
     expected = np.array([0.35, 1.8, 7.1, 27.5])
     measured = np.zeros(expected.size)
     for i, level in enumerate(levels):
         extractor.process(np.array([3000.0]), np.array([level]))
         measured[i] = extractor.outputDict[feature]
-    writeToCSVFile(levels, expected, measured,
-            './data/SteadyStateLoudnessANSIS342007_3kHz.csv')
+    writeTo3ColumnCSVFile(levels, expected, measured,
+            './data/StationaryLoudnessANSIS342007_PureTonesEX2.csv')
 
-    #Pure tones: Example 4 
+    #Example 4 
     levels = np.array([50])
     expected = np.array([0.345])
     measured = np.zeros(expected.size)
     for i, level in enumerate(levels):
         extractor.process(np.array([100.0]), np.array([level]))
         measured[i] = extractor.outputDict[feature]
-    writeToCSVFile(levels, expected, measured, './data/SteadyStateLoudnessANSIS342007_100Hz.csv')
+    writeTo3ColumnCSVFile(levels, expected, measured, 
+            './data/StationaryLoudnessANSIS342007_PureTonesEX4.csv')
 
     '''
-    Filtered noise tests
+    Filtered noise
     '''
-    #Example1:
+    #Example 1:
     expected = np.array([4.25, 14.29])
     measured = np.zeros(2)
 
-    freqs, spectrum = generateWhitenoiseBandwidth(1000, 100, 40, False)
+    freqs, spectrum = generateWhiteNoiseBandFromFc(1000, 100, 40, False)
     extractor.process(freqs, 10 * np.log10(spectrum))
     measured[0] = extractor.outputDict[feature]
-    freqs, spectrum = generateWhitenoiseBandwidth(1000, 1000, 40, False)
+    freqs, spectrum = generateWhiteNoiseBandFromFc(1000, 1000, 40, False)
     extractor.process(freqs, 10 * np.log10(spectrum))
     measured[1] = extractor.outputDict[feature]
-    writeToCSVFile(np.array([100, 1000]), expected, measured,
-        './data/SteadyStateLoudnessANSIS342007_whitenoiseEX1.csv')
+    writeTo3ColumnCSVFile(np.array([100, 1000]), expected, measured,
+        './data/StationaryLoudnessANSIS342007_FilteredNoiseEX1.csv')
 
-    #Example2:
+    #Example 2:
     expected = np.array([4.25, 8.02])
     measured = np.zeros(2)
 
-    freqs, spectrum = generateWhitenoiseBandwidth(1000, 100, 40, True)
+    freqs, spectrum = generateWhiteNoiseBandFromFc(1000, 100, 60, True)
     extractor.process(freqs, 10 * np.log10(spectrum))
     measured[0] = extractor.outputDict[feature]
-    freqs, spectrum = generateWhitenoiseBandwidth(1000, 1000, 40, True)
+    freqs, spectrum = generateWhiteNoiseBandFromFc(1000, 1000, 60, True)
     extractor.process(freqs, 10 * np.log10(spectrum))
     measured[1] = extractor.outputDict[feature]
-    writeToCSVFile(np.array([100, 1000]), expected, measured,
-            './data/SteadyStateLoudnessANSIS342007_whitenoiseEX2.csv')
+    writeTo3ColumnCSVFile(np.array([100, 1000]), expected, measured,
+            './data/StationaryLoudnessANSIS342007_FilteredNoiseEX2.csv')
 
-    #Example3:
+    #Example 3:
     levels = np.array([0, 20, 40])
     expected = np.array([3.62, 16.00, 49.28])
     measured = np.zeros(3)
 
     for i, level in enumerate(levels):
-        freqs, spectrum = generatePinknoise(50, 15000, level, 1000)
+        freqs, spectrum = generatePinkNoise(50, 15000, level, 1000)
         extractor.process(freqs, 10 * np.log10(spectrum))
         measured[i] = extractor.outputDict[feature]
-
-    writeToCSVFile(levels, expected, measured,
-            './data/SteadyStateLoudnessANSIS342007_pinknoiseEX3.csv')
+    writeTo3ColumnCSVFile(levels, expected, measured,
+            './data/StationaryLoudnessANSIS342007_FilteredNoiseEX3.csv')
 
     #Example4:
     levels = np.arange(0, 60, 10)
@@ -100,43 +102,61 @@ if __name__ == '__main__':
         freqs, spectrum = generateSpectrumFromThirdOctaveBandLevels(bandLevels) 
         extractor.process(freqs, 10 * np.log10(spectrum))
         measured[i] = extractor.outputDict[feature]
+    writeTo3ColumnCSVFile(levels, expected, measured,
+            './data/StationaryLoudnessANSIS342007_FilteredNoiseEX4.csv')
 
-    writeToCSVFile(levels, expected, measured,
-            './data/SteadyStateLoudnessANSIS342007_thirdOctaveEX4.csv')
     '''
     Multiple tones
     '''
+    #Example 1
     level = 60
     expected = np.array([6.35])
     measured = np.zeros(expected.size)
     extractor.process(np.array([1500, 1600, 1700]), np.array([level, level, level]))
     measured[0] = extractor.outputDict[feature]
-    writeToCSVFile(np.array([level]), expected, measured, './data/SteadyStateLoudnessANSIS342007_multiTones1.csv')
+    writeTo3ColumnCSVFile(np.array([level]), expected, measured, 
+            './data/StationaryLoudnessANSIS342007_MultipleTonesEX1.csv')
 
+    #Example 2
     level = 60
     expected = np.array([12.62])
     measured = np.zeros(expected.size)
-    extractor.process(np.array([1500, 1600, 2400]), np.array([level, level, level]))
+    extractor.process(np.array([1000, 1600, 2400]), np.array([level, level, level]))
     measured[0] = extractor.outputDict[feature]
-    writeToCSVFile(np.array([level]), expected, measured, './data/SteadyStateLoudnessANSIS342007_multiTones2.csv')
+    writeTo3ColumnCSVFile(np.array([level]), expected, measured, 
+            './data/StationaryLoudnessANSIS342007_MultipleTonesEX2.csv')
 
+    #Example 3
     level = 30
     expected = np.array([1.99])
     measured = np.zeros(expected.size)
     extractor.process(np.arange(100, 1100, 100), np.ones(10) * level)
     measured[0] = extractor.outputDict[feature]
-    writeToCSVFile(np.array([level]), expected, measured, './data/SteadyStateLoudnessANSIS342007_multiTones3.csv')
+    writeTo3ColumnCSVFile(np.array([level]), expected, measured,
+            './data/StationaryLoudnessANSIS342007_MultipleTonesEX3.csv')
 
     '''
     Tones plus noise
     '''
+    #Example 1
     expected = np.array([5.14])
     measured = np.zeros(expected.size)
     
-    freqs, spectrum = generateWhitenoiseBandwidth(1000, 100, 40, False)
+    freqs, spectrum = generateWhiteNoiseBandFromFc(1000, 100, 40, False)
+    freqs = np.sort(np.append(freqs, 1000))
     idx = np.where(freqs == 1000)[0]
-    spectrum[idx] += 10 ** (60 / 10.0)
+    spectrum = np.insert(spectrum, idx, 10 ** (60 / 10.0))
     extractor.process(freqs, 10 * np.log10(spectrum))
     measured[0] = extractor.outputDict[feature]
-    writeToCSVFile(np.array([40]), expected, measured,
-            './data/SteadyStateLoudnessANSIS342007_tonePlusNoise.csv')
+    writeTo3ColumnCSVFile(np.array([40]), expected, measured,
+            './data/StationaryLoudnessANSIS342007_TonePlusNoiseEX1.csv')
+    
+    '''
+    ISO Absolute thresholds
+    '''
+    def func(x):
+        return ln.soneToPhonMGB1997(float(x), True)
+    predictor = StationaryLoudnessISOThresholdPredictor(model, feature, func)
+    predictor.process()
+    writeTo3ColumnCSVFile(freqsISO, thresholdsISO, predictor.predictions,
+            './data/StationaryLoudnessANSIS342007_ISO389-7AbsThresholds.csv')

@@ -19,6 +19,7 @@ class DynamicLoudnessIterator():
 
         self.extractor = LoudnessExtractor(model, fs, nInputEars, output)
         self.outputName = model.getOutputModulesToAggregate()[0]
+        self.converged = False
 
         if globalLoudnessFeature is None:
             self.globalLoudnessFeature = np.mean
@@ -38,7 +39,7 @@ class DynamicLoudnessIterator():
         loudnessLevel = self.loudnessLevelFunction(loudness)
         return loudnessLevel
 
-    def process(self, inputSignal, targetLoudness, tol = 0.1, nIters = 5):
+    def process(self, inputSignal, targetLoudness, tol = 0.1, nIters = 5, alpha = 1.0):
 
         # First check if the target loudness is a signal
         if type(targetLoudness) is np.ndarray:
@@ -46,6 +47,7 @@ class DynamicLoudnessIterator():
 
         storedGain = 0
 
+        self.converged = False
         for i in range(nIters):
 
             loudnessLevel = self.extractLoudness(inputSignal, storedGain)
@@ -56,9 +58,12 @@ class DynamicLoudnessIterator():
                     'Error: %0.3f') % (storedGain, loudnessLevel, error))
 
             if np.abs(error) < tol:
+                self.converged = True
                 break
             else:
-                storedGain += error
+                storedGain += error * alpha
+                if (i == (nIters-1)):
+                    print "Reached iteration limit, not solved within desired error tolerance."
 
         return storedGain
 
@@ -68,6 +73,7 @@ class StationaryLoudnessIterator():
         
         self.outputName = outputName
         self.extractor = StationaryLoudnessExtractor(model, outputName)
+        self.converged = False
 
         if loudnessLevelFunction is None:
             self.loudnessLevelFunction = asIs
@@ -84,7 +90,8 @@ class StationaryLoudnessIterator():
             targetLoudnessFrequencies, 
             targetLoudnessIntensityLevels, 
             tol, 
-            nIters = 5):
+            nIters = 5,
+            alpha = 1.0):
 
         if type(targetLoudnessIntensityLevels) is np.ndarray:
             targetLoudness = self.extractLoudness(targetLoudnessFrequencies,
@@ -94,6 +101,7 @@ class StationaryLoudnessIterator():
 
         storedGain = 0
 
+        self.converged = False
         for i in range(nIters):
 
             loudnessLevel = self.extractLoudness(frequencies, intensityLevels, storedGain)
@@ -104,9 +112,12 @@ class StationaryLoudnessIterator():
                     'Error: %0.3f') % (storedGain, loudnessLevel, error))
 
             if np.abs(error) < tol:
+                self.converged = True
                 break
             else:
-                storedGain += error
+                storedGain += error * alpha
+                if (i == (nIters-1)):
+                    print "Reached iteration limit, not solved within desired error tolerance."
 
         return storedGain
 

@@ -364,8 +364,8 @@ namespace loudness{
         int nEars_, nChannels_, nSamples_, nTotalSamples_;
         bool trig_, initialized_;
         int fs_;
-        long long reserveSamples_;
         Real frameRate_, channelSpacingInCams_;
+        long long reserveSamples_;
         RealVec signals_, aggregatedSignals_;
         RealVec centreFreqs_;
     }; 

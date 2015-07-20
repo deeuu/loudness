@@ -49,7 +49,7 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/modules/SpecificLoudnessANSIS342007.cpp \
 ../src/modules/BinauralInhibitionMG2007.cpp \
 ../src/modules/InstantaneousLoudness.cpp \
-../src/models/SteadyStateLoudnessANSIS342007.cpp \
+../src/models/StationaryLoudnessANSIS342007.cpp \
 ../src/models/DynamicLoudnessGM2002.cpp \
 ../src/models/DynamicLoudnessCH2012.cpp
 
@@ -58,24 +58,24 @@ OBJECTS=$(SOURCES:.cpp=.o)
 all: $(SOURCES) $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS) 
-	$(CC) $(OBJECTS) -o $@ $(LDFLAGS) $(LIBS)
+	@$(CC) $(OBJECTS) -o $@ $(LDFLAGS) $(LIBS)
 
 .cpp.o:
-	$(CC) $(CFLAGS) $(INCS) $< -o $@
+	@echo "Compiling: " $<
+	@$(CC) $(CFLAGS) $(INCS) $< -o $@
 
 clean:
-	rm -rf $(OBJECTS) $(EXECUTABLE)
+	@rm -rf $(OBJECTS) $(EXECUTABLE)
 
 install:
-	#install the library and link soname
-	install -c $(EXECUTABLE) $(TARGET_DIR)/lib
-	ln -sf $(TARGET_DIR)/lib/$(EXECUTABLE) $(TARGET_DIR)/lib/$(BASENAME)
-	ldconfig
-	#copy src folder and delete all but headers
-	mkdir -p $(TARGET_DIR)/include/$(NAME)
-	cp -r ../src/* $(TARGET_DIR)/include/$(NAME)
-	find $(TARGET_DIR)/include/$(NAME) ! -name \*.h -type f -delete 
+	@#install the library and link soname
+	@install -c $(EXECUTABLE) $(TARGET_DIR)/lib
+	@ln -sf $(TARGET_DIR)/lib/$(EXECUTABLE) $(TARGET_DIR)/lib/$(BASENAME)
+	@ldconfig
+	@#copy src folder and delete all but headers
+	@mkdir -p $(TARGET_DIR)/include/$(NAME)
+	@cd ../src; find -name '*.h' -exec cp --parents '{}' $(TARGET_DIR)/include/$(NAME) \;
 
 uninstall:
-	rm -rf $(TARGET_DIR)/include/$(NAME)
-	rm -rf $(TARGET_DIR)/lib/$(EXECUTABLE)
+	@rm -rf $(TARGET_DIR)/include/$(NAME)
+	@rm -rf $(TARGET_DIR)/lib/$(EXECUTABLE)

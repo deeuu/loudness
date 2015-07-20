@@ -14,7 +14,7 @@ namespace loudness{
             isHannWindowUsed_ (isHannWindowUsed),
             isPowerSpectrum_ (isPowerSpectrum),
             isFirstSampleAtWindowCentre_ (true),
-            reference_ (2e-5)
+            referenceValue_ (2e-5)
     {}
 
     HoppingGoertzelDFT::~HoppingGoertzelDFT() {}
@@ -136,7 +136,7 @@ namespace loudness{
             binIdxForGoertzels_[w][1] = k;
             if (isPowerSpectrum_)
             {
-                Real refSquared = reference_ * reference_;
+                Real refSquared = referenceValue_ * referenceValue_;
                 Real windowSizeSquared = windowSizes_[w] * windowSizes_[w];
                 normFactors_[w] = 2.0 / (refSquared * windowSizeSquared);
                 // 3/8 for hann window and 16 for gain introduced by
@@ -373,9 +373,9 @@ namespace loudness{
         }
     }
 
-    void HoppingGoertzelDFT::setReference (Real reference)
+    void HoppingGoertzelDFT::setReferenceValue (Real referenceValue)
     {
-        reference_ = reference;
+        referenceValue_ = referenceValue;
     }
 
     void HoppingGoertzelDFT::setFirstSampleAtWindowCentre (bool isFirstSampleAtWindowCentre)

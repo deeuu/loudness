@@ -40,7 +40,7 @@ class StationaryLoudnessExtractor:
         nComponents = frequencies.size
         nEars = intensities.shape[1]
 
-        if (np.all(self.outputDict['Frequencies'] != frequencies) or
+        if (np.any(self.outputDict['Frequencies'] != frequencies) or
                 (nEars != self.nEars)):
             self.bank.initialize(nEars, nComponents, 1, 1)
             self.bank.setCentreFreqs(frequencies)
@@ -192,7 +192,6 @@ class LoudnessExtractor:
             ax1.set_ylabel("Amplitude")
 
             for name in modelOutputsToPlot:
-                for ear in range(self.outputDict[name].shape[1]):
                     ax2.plot(self.outputDict['FrameTimes'], self.outputDict[name])
             ax2.set_ylabel("Loudness")
             ax2.set_xlabel("Time, seconds")
