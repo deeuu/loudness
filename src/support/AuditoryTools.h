@@ -81,9 +81,11 @@ namespace loudness{
      *
      * Piecewise polynomials were calculating by inputting a 1kHz tone at levels
      * -50-137 dB SPL using the RoexBankANSIS342007 module with filters spanning
-     *  50-15000 Hz with 0.1 Cam spacing. Functions are accurate within +/- 0.22
-     *  phon across the entire range and +/-0.020 between 2 and 2.5 phons
-     *  (useful for predicting absolute thresholds).
+     *  50-15000 Hz with 0.1 Cam spacing. If you want the conversion according
+     *  to the revised specific loudness formula at high levels, set
+     *  @a isANSIS342007 to true. Functions are accurate to within 
+     *  +/- 0.43 phons across the entire range and +/- 0.032 between 2 and 2.5 phons
+     *  (useful for predicting absolute thresholds) for both equations.
      *
      * @param sone Loudness in sones.
      *  
