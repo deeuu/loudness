@@ -16,7 +16,8 @@ except AttributeError:
 if __name__ == "__main__":
 
     setup(name="loudness",
-            py_modules=['loudness'], 
+            packages = ['loudness', 'loudness.tools'],
+            package_dir = {'loudness': '.', 'loudness.tools' : '../src/python'},
             ext_modules=[Extension("_loudness",
             [
                 "loudness.i",
