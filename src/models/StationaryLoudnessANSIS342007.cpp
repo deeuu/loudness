@@ -85,7 +85,7 @@ namespace loudness{
          */
         isBinauralInhibitionUsed_ = isBinauralInhibitionUsed_ * (input.getNEars() == 2);
         modules_.push_back(unique_ptr<Module>
-                (new SpecificLoudnessANSIS342007(true, isBinauralInhibitionUsed_)));
+                (new SpecificLoudnessANSIS342007(isSpecificLoudnessANSIS342007_, isBinauralInhibitionUsed_)));
 
         /*
          * Binaural inhibition
