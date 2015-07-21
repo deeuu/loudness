@@ -33,7 +33,8 @@ namespace loudness{
         setOuterEarType(OME::Filter::ANSIS342007_FREEFIELD);
         setfilterSpacingInCams(0.1);
         setPresentationDiotic(true);
-        setBinauralInhibitionUsed(false);
+        setBinauralInhibitionUsed(true);
+        setSpecificLoudnessANSIS342007(true);
     }
 
     StationaryLoudnessANSIS342007::~StationaryLoudnessANSIS342007()
@@ -57,6 +58,11 @@ namespace loudness{
     void StationaryLoudnessANSIS342007::setfilterSpacingInCams(Real filterSpacingInCams)
     {
         filterSpacingInCams_ = filterSpacingInCams;
+    }
+
+    void StationaryLoudnessANSIS342007::setSpecificLoudnessANSIS342007(bool isSpecificLoudnessANSIS342007)
+    {
+        isSpecificLoudnessANSIS342007_ = isSpecificLoudnessANSIS342007;
     }
 
     bool StationaryLoudnessANSIS342007::initializeInternal(const SignalBank &input)

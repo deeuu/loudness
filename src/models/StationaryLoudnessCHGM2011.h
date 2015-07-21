@@ -17,8 +17,8 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#ifndef StationaryLOUDNESSANSIS342007_H
-#define StationaryLOUDNESSANSIS342007_H
+#ifndef StationaryLoudnessCHGM2011_H
+#define StationaryLoudnessCHGM2011_H
 
 #include "../support/Model.h"
 #include "../support/AuditoryTools.h"
@@ -27,13 +27,13 @@
 namespace loudness{
 
     /**
-     * @brief Implementation of the ANSI S3.4 2007 steady-state loudness model.
+     * @brief Implementation of the Chen et al 2011 stationary loudness model.
      * 
      * This loudness model is for processing spectra only, i.e., there is no
      * time-frequency decomposition. The input SignalBank can have
      * multiple ears and channels but only one sample per channel which
-     * specifies the intensity of a single component in normalised units. 
-     * Make sure that the centre frequencies corresponding to each input component are set.
+     * specifies the intensity of a single component. Make sure that the centre
+     * frequencies corresponding to each input component are set.
      *
      * If the input SignalBank used to initialise this model has one ear, then
      * the instantaneous loudness is multiplied by two. If you don't want this,
@@ -45,46 +45,17 @@ namespace loudness{
      * inhibition model proposed by Moore and Glasberg (2007) is used. If you
      * don't want this call method setInhibitSpecificLoudness(false). 
      *
-     * It should be noted that this model makes use of polynomials to
-     * approximate the variables involved in the specific loudness calculations,
-     * rather than interpolation as used in the standard. See
-     * SpecificLoudnessANSIS342007 to see how the specific loudness parameters
-     * are computed.
-     *
      * REFERENCES:
+     * Chen, Z., Hu, G., Glasberg, B. R., & Moore, B. C. J. (2011). A new method
+     * of calculating auditory excitation patterns and loudness for steady
+     * sounds. Hearing Research, 282(1-2), 204–15.
      *
-     * Glasberg, B. R., & Moore, B. C. J. (1990). Derivation of Auditory Filter
-     * Shapes From Notched-Noise Data. Hearing Research, 47, 103–138.
-     *
-     * Moore, B. C. J., Glasberg, B. R., & Baer, T. (1997). A Model for the
-     * Prediction of Thresholds, Loudness, and Partial Loudness. Journal of the
-     * Audio Engineering Society, 45(4), 224–240.
-     *
-     * Glasberg, B. R., & Moore, B. C. J. (2002). A Model of Loudness Applicable
-     * to Time-Varying Sounds. Journal of the Audio Engineering Society, 50(5),
-     * 331–342.
-     *
-     * Moore, B. C. J., Glasberg, B. R., & Stone, M. A. (2003). Why Are
-     * Commercials so Loud ? - Perception and Modeling of the Loudness of
-     * Amplitude-Compressed Speech. Journal of the Acoustical Society of America,
-     * 51(12), 1123–1132.
-     *
-     * Glasberg, B. R., & Moore, B. C. J. (2006). Prediction of Absolute
-     * Thresholds and Equal-Loudness Contours Using a Modified Loudness Model.
-     * The Journal of the Acoustical Society of America, 120(2), 585–588.
-     *
-     * Moore, B. C. J., & Glasberg, B. R. (2007). Modeling Binaural Loudness.
-     * The Journal of the Acoustical Society of America, 121(3), 1604–1612.
-     *
-     * ANSI. (2007). ANSI S3.4-2007. Procedure for the Computation of Loudness
-     * of Steady Sounds.
      */
-
-    class StationaryLoudnessANSIS342007 : public Model
+    class StationaryLoudnessCHGM2011 : public Model
     {
         public:
-            StationaryLoudnessANSIS342007();
-            virtual ~StationaryLoudnessANSIS342007();
+            StationaryLoudnessCHGM2011();
+            virtual ~StationaryLoudnessCHGM2011();
 
             void setPresentationDiotic(bool isPresentationDiotic);
 
@@ -94,14 +65,14 @@ namespace loudness{
 
             void setfilterSpacingInCams(Real filterSpacingInCams);
 
-            void setSpecificLoudnessANSIS342007(bool isSpecificLoudnessANSIS342007_);
-            
+            void setSpecificLoudnessOutput(bool isSpecificLoudnessOutput);
+
         private:
             virtual bool initializeInternal(const SignalBank &input);
 
             Real filterSpacingInCams_;
             bool isPresentationDiotic_, isBinauralInhibitionUsed_;
-            bool isSpecificLoudnessANSIS342007_;
+            bool isSpecificLoudnessOutput_;
             OME::Filter outerEarType_;
     }; 
 }

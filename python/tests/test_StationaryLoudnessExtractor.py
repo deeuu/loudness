@@ -1,13 +1,13 @@
 import loudness as ln
 import numpy as np
-from extractors import StationaryLoudnessExtractor
 
-model = ln.StationaryLoudnessANSIS342007()
+#model = ln.StationaryLoudnessANSIS342007()
+model = ln.StationaryLoudnessCHGM2011()
 
-freqs = np.array([3000.0])
-intensityLevels = np.array([2.2])
+freqs = np.array([1000.0])
+intensityLevels = np.array([40])
 
-extractor = StationaryLoudnessExtractor(model, 'InstantaneousLoudness')
+extractor = ln.tools.extractors.StationaryLoudnessExtractor(model, 'InstantaneousLoudness')
 extractor.process(freqs, intensityLevels)
 
 print ln.soneToPhonMGB1997(float(extractor.outputDict['InstantaneousLoudness']), True)

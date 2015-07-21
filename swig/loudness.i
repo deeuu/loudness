@@ -54,6 +54,7 @@
 #include "../src/modules/ARAverager.h"
 #include "../src/modules/PeakFollower.h"
 #include "../src/models/StationaryLoudnessANSIS342007.h"
+#include "../src/models/StationaryLoudnessCHGM2011.h"
 #include "../src/models/DynamicLoudnessGM2002.h"
 #include "../src/models/DynamicLoudnessCH2012.h"
 
@@ -133,5 +134,6 @@ using std::vector;
 %include "../src/modules/ARAverager.h"
 %include "../src/modules/PeakFollower.h"
 %include "../src/models/StationaryLoudnessANSIS342007.h"
+%include "../src/models/StationaryLoudnessCHGM2011.h"
 %include "../src/models/DynamicLoudnessGM2002.h"
 %include "../src/models/DynamicLoudnessCH2012.h"

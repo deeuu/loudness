@@ -57,7 +57,7 @@ namespace loudness{
      * call method setDioticPresentation(false) (default is true). If the input
      * SignalBank has two ears, the default the instantaneous loudness is a sum
      * of the loudness in both left and right ears. If you want to access the
-     * loudness in both left and right ears seperately, call method
+     * loudness in both left and right ears separately, call method
      * setDioticPresentation(false). When there are two ears, the binaural
      * inhibition model proposed by Moore and Glasberg (2007) is used. If you
      * don't want this call method setInhibitSpecificLoudness(false). 
@@ -93,9 +93,9 @@ namespace loudness{
      * The Journal of the Acoustical Society of America, 121(3), 1604–1612.
      *
      * ANSI. (2007). ANSI S3.4-2007. Procedure for the Computation of Loudness
-     * of
-     * Steady Sounds.
+     * of Steady Sounds.
      */
+
     class DynamicLoudnessGM2002 : public Model
     {
         public:

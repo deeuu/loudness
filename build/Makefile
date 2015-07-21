@@ -50,6 +50,7 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/modules/BinauralInhibitionMG2007.cpp \
 ../src/modules/InstantaneousLoudness.cpp \
 ../src/models/StationaryLoudnessANSIS342007.cpp \
+../src/models/StationaryLoudnessCHGM2011.cpp \
 ../src/models/DynamicLoudnessGM2002.cpp \
 ../src/models/DynamicLoudnessCH2012.cpp
 
