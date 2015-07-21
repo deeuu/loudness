@@ -164,7 +164,7 @@ namespace loudness{
     {
         //common to all
         setRate(1000);
-        setHPFUsed(false);
+        setHPFUsed(true);
         setPeakSTLFollowerUsed(false);
         setOuterEarType(OME::ANSIS342007_FREEFIELD);
         setSpectrumSampledUniformly(true);

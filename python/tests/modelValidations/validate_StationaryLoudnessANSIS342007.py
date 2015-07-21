@@ -1,15 +1,13 @@
 import numpy as np
-import loudness as ln
-import sys,os
-sys.path.append('../../tools/')
 from usefulFunctions import *
-from extractors import StationaryLoudnessExtractor
-from predictors import StationaryLoudnessISOThresholdPredictor, freqsISO, thresholdsISO
+from loudness.tools.extractors import StationaryLoudnessExtractor
+from loudness.tools.predictors import StationaryLoudnessContourPredictor
+from loudness import StationaryLoudnessANSIS342007, soneToPhonMGB1997
 import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
 
-    model = ln.StationaryLoudnessANSIS342007()
+    model = StationaryLoudnessANSIS342007()
     feature = 'InstantaneousLoudness'
     extractor = StationaryLoudnessExtractor(model, feature)
 
@@ -155,8 +153,10 @@ if __name__ == '__main__':
     ISO Absolute thresholds
     '''
     def func(x):
-        return ln.soneToPhonMGB1997(float(x), True)
-    predictor = StationaryLoudnessISOThresholdPredictor(model, feature, func)
+        return soneToPhonMGB1997(float(x), True)
+    predictor = StationaryLoudnessContourPredictor(model, feature, func, 'abs')
+    predictor.tol = 0.01
+    predictor.setTargetLoudnessLevel = 2.2
     predictor.process()
-    writeTo3ColumnCSVFile(freqsISO, thresholdsISO, predictor.predictions,
+    writeTo3ColumnCSVFile(predictor.freqs, predictor.sPLs, predictor.predictions,
             './data/StationaryLoudnessANSIS342007_ISO389-7AbsThresholds.csv')
