@@ -283,9 +283,7 @@ namespace loudness{
          * 20Hz but exclude DC.
          * 15001 Hz so top frequencies included.
          */
-        //RealVec bandFreqsHz {10, 80, 500, 1250, 2540, 4050, 15001};
-        // delete this
-        RealVec bandFreqsHz {10, 80, 500, 1250, 2750, 4500, 15001};
+        RealVec bandFreqsHz {10, 80, 500, 1250, 2540, 4050, 15001};
 
         //window spec
         RealVec windowSizeSecs {0.064, 0.032, 0.016, 0.008, 0.004, 0.002};
