@@ -12,6 +12,8 @@ class StationaryLoudnessExtractor:
         if model.isDynamic():
             raise ValueError("Model cannot be dynamic")
         self.model = model
+        if outputs is None:
+            raise ValueError("Must specify outputs")
         if type(outputs) is not list:
             self.outputs = [outputs]
         else:
@@ -53,12 +55,12 @@ class StationaryLoudnessExtractor:
         self.model.process(self.bank)
 
         for name in self.outputs:
-            outputBank = self.model.getOutputModuleSignalBank(name)
+            outputBank = self.model.getOutput(name)
             self.outputDict[name] = (np.squeeze(outputBank.getSignals())).copy()
 
         self.model.reset()
 
-class LoudnessExtractor:
+class DynamicLoudnessExtractor:
     '''Convienience class for processing numpy arrays.
     This class can be used to extract features of an input array using a
     dynamic loudness model.
@@ -99,10 +101,14 @@ class LoudnessExtractor:
         self.timeStep = float(self.hopSize) / fs
         self.inputBuf = ln.SignalBank()
         self.inputBuf.initialize(self.nInputEars, 1, self.hopSize, self.fs)
-        if outputs is not None:
-            if type(outputs) is not list:
-                outputs = [outputs]
-            self.model.setOutputModulesToAggregate(outputs)
+        self.outputs = outputs
+        if self.outputs is not None:
+            if type(self.outputs) is not list:
+                self.outputs = [self.outputs]
+            self.model.setOutputsToAggregate(self.outputs)
+        else:
+            raise ValueError("Must specify outputs")
+
         if not self.model.initialize(self.inputBuf):
             raise ValueError("Problem initialising the model!")
 
@@ -161,10 +167,11 @@ class LoudnessExtractor:
             self.model.process(self.inputBuf)
 
         #get outputs
-        outputNames = self.model.getOutputModulesToAggregate()
-        for name in outputNames:
-            bank = self.model.getOutputModuleSignalBank(name)
+        for name in self.outputs:
+            bank = self.model.getOutput(name)
             self.outputDict[name] = np.squeeze(bank.getAggregatedSignals())
+            if self.outputDict[name].ndim == 1:
+                self.outputDict[name] = self.outputDict[name].reshape((-1,1))
 
         #Processing complete so clear internal states
         self.model.reset()
@@ -186,8 +193,8 @@ class LoudnessExtractor:
             fig, (ax1, ax2) = plt.subplots(2, 1, sharex = True)
 
             for ear in range(self.nInputEars):
-                ax1.plot(time,\
-                        self.inputSignal[ear, 0,\
+                ax1.plot(time,
+                        self.inputSignal[ear, 0,
                             self.nSamplesToPadStart:self.nSamplesToPadStart+self.nSamples])
             ax1.set_ylabel("Amplitude")
 
@@ -217,7 +224,7 @@ class LoudnessExtractor:
                 header.append(',' + name)
                 for ear in range(self.outputDict[name].shape[1]):
                     dataToSave = np.hstack((dataToSave, \
-                        self.outputDict[name][:, ear, 0, 0].reshape(-1,1)))
+                        self.outputDict[name][:, ear].reshape(-1,1)))
 
             filename, ext = os.path.splitext(filename)
             np.savetxt(filename + '.csv', dataToSave,\
@@ -228,6 +235,7 @@ class LoudnessExtractor:
         Saves the complete output dictionary to a pickle file.
         '''
         if self.processed:
+            print 'Saving to pickle file'
             filename, ext = os.path.splitext(filename)
             with open(filename + '.pickle', 'wb') as outfile:
                 pickle.dump(self.outputDict, outfile, protocol=pickle.HIGHEST_PROTOCOL)
@@ -248,9 +256,11 @@ class LoudnessExtractor:
             end = endSeconds
             if end is not None:
                 end = int(np.round(endSeconds/self.timeStep)+1)
+            self.outputDict['Features'] = {}
             for name in modelOutputs:
-                self.outputDict['Features'] = {name : {}}
-                loudnessVec = self.outputDict[name][start:end, :, 0, 0]
+                self.outputDict['Features'][name] = {}
+                # Sum both ears
+                loudnessVec = np.sum(self.outputDict[name][start:end], 1)
                 self.outputDict['Features'][name]['Mean'] = \
                         np.mean(loudnessVec, 0)
                 self.outputDict['Features'][name]['Median'] = \
@@ -273,9 +283,8 @@ class BatchWavFileProcessor:
 
     import loudness as ln
     model = ln.DynamicLoudnessCH2012()
-    model.setOutputsToAggregate(['ShortTermLoudness', 'LongTermLoudness'])
 
-    processor = BatchWavFileProcessor(wavFileDirectory, hdf5Filename)
+    processor = BatchWavFileProcessor(wavFileDirectory, hdf5Filename, ['ShortTermLoudness', 'LongTermLoudness'])
     processor.process(model)
 
     All wav files in the directory `wavFileDirectory' will be processed and
@@ -290,27 +299,40 @@ class BatchWavFileProcessor:
 
     def __init__(self,
                  wavFileDirectory = "",
-                 filename = ""):
+                 filename = "",
+                 outputs = None):
 
-        self.wavFileDirectory = os.path.abspath(wavFileDirectory)
         self.filename = os.path.abspath(filename)
-
-        #Get a list of all wav files in this directory
-        self.wavFiles = []
-        for file in os.listdir(self.wavFileDirectory):
-            if file.endswith(".wav"):
-                self.wavFiles.append(file)
-        self.wavFiles.sort() #sort to avoid platform specific order
-        if not self.wavFiles:
-            raise ValueError("No wav files found")
+        self.wavFileDirectory = os.path.dirname(wavFileDirectory)
+        if wavFileDirectory.endswith('.wav'):
+            self.wavFiles = [os.path.basename(wavFileDirectory)]
+        else:
+            #Get a list of all wav files in this directory
+            self.wavFiles = []
+            for file in os.listdir(self.wavFileDirectory):
+                if file.endswith(".wav"):
+                    self.wavFiles.append(file)
+            self.wavFiles.sort() #sort to avoid platform specific order
+            if not self.wavFiles:
+                raise ValueError("No wav files found")
         
         self.frameTimeOffset = 0
         self.audioFilesHaveSameSpec = False
         self.numFramesToAppend = 0
         self.gainInDecibels = 0
 
+        self.outputs = outputs
+        if self.outputs is not None:
+            if type(outputs) is not list:
+                self.outputs = [outputs]
+        else:
+            raise ValueError("No outputs specified.")
+
     def process(self, model):
 
+        model.setOutputsToAggregate(self.outputs)
+        
+        print "Output will be saved to ", self.filename
         h5File = h5py.File(self.filename, 'w')
 
         processor = ln.AudioFileProcessor(\
@@ -321,6 +343,8 @@ class BatchWavFileProcessor:
 
         for wavFile in self.wavFiles:
             
+            print("Processing file %s ..." % wavFile)
+
             #Create new group
             wavFileGroup = h5File.create_group(wavFile)
 
@@ -338,13 +362,11 @@ class BatchWavFileProcessor:
                     np.arange(processor.getNFrames()) * processor.getTimeStep())
 
             #Processing
-            print("Processing file %s ..." % wavFile)
             processor.processAllFrames(model)
 
             #get output
-            outputNames = model.getOutputModulesToAggregate()
-            for name in outputNames:
-                bank = model.getOutputModuleSignalBank(name)
+            for name in self.outputs:
+                bank = model.getOutput(name)
                 wavFileGroup.create_dataset(name, data =
                         np.squeeze(bank.getAggregatedSignals()))
         h5File.close()

@@ -1,5 +1,4 @@
-Loudness
-========
+# Loudness
 
 Loudness is a C++ library with Python bindings for modelling perceived loudness. 
 The library consists of processing modules which can be cascaded to form a loudness model.
@@ -25,3 +24,38 @@ https://github.com/rogersce/cnpy
 
 Ricard Marxer for the loudia audio project:
 https://github.com/rikrd/loudia
+
+### Example - Loudness of a 1 kHz tone @ 40 dB SPL according to ANSI S3.4:2007
+~~~
+import loudness as ln
+
+# All inputs and outputs make use of a SignalBank
+inputBank = ln.SignalBank()
+nEars = 1
+nChannels = 1
+nSamples = 1
+fs = 1
+# There are 3 dimensions
+inputBank.initialize(nEars, nChannels, nSamples, fs)
+
+# Set the centre frequency of the first (only) channel
+inputBank.setCentreFreq(0, 1000)
+
+# Set the intensity in normalised units
+level = 40
+inputBank.setSample(0, 0, 0, 10 ** (level / 10))
+
+# The loudness model
+model = ln.StationaryLoudnessANSIS342007()
+model.initialize(inputBank)
+
+# Now process the input
+model.process(inputBank)
+
+# Get the output of this loudness model
+feature = 'InstantaneousLoudness'
+outputBank = model.getOutput(feature)
+
+# Loudness
+print 'Loudness in sones %0.2f' % outputBank.getSample(0, 0, 0)
+~~~

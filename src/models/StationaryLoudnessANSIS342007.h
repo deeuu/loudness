@@ -27,23 +27,29 @@
 namespace loudness{
 
     /**
-     * @brief Implementation of the ANSI S3.4 2007 steady-state loudness model.
+     * @brief Implementation of the ANSI S3.4:2007 stationary loudness model.
      * 
-     * This loudness model is for processing spectra only, i.e., there is no
-     * time-frequency decomposition. The input SignalBank can have
-     * multiple ears and channels but only one sample per channel which
-     * specifies the intensity of a single component in normalised units. 
-     * Make sure that the centre frequencies corresponding to each input component are set.
+     * This loudness model is for processing spectra only, i.e. there is no
+     * time-frequency decomposition. The input SignalBank can have multiple ears
+     * and channels but only one sample per channel. This sample should
+     * correspond to the intensity of a single component in normalised units.
+     * Make sure that the frequencies corresponding to the input components are
+     * set before initialising this model.
      *
      * If the input SignalBank used to initialise this model has one ear, then
      * the instantaneous loudness is multiplied by two. If you don't want this,
-     * call method setDioticPresentation(false) (default is true). If the input
+     * call the method setDioticPresentation(false) (default is true). If the input
      * SignalBank has two ears, the default the instantaneous loudness is a sum
      * of the loudness in both left and right ears. If you want to access the
      * loudness in both left and right ears separately, call method
      * setDioticPresentation(false). When there are two ears, the binaural
      * inhibition model proposed by Moore and Glasberg (2007) is used. If you
      * don't want this call method setInhibitSpecificLoudness(false). 
+     *
+     * OUTPUTS:
+     *  - "Excitation"
+     *  - "SpecificLoudness"
+     *  - "InstantaneousLoudness"
      *
      * It should be noted that this model makes use of polynomials to
      * approximate the variables involved in the specific loudness calculations,

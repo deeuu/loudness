@@ -108,7 +108,7 @@ namespace loudness{
         {
             LOUDNESS_DEBUG(name_ << ": No binaural inhibition.");
         }
-        outputModules_["SpecificLoudnessPattern"] = modules_.back().get();
+        outputModules_["SpecificLoudness"] = modules_.back().get();
         
         /*
         * Instantaneous loudness

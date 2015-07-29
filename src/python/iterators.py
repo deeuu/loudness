@@ -2,7 +2,7 @@ import numpy as np
 import loudness as ln
 import matplotlib.pyplot as plt
 from sound import Sound
-from extractors import LoudnessExtractor, StationaryLoudnessExtractor
+from extractors import DynamicLoudnessExtractor, StationaryLoudnessExtractor
 
 def asIs(x):
     return x
@@ -17,7 +17,7 @@ class DynamicLoudnessIterator():
             loudnessLevelFunction = None,
             nInputEars = 1):
 
-        self.extractor = LoudnessExtractor(model, fs, nInputEars, output)
+        self.extractor = DynamicLoudnessExtractor(model, fs, nInputEars, output)
         self.outputName = model.getOutputModulesToAggregate()[0]
         self.converged = False
 

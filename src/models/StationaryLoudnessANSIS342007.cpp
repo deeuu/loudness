@@ -78,7 +78,7 @@ namespace loudness{
          */
         modules_.push_back(unique_ptr<Module>
                 (new RoexBankANSIS342007(1.8, 38.9, filterSpacingInCams_)));
-        outputModules_["ExcitationPattern"] = modules_.back().get();
+        outputModules_["Excitation"] = modules_.back().get();
         
         /*
          * Specific loudness
@@ -94,7 +94,7 @@ namespace loudness{
         {
             modules_.push_back(unique_ptr<Module> (new BinauralInhibitionMG2007));
         }
-        outputModules_["SpecificLoudnessPattern"] = modules_.back().get();
+        outputModules_["SpecificLoudness"] = modules_.back().get();
 
         /*
          * Instantaneous loudness

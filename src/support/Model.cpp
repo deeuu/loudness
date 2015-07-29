@@ -24,7 +24,7 @@ namespace loudness{
     Model::Model(string name, bool isDynamic) :
         name_(name),
         isDynamic_(isDynamic),
-        rate_(0)
+        rate_(0.0)
     {
         LOUDNESS_DEBUG(name_ << ": Constructed.");
     }
@@ -43,6 +43,11 @@ namespace loudness{
         }
         else
         {
+            if (outputModules_.empty())
+            {
+                LOUDNESS_ERROR(name_ << ": Invalid, this Model has no outputs.");
+                return 0;
+            }
             LOUDNESS_DEBUG(name_ << ": initialised.");
 
             nModules_ = (int)modules_.size();
@@ -80,26 +85,38 @@ namespace loudness{
             modules_[i] -> addTargetModule(*modules_[i + 1]);
     }
 
-    const SignalBank& Model::getOutputModuleSignalBank(const string& outputName)
+    void Model::setOutputsToAggregate(const vector<string>& outputsToAggregate)
+    {
+        outputsToAggregate_ = outputsToAggregate;
+    }
+
+    void Model::addOutputToAggregate(string& outputToAggregate)
+    {
+        if (std::find (outputsToAggregate_.begin(), 
+                        outputsToAggregate_.end(),
+                        outputToAggregate) == outputsToAggregate_.end())
+        {
+            outputsToAggregate_.push_back(outputToAggregate);
+        }
+    }
+
+    void Model::removeOutputToAggregate(string& outputToAggregate)
+    {
+        outputsToAggregate_.erase (std::remove (
+                    outputsToAggregate_.begin(), 
+                    outputsToAggregate_.end(), outputToAggregate));
+    }
+
+    const SignalBank& Model::getOutput(const string& outputName) const
     {
         auto search = outputModules_.find(outputName);
         LOUDNESS_ASSERT(search != outputModules_.end());
         return search -> second -> getOutput();
     }
 
-    void Model::setOutputModulesToAggregate(const vector<string>& outputModulesToAggregate)
-    {
-        outputModulesToAggregate_ = outputModulesToAggregate;
-    }
-
-    const vector<string>& Model::getOutputModulesToAggregate() const
-    {
-        return outputModulesToAggregate_;
-    }
-
     void Model::configureSignalBankAggregation()
     {
-        for (const auto &outputName : outputModulesToAggregate_)
+        for (const auto &outputName : outputsToAggregate_)
         {
             auto search = outputModules_.find(outputName);
             if (search != outputModules_.end())

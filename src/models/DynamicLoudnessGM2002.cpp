@@ -43,14 +43,14 @@ namespace loudness{
         Model("DynamicLoudnessGM2002", true),
         pathToFilterCoefs_(pathToFilterCoefs)
     {
-        configureModelParameters("recentAndFaster");
+        configureModelParameters("FasterAndRecent");
     }
 
     DynamicLoudnessGM2002::DynamicLoudnessGM2002() :
         Model("DynamicLoudnessGM2002", true),
         pathToFilterCoefs_("")
     {
-        configureModelParameters("recentAndFaster");
+        configureModelParameters("RecentAndFaster");
     }
     
     DynamicLoudnessGM2002::~DynamicLoudnessGM2002()
@@ -183,15 +183,15 @@ namespace loudness{
                 
         if (setName != "GM2002")
         {
-            if (setName == "faster")
+            if (setName == "Faster")
             {
                 setRoexBankFast(true);
                 setExcitationPatternInterpolated(true);
-                setFilterSpacingInCams(1.25);
-                setCompressionCriterionInCams(0.8);
+                setFilterSpacingInCams(0.75);
+                setCompressionCriterionInCams(0.2);
                 LOUDNESS_DEBUG(name_ << ": Using faster params for Glasberg and Moore's 2002 model.");
             }
-            else if (setName == "recent")
+            else if (setName == "Recent")
             {
                 configureSmoothingTimes("MGS2003");
                 setSpecificLoudnessANSIS342007(true);
@@ -200,14 +200,14 @@ namespace loudness{
                         << "time-constants from 2003 paper and high-level specific "
                         << "loudness equation (ANSI S3.4 2007)."); 
             }
-            else if (setName == "recentAndFaster")
+            else if (setName == "FasterAndRecent")
             {
                 configureSmoothingTimes("MGS2003");
                 setSpecificLoudnessANSIS342007(true);
                 setRoexBankFast(true);
                 setExcitationPatternInterpolated(true);
-                setFilterSpacingInCams(1.25);
-                setCompressionCriterionInCams(0.8);
+                setFilterSpacingInCams(0.75);
+                setCompressionCriterionInCams(0.2);
                 LOUDNESS_DEBUG(name_
                         << ": Using faster params and "
                         << "updated time-constants from 2003 paper and "
@@ -283,7 +283,9 @@ namespace loudness{
          * 20Hz but exclude DC.
          * 15001 Hz so top frequencies included.
          */
-        RealVec bandFreqsHz {10, 80, 500, 1250, 2540, 4050, 15001};
+        //RealVec bandFreqsHz {10, 80, 500, 1250, 2540, 4050, 15001};
+        // delete this
+        RealVec bandFreqsHz {10, 80, 500, 1250, 2750, 4500, 15001};
 
         //window spec
         RealVec windowSizeSecs {0.064, 0.032, 0.016, 0.008, 0.004, 0.002};
@@ -367,7 +369,7 @@ namespace loudness{
             modules_.push_back(unique_ptr<Module> 
                     (new RoexBankANSIS342007(1.8, 38.9, filterSpacingInCams_)));
         }
-        outputModules_["ExcitationPattern"] = modules_.back().get();
+        outputModules_["Excitation"] = modules_.back().get();
         
         /*
          * Specific loudness
@@ -384,7 +386,7 @@ namespace loudness{
         {
             modules_.push_back(unique_ptr<Module> (new BinauralInhibitionMG2007));
         }
-        outputModules_["SpecificLoudnessPattern"] = modules_.back().get();
+        outputModules_["SpecificLoudness"] = modules_.back().get();
 
         /*
         * Instantaneous loudness

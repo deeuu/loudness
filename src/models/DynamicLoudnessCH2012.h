@@ -28,17 +28,17 @@ namespace loudness{
     /**
      * @class DynamicLoudnessCH2012
      *
-     * @brief Implements Chen and Hu's (2012) time-varying loudness model.
+     * @brief Implements Chen and Hu's (2012) dynamic loudness model.
      *
      * At present, there are two parameter sets available:
      *
-     * 1. CH2012 - The specification used by Chen and Hu (2012).
-     * 2. faster - Uses a compressed spectrum with a filter spacing of 0.25
-     * Cams.
+     * 1. "CH2012"
+     *      - Uses the specification of Chen and Hu (2012).
+     * 2. "Faster" 
+     *      - Uses a compressed spectrum according to a 0.3 Cam criterion.
+     *      - Uses a filter spacing of 0.5 Cams.
      *
-     * The default is `faster'.
-     *
-     * Use configureModelParameters() to select the model parameters.
+     * The default is "Faster". Use configureModelParameters() to switch parameter sets.
      * 
      * If you want to use a time-domain filter for simulating the transmission
      * response of the outer and middle ear, such as the 4096 order FIR filter
@@ -58,7 +58,7 @@ namespace loudness{
      * setDioticPresentation(false). When there are two ears, the binaural
      * inhibition model proposed by Moore and Glasberg (2007) is used. If you
      * don't want this call method setInhibitSpecificLoudness(false). Note that
-     * because this model does not have an explicit `specific loudness' stage,
+     * because this model does not have a separate `specific loudness' stage,
      * the excitation pattern is scaled to give units of sones rather than
      * power. If you don't want this, call method setOutputSpecificLoudness
      * (false) (default is true). In this case, binaural inhibition will not be
@@ -68,6 +68,16 @@ namespace loudness{
      * pattern can be interpolated to approximate the high resolution pattern.
      * If you want this setExcitationPatternInterpolated(true); In mode `faster'
      * this is true;
+     *
+     * A peak follower can be applied to the short-term loudness using 
+     * setPeakSTLFollowerUsed(true) (default is false).
+     *
+     * OUTPUTS:
+     *  - "SpecificLoudness"
+     *  - "InstantaneousLoudness"
+     *  - "ShortTermLoudness"
+     *  - "LongTermLoudness"
+     *  - "PeakShortTermLoudness" (optional)
      *
      * REFERENCES:
      *

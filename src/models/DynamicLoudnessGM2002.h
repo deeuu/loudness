@@ -28,20 +28,31 @@ namespace loudness{
     /**
      * @class DynamicLoudnessGM2002
      *
-     * @brief Implements Glasberg and Moore's (2002) time-varying loudness model.
+     * @brief Implements Glasberg and Moore's (2002) dynamic loudness model.
      *
      * At present, there are three parameter sets available:
      *
-     * 1. GM2002 - The specification used by Glasberg and Moore (2002).
-     * 2. faster - Uses a compressed spectrum with a fast roex filterbank.
-     * 3. recent - Uses time-constants from Moore et al. (2003) and the
-     * modified equation for computing the speicifc loudness at very high levels
-     * (ANSI S3.4, 2007).
-     * 4. recentAndFaster - A combination of 2. and 3.
+     * 1. "GM2002"
+     *      - The specification used by Glasberg and Moore (2002). 
+     *      - This computes excitation patterns according to ANSI S3.4:2007 and will be
+     *      extremely slow. 
+     *      - Use setFastRoexBank(true) (default false) to speed it up.
+     * 2. "Faster" 
+     *      - Uses a compressed spectrum according to a 0.2 Cam criterion.
+     *      - Uses a filter spacing of 0.75 Cams with interpolation.
+     *      - Uses the fast roex filter bank.
+     *      - If you need even faster performance, try: 
+     *          - setExcitationPatternInterpolated(false)
+     *          - setCompressionCriterionInCams(0.8)
+     *          - setRate(500)
+     * 3. "Recent"
+     *      - Uses modified long-term loudness time-constants from Moore et al. (2003).
+     *      - Uses modified equation for computing the specific loudness at very high levels (ANSI S3.4:2007).
      *
-     * The default is `faster'.
+     * 4. "FasterAndRecent"
+     *      - A combination of (2) and (3).
      *
-     * Use configureModelParameters() to select the model parameters.
+     * The default is "FasterAndRecent". Use configureModelParameters() to switch parameter sets.
      *
      * If you want to use a time-domain filter for simulating the transmission
      * response of the outer and middle ear, such as the 4096 order FIR filter
@@ -49,7 +60,7 @@ namespace loudness{
      * coefficients when constructing the object. The coefficients must be a
      * Numpy array stored as a binary file in the '.npy' format. If a file path
      * is not provided, pre-cochlear filtering is performed using the hybrid
-     * filter which combines a 3rd order high-pass filter with a frequency
+     * filter which combines a 3rd order Butterworth high-pass filter with a frequency
      * domain weighting function.
      *
      * If the input SignalBank used to initialise this model has one ear, then
@@ -64,8 +75,19 @@ namespace loudness{
      * 
      * When using filter spacings greater than 0.1 Cams, the sampled excitation
      * pattern can be interpolated to approximate the high resolution pattern.
-     * If you want this setExcitationPatternInterpolated(true). In `faster'
+     * If you want this setExcitationPatternInterpolated(true). In `Faster'
      * modes, this is true.
+     *
+     * A peak follower can be applied to the short-term loudness using 
+     * setPeakSTLFollowerUsed(true) (default is false).
+     *
+     * OUTPUTS:
+     *  - "Excitation"
+     *  - "SpecificLoudness"
+     *  - "InstantaneousLoudness"
+     *  - "ShortTermLoudness"
+     *  - "LongTermLoudness"
+     *  - "PeakShortTermLoudness" (optional)
      *
      * REFERENCES:
      *

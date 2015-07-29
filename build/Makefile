@@ -59,8 +59,8 @@ OBJECTS=$(SOURCES:.cpp=.o)
 all: $(SOURCES) $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS) 
+	@echo "Creating shared library"
 	@$(CC) $(OBJECTS) -o $@ $(LDFLAGS) $(LIBS)
-
 .cpp.o:
 	@echo "Compiling: " $<
 	@$(CC) $(CFLAGS) $(INCS) $< -o $@

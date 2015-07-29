@@ -40,14 +40,14 @@ namespace loudness{
         Model("DynamicLoudnessCH2012", true),
         pathToFilterCoefs_(pathToFilterCoefs)
     {
-        configureModelParameters("faster");
+        configureModelParameters("Faster");
     }
 
     DynamicLoudnessCH2012::DynamicLoudnessCH2012() :
         Model("DynamicLoudnessCH2012", true),
         pathToFilterCoefs_("")
     {
-        configureModelParameters("faster");
+        configureModelParameters("Faster");
     }
 
     DynamicLoudnessCH2012::~DynamicLoudnessCH2012()
@@ -139,12 +139,11 @@ namespace loudness{
         attackTimeLTL_ = 0.1;
         releaseTimeLTL_ = 2.0;
 
-        if (setName == "faster")
+        if (setName == "Faster")
         {
-            setFilterSpacingInCams(0.25);
-            setExcitationPatternInterpolated(true);
+            setFilterSpacingInCams(0.5);
             setCompressionCriterionInCams(0.3);
-            LOUDNESS_DEBUG(name_ << ": using a filter spacing of 0.25 Cams"
+            LOUDNESS_DEBUG(name_ << ": using a filter spacing of 0.5 Cams"
                    << " with 0.3 Cam spectral compression criterion.");
         }
         else if (setName != "CH2012")
@@ -301,7 +300,7 @@ namespace loudness{
         {
             LOUDNESS_DEBUG(name_ << ": No binaural inhibition.");
         }
-        outputModules_["SpecificLoudnessPattern"] = modules_.back().get();
+        outputModules_["SpecificLoudness"] = modules_.back().get();
         
         /*
         * Instantaneous loudness

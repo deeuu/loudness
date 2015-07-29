@@ -229,6 +229,7 @@ class Sound:
             plt.plot(np.arange(self.nSamples)/float(self.fs), self.data[:,chn])
         plt.xlabel("Time, seconds")
         plt.ylabel("Amplitude (linear)")
+        plt.show()
 
     def plotWaveformAndSpectrogram(self, 
             nFFT = 1024, 
@@ -256,7 +257,6 @@ class Sound:
             ax2.set_xlim(xlim)
         else:
             ax2.set_xlim(0,t[-1])
-
         plt.show()
 
     def __mul__(self, sound):
