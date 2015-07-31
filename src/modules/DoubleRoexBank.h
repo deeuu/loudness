@@ -35,6 +35,12 @@ namespace loudness{
      * an active narrowband filter.  The output of the passive filter controls
      * the active gain of the narrowband filter.
      *
+     * The centre frequencies of the filters are calculated according to the
+     * Hertz to Cam equation given in ANSI S3.4:2007. Therefore, they will be
+     * slightly different to those computed in Chen et al. (2011) as they use
+     * the traditional equation with rounded coefficients. For example, 40.2
+     * Cams ~= 17197 Hz (ANSI) and 40.2 Cams ~= 17070 Hz (Chen et al.).
+     *
      * REFERENCES:
      *
      * Chen, Z., Hu, G., Glasberg, B. R., & Moore, B. C. J. (2011). A new method

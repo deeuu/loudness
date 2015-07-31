@@ -93,6 +93,7 @@ namespace loudness{
      * of the IEEE International Conference on Acoustics, Speech, and Signal
      * Processing (ICASSP ’12) (pp. 157–160).
      *
+     * @sa DoubleRoexBank
      */
     class DynamicLoudnessCH2012 : public Model
     {

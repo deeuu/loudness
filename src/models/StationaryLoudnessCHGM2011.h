@@ -64,6 +64,8 @@ namespace loudness{
      * Moore, B. C. J., & Glasberg, B. R. (2007). Modeling Binaural Loudness.
      * The Journal of the Acoustical Society of America, 121(3), 1604–1612.
      *
+     * @sa DoubleRoexBank
+     *
      */
     class StationaryLoudnessCHGM2011 : public Model
     {
