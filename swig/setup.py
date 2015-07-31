@@ -15,12 +15,13 @@ except AttributeError:
 
 if __name__ == "__main__":
 
-    setup(name="loudness",
+    setup(
+            name = "loudness",
             packages = ['loudness', 'loudness.tools'],
             package_dir = {'loudness': '.', 'loudness.tools' : '../src/python'},
-            ext_modules=[Extension("_loudness",
+            ext_modules=[Extension("loudness._core",
             [
-                "loudness.i",
+                "core.i",
                 "../src/thirdParty/cnpy/cnpy.cpp",
                 "../src/thirdParty/spline/Spline.cpp",
                 "../src/support/AuditoryTools.cpp",

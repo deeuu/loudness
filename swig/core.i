@@ -17,7 +17,7 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-%module loudness
+%module core
 %{
 #define SWIG_FILE_WITH_INIT
 #include "../src/thirdParty/cnpy/cnpy.h"
