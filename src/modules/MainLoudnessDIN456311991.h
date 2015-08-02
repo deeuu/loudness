@@ -17,27 +17,30 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#ifndef InstantaneousLoudnessDIN45631_H
-#define InstantaneousLoudnessDIN45631_H
+#ifndef MainLoudnessDIN456311991_H
+#define MainLoudnessDIN456311991_H
 
 #include "../support/Module.h"
 
 namespace loudness{
 
     /**
-     * @class InstantaneousLoudnessDIN45631
+     * @class MainLoudnessDIN456311991
      *
-     * @brief Calculates the total loudness from the main loudness according to
-     * DIN 45631 (1990).
+     * @brief Given a set of 28 third-octave band levels, this module computes
+     * the main loudness of each band.
      *
-     * The input SignalBank should have 21 channels corresponding to the
-     * approximated critical bands derived from third-octave filter bands.
-     * If the input SignalBank has two ears, the loudness in each is computed
-     * according to the standard and the sum of loudnesses is divided by two.
-     * The output SignalBank of this module has one ear, one channel and one sample.
+     * The input SignalBank should have 28 channels with the following centre
+     * frequencies:
+     *    {25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500,
+     *    630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000,
+     *    10000, 12500}
+     * The corresponding samples should be in dB SPL.
      *
-     * @todo Develop a module for transforming the main loudness to specific
-     * loudness.
+     * Two ears are supported, but the main binaural loudness is calculated for
+     * each ear separately. This is so that the output SignalBank can then be
+     * passed to InstantaneousLoudnessDIN456311991 which then sums the total
+     * loudness in each ear and divides the sum by two.
      *
      * REFERENCES:
      *
@@ -51,16 +54,16 @@ namespace loudness{
      * Aaron Hastings. Matlab port of the BASIC program.
      * http://www.auditory.org/mhonarc/2000/msg00498.html.
      *
-     * @sa MainLoudnessDIN45631
+     * @sa InstantaneousLoudnessDIN456311991
      */
  
-    class InstantaneousLoudnessDIN45631 : public Module
+    class MainLoudnessDIN456311991 : public Module
     {
 
     public:
 
-        InstantaneousLoudnessDIN45631 ();
-        virtual ~InstantaneousLoudnessDIN45631();
+        MainLoudnessDIN456311991 (bool isPresentationDiffuseField);
+        virtual ~MainLoudnessDIN456311991();
 
     private:
 
@@ -70,8 +73,9 @@ namespace loudness{
         virtual void processInternal(){};
         virtual void resetInternal();
         
-        RealVec zUP_, rNS_;
-        RealVecVec uSL_;
+        bool isPresentationDiffuseField_;
+        RealVecVec dLL_;
+        RealVec rAP_, a0_, dDF_, lTQ_, dCB_;
     };
 }
 

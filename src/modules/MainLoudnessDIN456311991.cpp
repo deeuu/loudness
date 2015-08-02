@@ -17,13 +17,13 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#include "MainLoudnessDIN45631.h"
+#include "MainLoudnessDIN456311991.h"
 #include "../support/AuditoryTools.h"
 
 namespace loudness{
 
-    MainLoudnessDIN45631::MainLoudnessDIN45631(bool isPresentationDiffuseField) :
-        Module("MainLoudnessDIN45631"),
+    MainLoudnessDIN456311991::MainLoudnessDIN456311991(bool isPresentationDiffuseField) :
+        Module("MainLoudnessDIN456311991"),
         isPresentationDiffuseField_ (isPresentationDiffuseField),
         dLL_ (11, RealVec(8, 0.0)),
         rAP_ (8, 0.0),
@@ -70,9 +70,9 @@ namespace loudness{
 
     }
 
-    MainLoudnessDIN45631::~MainLoudnessDIN45631() {}
+    MainLoudnessDIN456311991::~MainLoudnessDIN456311991() {}
 
-    bool MainLoudnessDIN45631::initializeInternal(const SignalBank &input)
+    bool MainLoudnessDIN456311991::initializeInternal(const SignalBank &input)
     {
         if (input.getNChannels() != 28)
         {
@@ -109,7 +109,7 @@ namespace loudness{
         return 1;
     }
 
-    void MainLoudnessDIN45631::processInternal(const SignalBank &input)
+    void MainLoudnessDIN456311991::processInternal(const SignalBank &input)
     {
         for (int ear = 0; ear < input.getNEars(); ++ear)
         {
@@ -188,5 +188,5 @@ namespace loudness{
         }
     }
 
-   void MainLoudnessDIN45631::resetInternal(){};
+   void MainLoudnessDIN456311991::resetInternal(){};
 }

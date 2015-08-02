@@ -17,12 +17,12 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#include "InstantaneousLoudnessDIN45631.h"
+#include "InstantaneousLoudnessDIN456311991.h"
 
 namespace loudness{
 
-    InstantaneousLoudnessDIN45631::InstantaneousLoudnessDIN45631() :
-        Module("InstantaneousLoudnessDIN45631"),
+    InstantaneousLoudnessDIN456311991::InstantaneousLoudnessDIN456311991() :
+        Module("InstantaneousLoudnessDIN456311991"),
         zUP_ (21, 0.0),
         rNS_ (21, 0.0),
         uSL_ (18, RealVec(8, 0.0))
@@ -59,9 +59,9 @@ namespace loudness{
         uSL_[17] = {0.06,0.05,0.03,0.02,0.02,0.02,0.02,0.02};
     }
 
-    InstantaneousLoudnessDIN45631::~InstantaneousLoudnessDIN45631() {}
+    InstantaneousLoudnessDIN456311991::~InstantaneousLoudnessDIN456311991() {}
 
-    bool InstantaneousLoudnessDIN45631::initializeInternal(const SignalBank &input)
+    bool InstantaneousLoudnessDIN456311991::initializeInternal(const SignalBank &input)
     {
         if (input.getNChannels() != 21)
         {
@@ -76,7 +76,7 @@ namespace loudness{
         return 1;
     }
 
-    void InstantaneousLoudnessDIN45631::processInternal(const SignalBank &input)
+    void InstantaneousLoudnessDIN456311991::processInternal(const SignalBank &input)
     {
         Real nTot = 0.0;
         for (int ear = 0; ear < input.getNEars(); ++ear)
@@ -189,5 +189,5 @@ namespace loudness{
         output_.setSample (0, 0, 0, nTot);
     }
 
-   void InstantaneousLoudnessDIN45631::resetInternal(){};
+   void InstantaneousLoudnessDIN456311991::resetInternal(){};
 }
