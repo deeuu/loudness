@@ -51,7 +51,7 @@ namespace loudness{
         output_.setChannelSpacingInCams (camStep_);
 
         //see ANSI S3.4 2007 p.11
-        const Real p51_1k = 4000.0 / freqToERB (1000.0);
+        const Real p51_1k = 4000.0 / centreFreqToCambridgeERB (1000.0);
 
         //pcomp is slope per component
         pcomp_.assign (nChannels, 0.0);
@@ -70,7 +70,7 @@ namespace loudness{
         for (int i = 0; i < nChannels; ++i)
         {
             fc = input.getCentreFreq(i);
-            erb = freqToERB (fc);
+            erb = centreFreqToCambridgeERB (fc);
             pcomp_[i] = 4.0 * fc / erb;
         }
         for (int i = 0; i < nFilters_; ++i)
@@ -78,9 +78,9 @@ namespace loudness{
             //filter frequency in Cams
             cam = camLo_ + (i * camStep_);
             //filter frequency in Hz
-            fc = camToFreq (cam);
+            fc = camToHertz (cam);
             //get the ERB of the filter
-            erb = freqToERB (fc);
+            erb = centreFreqToCambridgeERB (fc);
             //ANSI S3.4 sec 3.5 p.11
             pu_[i] = 4.0 * fc / erb;
             pl_[i] = 0.35 * (pu_[i] / p51_1k);

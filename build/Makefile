@@ -46,6 +46,9 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/modules/RoexBankANSIS342007.cpp \
 ../src/modules/FastRoexBank.cpp \
 ../src/modules/DoubleRoexBank.cpp \
+../src/modules/OctaveBank.cpp \
+../src/modules/MainLoudnessDIN45631.cpp \
+../src/modules/InstantaneousLoudnessDIN45631.cpp \
 ../src/modules/SpecificLoudnessANSIS342007.cpp \
 ../src/modules/BinauralInhibitionMG2007.cpp \
 ../src/modules/InstantaneousLoudness.cpp \
