@@ -183,9 +183,9 @@ namespace loudness{
         if (nTot < 0.0)
             nTot = 0.0;
         else if (nTot <= 16.0) // round to three dp
-            nTot = std::floor (nTot * 1000.0 + 0.5) / 1000.0;
+            nTot = round (nTot, 3);
         else // round to two dp
-            nTot = std::floor (nTot * 100.0 + 0.5) / 100.0;
+            nTot = round (nTot, 2);
         output_.setSample (0, 0, 0, nTot);
     }
 

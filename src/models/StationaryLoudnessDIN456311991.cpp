@@ -25,11 +25,17 @@
 namespace loudness{
 
     StationaryLoudnessDIN456311991::StationaryLoudnessDIN456311991() :
-        Model("StationaryLoudnessDIN456311991", false)
+        Model("StationaryLoudnessDIN456311991", false),
+        isPresentationDiffuseField_ (false)
     {}
 
     StationaryLoudnessDIN456311991::~StationaryLoudnessDIN456311991()
     {}
+
+    void StationaryLoudnessDIN456311991::setPresentationDiffuseField (bool isPresentationDiffuseField)
+    {
+        isPresentationDiffuseField_ = isPresentationDiffuseField;
+    }
 
     bool StationaryLoudnessDIN456311991::initializeInternal(const SignalBank &input)
     {
@@ -37,19 +43,19 @@ namespace loudness{
          * Third octave filters
          */
         modules_.push_back(unique_ptr<Module>
-                (new OctaveBank(3, true, true)));
+                (new OctaveBank(3, 2, true, true)));
         
         /*
          * Main loudness
          */
         modules_.push_back(unique_ptr<Module>
-                (new MainLoudnessDIN456311991));
+                (new MainLoudnessDIN456311991 (isPresentationDiffuseField_)));
 
         /*
          * Instantaneous loudness
          */   
         modules_.push_back(unique_ptr<Module> 
-                (new InstantaneousLoudnessDIN456311991()));
+                (new InstantaneousLoudnessDIN456311991));
         outputModules_["InstantaneousLoudness"] = modules_.back().get();
 
         //configure targets

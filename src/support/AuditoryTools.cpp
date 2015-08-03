@@ -108,6 +108,18 @@ namespace loudness{
                     9.4892948514340887 * s + 38.986682624132882);
         }
     }
+
+    Real soneToPhonDIN456311991 (Real sone)
+    {
+        if (sone >= 1)
+            return 40 + 10 * std::log2 (sone);
+        else
+        {
+            Real phon = 40 * std::pow (sone + 0.0005, 0.35);
+            phon = (phon < 3.0) ? 3.0 : phon;
+            return phon;
+        }
+    }
     
     OME::OME(const Filter& middleEarType, const Filter& outerEarType) :
         middleEarType_(middleEarType),

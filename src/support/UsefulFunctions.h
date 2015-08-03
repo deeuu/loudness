@@ -88,7 +88,15 @@ namespace loudness{
     template <typename Type>
     Type nextPowerOfTwo(const Type& value)
     {
-        return pow( 2, ceil( log2(value) ) );
+        return std::pow (2, std::ceil (std::log2 (value) ) );
+    }
+
+    /** Rounds value to a number of decimal places (default is 0) */
+    template <typename Type>
+    Type round(const Type& value, int nDecimals = 0)
+    {
+        int c = std::pow (10, nDecimals);
+        return Type (std::floor (value * c + 0.5) / c);
     }
 
     /** Convert decibels to amplitude.
@@ -101,7 +109,7 @@ namespace loudness{
                               const Type minValue = (Type)LOWER_LIMIT_DB,
                               const Type clipValue = (Type)0.0)
     {
-        return decibels > minValue ? pow(10, decibels / 20.0) : clipValue;
+        return decibels > minValue ? std::pow (10, decibels / 20.0) : clipValue;
     }
 
     /** Convert amplitude to decibels.
@@ -113,7 +121,7 @@ namespace loudness{
                              const Type minValue = (Type)0.0,
                              const Type clipValue = (Type)LOWER_LIMIT_DB)
     {
-        return amplitude > minValue ? 20 * log10(amplitude) : clipValue;
+        return amplitude > minValue ? 20 * std::log10 (amplitude) : clipValue;
     }
     /** Convert decibels to power.
      *  If decibels is greater than minValue, power is calculated,
@@ -124,7 +132,7 @@ namespace loudness{
                           const Type minValue = (Type)LOWER_LIMIT_DB,
                           const Type clipValue = (Type)0.0)
     {
-        return decibels > minValue ? pow(10, decibels / 10.0) : clipValue;
+        return decibels > minValue ? std::pow (10, decibels / 10.0) : clipValue;
     }
 
     /** Convert power to decibels.
@@ -136,7 +144,7 @@ namespace loudness{
                           const Type minValue = (Type)0.0,
                           const Type clipValue = (Type)LOWER_LIMIT_DB)
     {
-        return power > minValue ? 10 * log10(power) : clipValue;
+        return power > minValue ? 10 * std::log10 (power) : clipValue;
     }
 }
 

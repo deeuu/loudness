@@ -25,7 +25,7 @@
 namespace loudness{
 
     /**
-     * @brief Implementation of the ANSI S3.4:2007 stationary loudness model.
+     * @brief Implementation of the DIN 45631:1991 stationary loudness model.
      * 
      * This loudness model is for processing spectra only, i.e. there is no
      * time-frequency decomposition. The input SignalBank can have multiple ears
@@ -35,22 +35,32 @@ namespace loudness{
      * set before initialising this model.
      *
      * If the input SignalBank used to initialise this model has one ear, then
-     * the instantaneous loudness is multiplied by two. If you don't want this,
-     * call the method setDioticPresentation(false) (default is true). If the input
-     * SignalBank has two ears, the default the instantaneous loudness is a sum
-     * of the loudness in both left and right ears. If you want to access the
-     * loudness in both left and right ears separately, call method
-     * setDioticPresentation(false). When there are two ears, the binaural
-     * inhibition model proposed by Moore and Glasberg (2007) is used. If you
-     * don't want this call method setInhibitSpecificLoudness(false). 
+     * the instantaneous loudness is calculated for binaural loudness. If the input
+     * SignalBank has two ears, the loudness is computed for each ear according
+     * to the standard, summed and then divided by two.  
+     *
+     * The input SignalBank is filtered by a set of 28 third octave band filters
+     * (using the third order Butterworth band pass filter response given in ANSI S1.11:1986).
      *
      * OUTPUTS:
-     *  - "Excitation"
-     *  - "SpecificLoudness"
      *  - "InstantaneousLoudness"
+     *
+     * @todo Develop a module for transforming the main loudness to specific
+     * loudness.
      *
      * REFERENCES:
      *
+     * Zwicker, E., Fastl, H., Widmann, U., Kurakata, K., Kuwano, S., & Germtuo,
+     * E. R. (1991). Program for calculating loudness according to DIN 45631 (ISO
+     * 532B). Journal of the Acoustical Society of America, 12(1), 39–42.
+     *
+     * GENESIS. LOUDNESS TOOLBOX. 
+     * http://genesis-acoustics.com/en/loudness_online-32.html.
+     *
+     * Aaron Hastings. Matlab port of the BASIC program.
+     * http://www.auditory.org/mhonarc/2000/msg00498.html.
+     *
+     * @sa OctaveBank MainLoudnessDIN456311991 InstantaneousLoudnessDIN456311991
      */
 
     class StationaryLoudnessDIN456311991 : public Model
@@ -58,9 +68,12 @@ namespace loudness{
         public:
             StationaryLoudnessDIN456311991();
             virtual ~StationaryLoudnessDIN456311991();
+            void setPresentationDiffuseField (bool isPresentationDiffuseField);
 
         private:
             virtual bool initializeInternal(const SignalBank &input);
+            
+            bool isPresentationDiffuseField_;
     }; 
 }
 

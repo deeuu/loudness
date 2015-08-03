@@ -157,7 +157,20 @@ namespace loudness{
      *  
      * @return Loudness in phons.
      */
-    Real soneToPhonCHGM2011(Real sone);
+    Real soneToPhonCHGM2011 (Real sone);
+
+    /**
+     * @brief Returns loudness level in phons given loudness in sones.
+     *
+     * Follows the equations given in Zwicker et al. (1991).
+     *
+     * REFERENCES:
+     *
+     * Zwicker, E., Fastl, H., Widmann, U., Kurakata, K., Kuwano, S., & Germtuo,
+     * E. R. (1991). Program for calculating loudness according to DIN 45631 (ISO
+     * 532B). Journal of the Acoustical Society of America, 12(1), 39–42.
+     */
+    Real soneToPhonDIN456311991 (Real sone);
 
     /**
      * @class OME

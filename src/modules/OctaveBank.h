@@ -57,6 +57,7 @@ namespace loudness{
     public:
 
         OctaveBank (int order = 3, 
+                    int nBandsToRemoveFromEnd = 0,
                     bool isThirdOctave = true, 
                     bool isOutputInDecibels = false);
 
@@ -74,7 +75,7 @@ namespace loudness{
         virtual void processInternal(){};
         virtual void resetInternal();
 
-        int order_;
+        int order_, nBandsToRemoveFromEnd_;
         bool isThirdOctave_, isOutputInDecibels_;
         Real exponent_, qDesExponentiated_;
         RealVec centreFreqs_;
