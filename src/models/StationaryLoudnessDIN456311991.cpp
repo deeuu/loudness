@@ -24,18 +24,16 @@
 
 namespace loudness{
 
-    StationaryLoudnessDIN456311991::StationaryLoudnessDIN456311991() :
+    StationaryLoudnessDIN456311991::StationaryLoudnessDIN456311991(
+            bool isPresentationDiffuseField,
+            bool isOutputRounded) :
         Model("StationaryLoudnessDIN456311991", false),
-        isPresentationDiffuseField_ (false)
+        isPresentationDiffuseField_ (isPresentationDiffuseField),
+        isOutputRounded_ (isOutputRounded)
     {}
 
     StationaryLoudnessDIN456311991::~StationaryLoudnessDIN456311991()
     {}
-
-    void StationaryLoudnessDIN456311991::setPresentationDiffuseField (bool isPresentationDiffuseField)
-    {
-        isPresentationDiffuseField_ = isPresentationDiffuseField;
-    }
 
     bool StationaryLoudnessDIN456311991::initializeInternal(const SignalBank &input)
     {

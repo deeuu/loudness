@@ -66,14 +66,13 @@ namespace loudness{
     class StationaryLoudnessDIN456311991 : public Model
     {
         public:
-            StationaryLoudnessDIN456311991();
+            StationaryLoudnessDIN456311991(bool isPresentationDiffuseField, bool isOutputRounded);
             virtual ~StationaryLoudnessDIN456311991();
-            void setPresentationDiffuseField (bool isPresentationDiffuseField);
 
         private:
             virtual bool initializeInternal(const SignalBank &input);
             
-            bool isPresentationDiffuseField_;
+            bool isPresentationDiffuseField_, isOutputRounded_;
     }; 
 }
 

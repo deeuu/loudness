@@ -21,11 +21,12 @@
 
 namespace loudness{
 
-    InstantaneousLoudnessDIN456311991::InstantaneousLoudnessDIN456311991() :
+    InstantaneousLoudnessDIN456311991::InstantaneousLoudnessDIN456311991(bool isOutputRounded) :
         Module("InstantaneousLoudnessDIN456311991"),
         zUP_ (21, 0.0),
         rNS_ (21, 0.0),
-        uSL_ (18, RealVec(8, 0.0))
+        uSL_ (18, RealVec(8, 0.0)),
+        isOutputRounded_ (isOutputRounded)
     {
         /* Upper limits of approximated critical bands in terms of critical band
          * rate */
@@ -182,10 +183,15 @@ namespace loudness{
         // Post-processing
         if (nTot < 0.0)
             nTot = 0.0;
-        else if (nTot <= 16.0) // round to three dp
-            nTot = round (nTot, 3);
-        else // round to two dp
-            nTot = round (nTot, 2);
+
+        if (isOutputRounded_)
+        {
+            if (nTot <= 16.0) // round to three dp
+                nTot = round (nTot, 3);
+            else // round to two dp
+                nTot = round (nTot, 2);
+        }
+
         output_.setSample (0, 0, 0, nTot);
     }
 

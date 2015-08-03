@@ -2,6 +2,7 @@ import numpy as np
 from usefulFunctions import *
 from loudness.tools.extractors import StationaryLoudnessExtractor
 from loudness.tools.predictors import StationaryLoudnessContourPredictor
+from loudness.tools import spectra
 from loudness import StationaryLoudnessANSIS342007, soneToPhonMGB1997
 import matplotlib.pyplot as plt
 

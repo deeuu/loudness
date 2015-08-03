@@ -35,7 +35,7 @@ class StationaryLoudnessContourPredictor():
             self.targetLoudnessLevel = 2.4
         else:
             contour = ISO2262003LoudnessContours()
-            sef.freqs, self.sPLs = contour.phonToSPL(None, loudnessLevel)
+            self.freqs, self.sPLs = contour.phonToSPL(None, loudnessLevel)
 
     def process(self):
 

@@ -162,7 +162,16 @@ namespace loudness{
     /**
      * @brief Returns loudness level in phons given loudness in sones.
      *
-     * Follows the equations given in Zwicker et al. (1991).
+     * Piecewise polynomials were calculating by inputting a 1kHz tone at levels
+     * spanning 5 - 120 dB SPL using the model StationaryLoudnessDIN456311991 with
+     * isOutputRounded_ set to false.  Values are accurate to within +/- 0.36
+     * phons across the entire range of input levels tested.  
+     *
+     * If @a isPolyApprox is false (default is true), the transformation is
+     * calculated using the equations given in Zwicker et al. (1991). However,
+     * these functions appears to be less accurate than the polynomial
+     * approximations (at least for the implementation of the model presented in
+     * this library).
      *
      * REFERENCES:
      *
@@ -170,7 +179,7 @@ namespace loudness{
      * E. R. (1991). Program for calculating loudness according to DIN 45631 (ISO
      * 532B). Journal of the Acoustical Society of America, 12(1), 39–42.
      */
-    Real soneToPhonDIN456311991 (Real sone);
+    Real soneToPhonDIN456311991 (Real sone, bool isPolyApprox = true);
 
     /**
      * @class OME

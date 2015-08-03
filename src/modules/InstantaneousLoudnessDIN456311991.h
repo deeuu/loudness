@@ -59,7 +59,7 @@ namespace loudness{
 
     public:
 
-        InstantaneousLoudnessDIN456311991 ();
+        InstantaneousLoudnessDIN456311991 (bool isOutputRounded = false);
         virtual ~InstantaneousLoudnessDIN456311991();
 
     private:
@@ -70,6 +70,7 @@ namespace loudness{
         virtual void processInternal(){};
         virtual void resetInternal();
         
+        bool isOutputRounded_;
         RealVec zUP_, rNS_;
         RealVecVec uSL_;
     };

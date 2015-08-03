@@ -94,8 +94,6 @@ namespace loudness{
                 Real filterOutput = 0.0;
                 Real fm = centreFreqs_[i];
 
-                LOUDNESS_DEBUG (name_ << ": FC :" << fm);
-
                 for (int j = 0; j < input.getNChannels(); ++j)
                 {
                     if (inputSpectrum[j] > 1e-15)
