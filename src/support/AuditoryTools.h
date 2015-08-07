@@ -164,7 +164,7 @@ namespace loudness{
      *
      * Piecewise polynomials were calculating by inputting a 1kHz tone at levels
      * spanning 5 - 120 dB SPL using the model StationaryLoudnessDIN456311991 with
-     * isOutputRounded_ set to false.  Values are accurate to within +/- 0.36
+     * isOutputRounded_ set to false.  Values are accurate to within +/- 0.35
      * phons across the entire range of input levels tested.  
      *
      * If @a isPolyApprox is false (default is true), the transformation is

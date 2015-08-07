@@ -66,7 +66,8 @@ namespace loudness{
     class StationaryLoudnessDIN456311991 : public Model
     {
         public:
-            StationaryLoudnessDIN456311991(bool isPresentationDiffuseField, bool isOutputRounded);
+            StationaryLoudnessDIN456311991(bool isPresentationDiffuseField = false, 
+                                           bool isOutputRounded = false);
             virtual ~StationaryLoudnessDIN456311991();
 
         private:
