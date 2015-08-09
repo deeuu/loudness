@@ -70,6 +70,8 @@ namespace loudness{
                                            bool isOutputRounded = false);
             virtual ~StationaryLoudnessDIN456311991();
 
+            void setPresentationDiffuseField(bool isPresentationDiffuseField);
+
         private:
             virtual bool initializeInternal(const SignalBank &input);
             

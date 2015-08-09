@@ -91,7 +91,6 @@ namespace std {
     %apply vector<int>& { IntVec& };
     %apply const vector<int>& { const IntVec& };
     %apply vector<string>& { StringVec };
-    %apply const vector<string>& { const StringVec& };
 }
 
 %apply (double* IN_ARRAY1, int DIM1) {(Real* data, int nSamples)}; 

@@ -4,42 +4,31 @@ nominalThirdOctBandFC = np.array([50, 62.5, 80, 100, 125, 160, 200, 250, 315,
     400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300,
     8000, 10000, 12700, 16000])
 
-def generateSymmetricNToneComplex(fc, 
-                                ratio,
-                                nTones, 
-                                dBSPL,
-                                overallLevel = True,
-                                logSpaced = True):
-    '''
-    Generates an `nTone' complex centred at (and including) fc.
-    `nTone' must be odd.
-    if `logSpaced' is True (default), components are spaced logarithmically
-    according to the frequency `ratio'. If `logSpaced' is False, `ratio' is not
-    a ratio, but instead defines the linear spacing between adjacent components in Hertz.
-    '''
-    if (nTones % 2):
-        nTonesBothSides = int(nTones)/2
-        ratio = float(ratio)
-        if logSpaced:
-            fLo = fc / (ratio ** nTonesBothSides)
-            fHi = fc * (ratio ** nTonesBothSides)
-        else:
-            fLo = fc - ratio * nTonesBothSides
-            fHi = fc + ratio * nTonesBothSides
-        return generateNToneComplex(fLo, fHi, nTones, dBSPL, overallLevel, logSpaced)
-    else:
-        raise ValueError("nTones must be odd")
 
-def generateNToneComplex(fLo, fHi, nTones, dBSPL, overallLevel = True, logSpaced = True):
+def getF1AndF2(fc, bw, fcIsGeometricMean = True):
+    if fcIsGeometricMean:
+        f2 = 0.5 * (bw + np.sqrt(bw **2 + 4 * fc ** 2))
+        f1 = f2 - bw
+    else:
+        f2 = fc + bw * 0.5
+        f1 = fc - bw * 0.5
+    return (f1, f2)
+
+def generateNToneComplex(fc, bw, nTones, dBSPL, overallLevel = True, fcIsGeometricMean = True):
+    
+    f1, f2 = getF1AndF2(fc, bw, fcIsGeometricMean)
+    return generateNToneComplexBand(f1, f2, nTones, dBSPL, overallLevel, fcIsGeometricMean)
+
+def generateNToneComplexBand(f1, f2, nTones, dBSPL, overallLevel = True, logSpaced = True):
     '''
-    Generates an nTone complex including at minimum the fLo frequency. 
-    If nTones is > 1, both fLo and fHi are included.
+    Generates an nTone complex including at minimum the f1 frequency. 
+    If nTones is > 1, both f1 and f2 are included.
     By default, the components are spaced logarithmically.
     '''
     if logSpaced:
-        componentFreqs = np.logspace(np.log10(fLo), np.log10(fHi), nTones)
+        componentFreqs = np.logspace(np.log10(f1), np.log10(f2), nTones)
     else:
-        componentFreqs = np.linspace(fLo, fHi, nTones)
+        componentFreqs = np.linspace(f1, f2, nTones)
 
     if overallLevel:
         componentIntensities = np.full(nTones, 10 ** (dBSPL / 10.0) / nTones)
@@ -48,20 +37,20 @@ def generateNToneComplex(fLo, fHi, nTones, dBSPL, overallLevel = True, logSpaced
 
     return componentFreqs, componentIntensities
     
-def generateWhiteNoiseBand(bandLo, bandHi, dBSPL, overallLevel = True, spacing = None):
+def generateWhiteNoiseBand(f1, f2, dBSPL, overallLevel = True, spacing = None):
     '''
-    In the standard the band frequences don't seem to be included i.e. (bandLo, bandHi)
-    Here we do: [bandLo + spacing/2, bandHi + spacing/2]
+    In the standard the band frequences don't seem to be included i.e. (f1, f2)
+    Here we do: [f1 + spacing/2, f2 + spacing/2]
     '''
     if not spacing:
-        if (bandHi - bandLo) > 30:
+        if (f2 - f1) > 30:
             spacing = 10
-            bandLo += 5
+            f1 += 5
         else:
             spacing = 1
-            bandLo += 0.5
+            f1 += 0.5
 
-    componentFreqs = np.arange(bandLo, bandHi, spacing)
+    componentFreqs = np.arange(f1, f2, spacing)
     nComponents = componentFreqs.size
     if overallLevel:
         componentIntensities = np.full(nComponents, 10**(dBSPL / 10.0) / nComponents)
@@ -70,21 +59,21 @@ def generateWhiteNoiseBand(bandLo, bandHi, dBSPL, overallLevel = True, spacing =
 
     return componentFreqs, componentIntensities
 
-def generatePinkNoiseBand(bandLo, bandHi, level, refFreq = None, spacing = None):
+def generatePinkNoiseBand(f1, f2, level, refFreq = None, spacing = None):
     '''
     if `refFreq' is not None, i.e. a frequency in Hz, `level' is taken to be the
     spectrum level at that frequency. Otherwise, `level' is taken to be the
     overall level of the band.  
     '''
     if not spacing:
-        if (bandHi - bandLo) > 30:
+        if (f2 - f1) > 30:
             spacing = 10
-            bandLo += 5
+            f1 += 5
         else:
             spacing = 1
-            bandLo += 0.5
+            f1 += 0.5
 
-    componentFreqs = np.arange(bandLo, bandHi, spacing)
+    componentFreqs = np.arange(f1, f2, spacing)
     lin = 10 ** (level / 10.0)
     if refFreq:
         gain = spacing * lin * refFreq

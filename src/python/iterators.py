@@ -18,7 +18,7 @@ class DynamicLoudnessIterator():
             nInputEars = 1):
 
         self.extractor = DynamicLoudnessExtractor(model, fs, nInputEars, output)
-        self.outputName = model.getOutputModulesToAggregate()[0]
+        self.outputName = output
         self.converged = False
 
         if globalLoudnessFeature is None:
@@ -36,6 +36,7 @@ class DynamicLoudnessIterator():
         self.extractor.process(signalIn)
         timeSeries = self.extractor.outputDict[self.outputName]
         loudness = self.globalLoudnessFeature(timeSeries)
+        print loudness
         loudnessLevel = self.loudnessLevelFunction(loudness)
         return loudnessLevel
 

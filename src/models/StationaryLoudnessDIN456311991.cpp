@@ -35,6 +35,11 @@ namespace loudness{
     StationaryLoudnessDIN456311991::~StationaryLoudnessDIN456311991()
     {}
 
+    void StationaryLoudnessDIN456311991::setPresentationDiffuseField(bool isPresentationDiffuseField)
+    {
+        isPresentationDiffuseField_ = isPresentationDiffuseField;
+    }
+
     bool StationaryLoudnessDIN456311991::initializeInternal(const SignalBank &input)
     {
         /*
