@@ -75,7 +75,7 @@ namespace loudness{
      */
     inline Real centreFreqToMunichERB(Real centreFreq)
     {
-        return 25.0 * 75.0 * pow(1.0 + 1400.0 * centreFreq*centreFreq, 0.69);
+        return 25.0 + 75.0 * pow(1.0 + 1.4e-6 * centreFreq*centreFreq, 0.69);
     }
 
     /**

@@ -79,8 +79,8 @@ class DynamicLoudnessExtractor:
 
     def __init__(self, model,
             fs = 32000, 
-            outputs = None,
-            nInputEars = 1):
+            nInputEars = 1,
+            outputs = None):
         ''' 
         Model   
             The input loudness model - must be dynamic.
