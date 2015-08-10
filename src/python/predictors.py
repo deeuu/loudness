@@ -208,12 +208,14 @@ class ISO2262003LoudnessContours():
         '''
         if f is None:
             f = self.freqs.copy()
+            '''
             if (phon > 80) & (phon < 90):
                 idx = (f>=20) & (f<=4e3)
                 f = f[idx]
             elif phon > 90:
                 idx = (f>=20) & (f<=1e3)
                 f = f[idx]
+            '''
 
 	l = self.lu_dB(f)
 	t = self.t_dB(f)
