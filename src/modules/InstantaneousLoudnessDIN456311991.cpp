@@ -23,10 +23,10 @@ namespace loudness{
 
     InstantaneousLoudnessDIN456311991::InstantaneousLoudnessDIN456311991(bool isOutputRounded) :
         Module("InstantaneousLoudnessDIN456311991"),
+        isOutputRounded_ (isOutputRounded),
         zUP_ (21, 0.0),
         rNS_ (21, 0.0),
-        uSL_ (18, RealVec(8, 0.0)),
-        isOutputRounded_ (isOutputRounded)
+        uSL_ (18, RealVec(8, 0.0))
     {
         /* Upper limits of approximated critical bands in terms of critical band
          * rate */

@@ -156,7 +156,7 @@ namespace loudness{
 
             void setPeakSTLFollowerUsed(bool isPeakSTLFollowerUsed);
 
-            void setOuterEarType(const OME::Filter& outerEarType);
+            void setOuterEarFilter(const OME::Filter& outerEarFilter);
 
             void setSpecificLoudnessANSIS342007(bool isSpecificLoudnessANSIS342007_);
 
@@ -183,7 +183,7 @@ namespace loudness{
             bool isSpecificLoudnessANSIS342007_, isFirstSampleAtWindowCentre_;
             bool isPeakSTLFollowerUsed_;
             string pathToFilterCoefs_;
-            OME::Filter outerEarType_;
+            OME::Filter outerEarFilter_;
     }; 
 }
 

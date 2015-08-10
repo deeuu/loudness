@@ -29,7 +29,7 @@ namespace loudness{
         Model("StationaryLoudnessCHGM2011", false)
     {
         //Default parameters
-        setOuterEarType(OME::Filter::ANSIS342007_FREEFIELD);
+        setOuterEarFilter(OME::Filter::ANSIS342007_FREEFIELD);
         setfilterSpacingInCams(0.1);
         setPresentationDiotic(true);
         setBinauralInhibitionUsed(true);
@@ -49,9 +49,9 @@ namespace loudness{
         isBinauralInhibitionUsed_ = isBinauralInhibitionUsed;
     }
 
-    void StationaryLoudnessCHGM2011::setOuterEarType(const OME::Filter outerEarType)
+    void StationaryLoudnessCHGM2011::setOuterEarFilter(const OME::Filter outerEarFilter)
     {
-        outerEarType_ = outerEarType;
+        outerEarFilter_ = outerEarFilter;
     }
 
     void StationaryLoudnessCHGM2011::setfilterSpacingInCams(Real filterSpacingInCams)
@@ -70,7 +70,7 @@ namespace loudness{
          * Weighting filter
          */
         modules_.push_back(unique_ptr<Module>
-                (new WeightSpectrum(OME::CHGM2011_MIDDLE_EAR, outerEarType_))); 
+                (new WeightSpectrum(OME::CHGM2011_MIDDLE_EAR, outerEarFilter_))); 
 
         // Set up scaling factors depending on output config
         Real doubleRoexBankfactor, instantaneousLoudnessFactor;

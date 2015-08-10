@@ -96,7 +96,7 @@ namespace loudness{
 
             void setBinauralInhibitionUsed(bool isBinauralInhibitionUsed);
 
-            void setOuterEarType(const OME::Filter outerEarType);
+            void setOuterEarFilter(const OME::Filter outerEarFilter);
 
             void setfilterSpacingInCams(Real filterSpacingInCams);
 
@@ -108,7 +108,7 @@ namespace loudness{
             Real filterSpacingInCams_;
             bool isPresentationDiotic_, isBinauralInhibitionUsed_;
             bool isSpecificLoudnessANSIS342007_;
-            OME::Filter outerEarType_;
+            OME::Filter outerEarFilter_;
     }; 
 }
 

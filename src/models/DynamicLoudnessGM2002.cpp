@@ -72,9 +72,9 @@ namespace loudness{
         isPeakSTLFollowerUsed_ = isPeakSTLFollowerUsed;
     }
 
-    void DynamicLoudnessGM2002::setOuterEarType(const OME::Filter& outerEarType)
+    void DynamicLoudnessGM2002::setOuterEarFilter(const OME::Filter& outerEarFilter)
     {
-        outerEarType_ = outerEarType;
+        outerEarFilter_ = outerEarFilter;
     }
 
     void DynamicLoudnessGM2002::setPresentationDiotic(bool isPresentationDiotic)
@@ -166,7 +166,7 @@ namespace loudness{
         setRate(1000);
         setHPFUsed(true);
         setPeakSTLFollowerUsed(false);
-        setOuterEarType(OME::ANSIS342007_FREEFIELD);
+        setOuterEarFilter(OME::ANSIS342007_FREEFIELD);
         setSpectrumSampledUniformly(true);
         setHoppingGoertzelDFTUsed(false);
         setSpectralResolutionDoubled(false);
@@ -349,7 +349,7 @@ namespace loudness{
                 middleEar = OME::ANSIS342007_MIDDLE_EAR_HPF;
 
             modules_.push_back(unique_ptr<Module> 
-                    (new WeightSpectrum(middleEar, outerEarType_)));
+                    (new WeightSpectrum(middleEar, outerEarFilter_)));
         }
 
         /*
