@@ -21,6 +21,7 @@
 #define StationaryLOUDNESSDIN456311991_H
 
 #include "../support/Model.h"
+#include "../modules/MainLoudnessDIN456311991.h"
 
 namespace loudness{
 
@@ -66,16 +67,18 @@ namespace loudness{
     class StationaryLoudnessDIN456311991 : public Model
     {
         public:
-            StationaryLoudnessDIN456311991(bool isPresentationDiffuseField = false, 
+            StationaryLoudnessDIN456311991(const MainLoudnessDIN456311991::OuterEarFilter = 
+                                           MainLoudnessDIN456311991::OuterEarFilter::FREEFIELD,
                                            bool isOutputRounded = false);
             virtual ~StationaryLoudnessDIN456311991();
 
-            void setPresentationDiffuseField(bool isPresentationDiffuseField);
+            void setOuterEarFilter(MainLoudnessDIN456311991::OuterEarFilter outerEarFilter);
 
         private:
             virtual bool initializeInternal(const SignalBank &input);
-            
-            bool isPresentationDiffuseField_, isOutputRounded_;
+
+            MainLoudnessDIN456311991::OuterEarFilter outerEarFilter_;
+            bool isOutputRounded_;
     }; 
 }
 

@@ -62,7 +62,13 @@ namespace loudness{
 
     public:
 
-        MainLoudnessDIN456311991 (bool isPresentationDiffuseField);
+        enum OuterEarFilter{
+                NONE,
+                FREEFIELD,
+                DIFFUSEFIELD,
+            };
+
+        MainLoudnessDIN456311991 (const OuterEarFilter& outerEarType = OuterEarFilter::FREEFIELD);
         virtual ~MainLoudnessDIN456311991();
 
     private:
@@ -73,7 +79,7 @@ namespace loudness{
         virtual void processInternal(){};
         virtual void resetInternal();
         
-        bool isPresentationDiffuseField_;
+        OuterEarFilter outerEarType_;
         RealVecVec dLL_;
         RealVec rAP_, a0_, dDF_, lTQ_, dCB_;
     };

@@ -22,9 +22,9 @@
 
 namespace loudness{
 
-    MainLoudnessDIN456311991::MainLoudnessDIN456311991(bool isPresentationDiffuseField) :
+    MainLoudnessDIN456311991::MainLoudnessDIN456311991(const OuterEarFilter& outerEarType) :
         Module("MainLoudnessDIN456311991"),
-        isPresentationDiffuseField_ (isPresentationDiffuseField),
+        outerEarType_ (outerEarType),
         dLL_ (11, RealVec(8, 0.0)),
         rAP_ (8, 0.0),
         a0_ (20, 0.0),
@@ -51,7 +51,9 @@ namespace loudness{
         rAP_ = {45,55,65,71,80,90,100,120};
 
         /* Correction of levels according to the transmission characteristics of
-         * the ear */
+         * the ear: Fastl and Zwicker p.225: a0 represents the transmission
+         * between the freefield and our hearing system. This is attenuation
+         * (dB) as a function of bark. */
         a0_ = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -0.5, -1.6,
                -3.2, -5.4, -5.6, -4, -1.5, 2, 5, 12};
 
@@ -161,11 +163,12 @@ namespace loudness{
                 if (i > 2)
                     lE[i] = thirdOctaveLevels[i + 8];
 
-                lE[i] = lE[i] - a0_[i];
-                mainLoudness[i] = 0.0;
+                if (outerEarType_ == OuterEarFilter::FREEFIELD)
+                    lE[i] = lE[i] - a0_[i];
+                else if (outerEarType_ == OuterEarFilter::DIFFUSEFIELD)
+                    lE[i] = lE[i] - a0_[i] + dDF_[i];
 
-                if (isPresentationDiffuseField_)
-                    lE[i] = lE[i] + dDF_[i];
+                mainLoudness[i] = 0.0;
 
                 if (lE[i] > lTQ_[i])
                 {

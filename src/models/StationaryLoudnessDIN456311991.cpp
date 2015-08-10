@@ -18,26 +18,25 @@
  */
 
 #include "../modules/OctaveBank.h"
-#include "../modules/MainLoudnessDIN456311991.h"
 #include "../modules/InstantaneousLoudnessDIN456311991.h"
 #include "StationaryLoudnessDIN456311991.h"
 
 namespace loudness{
 
     StationaryLoudnessDIN456311991::StationaryLoudnessDIN456311991(
-            bool isPresentationDiffuseField,
+            const MainLoudnessDIN456311991::OuterEarFilter outerEarFilter,
             bool isOutputRounded) :
         Model("StationaryLoudnessDIN456311991", false),
-        isPresentationDiffuseField_ (isPresentationDiffuseField),
+        outerEarFilter_ (outerEarFilter),
         isOutputRounded_ (isOutputRounded)
     {}
 
     StationaryLoudnessDIN456311991::~StationaryLoudnessDIN456311991()
     {}
 
-    void StationaryLoudnessDIN456311991::setPresentationDiffuseField(bool isPresentationDiffuseField)
+    void StationaryLoudnessDIN456311991::setOuterEarFilter(MainLoudnessDIN456311991::OuterEarFilter outerEarFilter)
     {
-        isPresentationDiffuseField_ = isPresentationDiffuseField;
+        outerEarFilter_ = outerEarFilter;
     }
 
     bool StationaryLoudnessDIN456311991::initializeInternal(const SignalBank &input)
@@ -52,7 +51,7 @@ namespace loudness{
          * Main loudness
          */
         modules_.push_back(unique_ptr<Module>
-                (new MainLoudnessDIN456311991 (isPresentationDiffuseField_)));
+                (new MainLoudnessDIN456311991 (outerEarFilter_)));
 
         /*
          * Instantaneous loudness
