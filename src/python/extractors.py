@@ -22,6 +22,7 @@ class StationaryLoudnessExtractor:
         self.outputDict['Frequencies'] = np.array([])
         self.nEars = 0
         self.bank = ln.SignalBank()
+        self.initialize = True
 
     def process(self, frequencies, intensityLevels):
 
@@ -42,13 +43,13 @@ class StationaryLoudnessExtractor:
         nComponents = frequencies.size
         nEars = intensities.shape[1]
 
-        if (np.any(self.outputDict['Frequencies'] != frequencies) or
-                (nEars != self.nEars)):
+        if self.initialize:
             self.bank.initialize(nEars, nComponents, 1, 1)
             self.bank.setCentreFreqs(frequencies)
             self.outputDict['Frequencies'] = frequencies
             self.nEars = nEars
             self.model.initialize(self.bank)
+        self.initialize = False
 
         self.bank.setSignals(intensities.reshape((nEars, nComponents, 1)))
         
