@@ -209,7 +209,7 @@ class Sound:
         Pad the data with zeros.
         '''
         if end:
-            self.data = np.vstack((self.data, zeros((samps, self.nChannels))))
+            self.data = np.vstack((self.data, np.zeros((samps, self.nChannels))))
         else:
             self.data = np.vstack((np.zeros((samps, self.nChannels)), self.data))
         self.nSamples, self.nChannels = self.data.shape
