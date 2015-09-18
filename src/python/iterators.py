@@ -37,7 +37,6 @@ class DynamicLoudnessIterator():
         self.extractor.process(signalIn)
         timeSeries = self.extractor.outputDict[self.outputName]
         loudness = self.globalLoudnessFeature(timeSeries)
-        print loudness
         loudnessLevel = self.loudnessLevelFunction(loudness)
         return loudnessLevel
 
@@ -58,8 +57,8 @@ class DynamicLoudnessIterator():
 
             error = targetLoudness - loudnessLevel
 
-            print (('Gain: %0.3f, Loudness Level: %0.3f, ' +
-                    'Error: %0.3f') % (storedGain, loudnessLevel, error))
+            print (('Gain: %0.3f, Loudness Level: %0.3f, Target Level: %0.3f ' +
+                    'Error: %0.3f') % (storedGain, loudnessLevel, targetLoudness, error))
 
             if np.abs(error) < tol:
                 self.converged = True
