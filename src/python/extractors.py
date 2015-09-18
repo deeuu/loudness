@@ -151,7 +151,7 @@ class DynamicLoudnessExtractor:
             np.zeros((self.nInputEars, 1, self.nSamplesToPadEnd))), 2)
 
         #configure the number of output frames needed
-        nOutputFrames = int(np.ceil(self.inputSignal.size / float(self.hopSize)))
+        nOutputFrames = int(np.ceil(self.inputSignal.shape[2] / float(self.hopSize)))
         self.outputDict['FrameTimes'] = (self.frameTimeOffset +
                                         np.arange(nOutputFrames) *
                                         self.hopSize / float(self.fs))

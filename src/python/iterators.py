@@ -176,7 +176,6 @@ class BatchWavFileIterator:
             # Load the audio file and configure level
             sound = Sound.readFromAudioFile(
                     self.wavFileDirectory + '/' + wavFile)
-            sound.useDBSPL()
             sound.applyGain(self.gainInDecibels)
 
             # Instantiate a dynamic loudness iterator
