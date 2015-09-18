@@ -78,7 +78,8 @@ class DynamicLoudnessExtractor:
     corresponding to the first and second frame would be 0 and 1ms respectively.
     You can offset the frame times using self.frameTimeOffset.  '''
 
-    def __init__(self, model,
+    def __init__(self, 
+            model,
             fs = 32000, 
             nInputEars = 1,
             outputs = None):

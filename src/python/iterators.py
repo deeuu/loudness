@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import loudness as ln
 import matplotlib.pyplot as plt
@@ -129,6 +130,7 @@ class BatchWavFileIterator:
     A wrapper around DynamicLoudnessIterator for batch processing audio files.
     This class can be used to search for the gains required to achieve a target
     loudness for multiple wav files.
+    Audio files can have individual target loudness values.
     '''
 
     def __init__(self,
@@ -148,7 +150,7 @@ class BatchWavFileIterator:
             if not self.wavFiles:
                 raise ValueError("No wav files found")
         
-        self.numFramesToAppend = 0
+        self.numSamplesToPadEnd = 0
         self.gainInDecibels = 0
         self.targetLoudness = None
         self.globalLoudnessFeature = None
@@ -163,9 +165,14 @@ class BatchWavFileIterator:
 
     def process(self, model):
 
+        hasMultipleTargets = False
+        if type(self.targetLoudness) in [np.ndarray, list]:
+            if len(self.targetLoudness) == len(self.wavFiles):
+                hasMultipleTargets = True
+
         self.gains = {}
 
-        for wavFile in self.wavFiles:
+        for i, wavFile in enumerate(self.wavFiles):
             
             # Load the audio file and configure level
             sound = Sound.readFromAudioFile(
@@ -182,11 +189,18 @@ class BatchWavFileIterator:
                     self.loudnessLevelFunction,
                     sound.nChannels)
 
+            processor.extractor.nSamplesToPadEnd = self.numSamplesToPadEnd
+
             # Process the audio file
             print("Processing file %s ..." % wavFile)
 
+            if hasMultipleTargets:
+                target = self.targetLoudness[i]
+            else:
+                target = self.targetLoudness
+
             gain = processor.process(sound.data, 
-                    self.targetLoudness,
+                    target,
                     self.tol,
                     self.nIters,
                     self.alpha)

@@ -232,7 +232,7 @@ namespace loudness{
         bool weightSpectrum = false;
         if (pathToFilterCoefs_.empty())
         {
-            LOUDNESS_WARNING(name_ 
+            LOUDNESS_DEBUG(name_ 
                     << ": No filter coefficients, opting to weight power spectrum.");
 
             weightSpectrum = true; 
