@@ -36,7 +36,7 @@ namespace loudness{
      *      - The specification used by Glasberg and Moore (2002). 
      *      - This computes excitation patterns according to ANSI S3.4:2007 and will be
      *      extremely slow. 
-     *      - Use setFastRoexBank(true) (default false) to speed it up.
+     *      - Use setRoexBankFast(true) (default false) to speed it up.
      * 2. "Faster" 
      *      - Uses a compressed spectrum according to a 0.2 Cam criterion.
      *      - Uses a filter spacing of 0.75 Cams with interpolation.

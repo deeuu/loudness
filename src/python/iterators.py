@@ -45,6 +45,8 @@ class DynamicLoudnessIterator():
         # First check if the target loudness is a signal
         if type(targetLoudness) is np.ndarray:
             targetLoudness = self.extractLoudness(targetLoudness)
+        elif targetLoudness is None:
+            raise ValueError('Target loudness must be specified')
 
         storedGain = 0
 
@@ -121,6 +123,78 @@ class StationaryLoudnessIterator():
                     print "Reached iteration limit, not solved within desired error tolerance."
 
         return storedGain
+
+class BatchWavFileIterator:
+    '''
+    A wrapper around DynamicLoudnessIterator for batch processing audio files.
+    This class can be used to search for the gains required to achieve a target
+    loudness for multiple wav files.
+    '''
+
+    def __init__(self,
+                 wavFileDirectory = "",
+                 output = None):
+
+        self.wavFileDirectory = os.path.dirname(wavFileDirectory)
+        if wavFileDirectory.endswith('.wav'):
+            self.wavFiles = [os.path.basename(wavFileDirectory)]
+        else:
+            #Get a list of all wav files in this directory
+            self.wavFiles = []
+            for file in os.listdir(self.wavFileDirectory):
+                if file.endswith(".wav"):
+                    self.wavFiles.append(file)
+            self.wavFiles.sort() #sort to avoid platform specific order
+            if not self.wavFiles:
+                raise ValueError("No wav files found")
+        
+        self.numFramesToAppend = 0
+        self.gainInDecibels = 0
+        self.targetLoudness = None
+        self.globalLoudnessFeature = None
+        self.loudnessLevelFunction = None
+        self.tol = 0.1
+        self.nIters = 5
+        self.alpha = 1.0
+
+        self.output = output
+        if self.output is None or type(self.output) is list:
+            raise ValueError("Only one model output allowed.")
+
+    def process(self, model):
+
+        self.gains = {}
+
+        for wavFile in self.wavFiles:
+            
+            # Load the audio file and configure level
+            sound = Sound.readFromAudioFile(
+                    self.wavFileDirectory + '/' + wavFile)
+            sound.useDBSPL()
+            sound.applyGain(self.gainInDecibels)
+
+            # Instantiate a dynamic loudness iterator
+            processor = DynamicLoudnessIterator(
+                    model, 
+                    sound.fs, 
+                    self.output,
+                    self.globalLoudnessFeature,
+                    self.loudnessLevelFunction,
+                    sound.nChannels)
+
+            # Process the audio file
+            print("Processing file %s ..." % wavFile)
+
+            gain = processor.process(sound.data, 
+                    self.targetLoudness,
+                    self.tol,
+                    self.nIters,
+                    self.alpha)
+
+            # Get gain required for target loudness
+            self.gains[wavFile] = gain 
+
+        return self.gains
 
 class StationaryLoudnessISOThresholdPredictor():
 
