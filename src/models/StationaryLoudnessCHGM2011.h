@@ -79,7 +79,7 @@ namespace loudness{
 
             void setOuterEarFilter(const OME::Filter outerEarFilter);
 
-            void setfilterSpacingInCams(Real filterSpacingInCams);
+            void setFilterSpacingInCams(Real filterSpacingInCams);
 
             void setSpecificLoudnessOutput(bool isSpecificLoudnessOutput);
 

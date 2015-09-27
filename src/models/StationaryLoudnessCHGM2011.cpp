@@ -30,7 +30,7 @@ namespace loudness{
     {
         //Default parameters
         setOuterEarFilter(OME::Filter::ANSIS342007_FREEFIELD);
-        setfilterSpacingInCams(0.1);
+        setFilterSpacingInCams(0.1);
         setPresentationDiotic(true);
         setBinauralInhibitionUsed(true);
         setSpecificLoudnessOutput(true);
@@ -54,7 +54,7 @@ namespace loudness{
         outerEarFilter_ = outerEarFilter;
     }
 
-    void StationaryLoudnessCHGM2011::setfilterSpacingInCams(Real filterSpacingInCams)
+    void StationaryLoudnessCHGM2011::setFilterSpacingInCams(Real filterSpacingInCams)
     {
         filterSpacingInCams_ = filterSpacingInCams;
     }
