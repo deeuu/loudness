@@ -182,7 +182,6 @@ class Sound:
         Multiplies the data with a sinusoid.
         Modulation can be linear (default) or logarithmic.
         '''
-        minVal = np.min(maxVal, minVal)
         amp = (maxVal-minVal)*0.5
         offset = minVal+amp
         
