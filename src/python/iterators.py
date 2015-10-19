@@ -124,6 +124,83 @@ class StationaryLoudnessIterator():
 
         return storedGain
 
+class BatchDynamicLoudnessIterator:
+    '''
+    A wrapper around DynamicLoudnessIterator for batch processing a list of signals.
+    This class can be used to search for the gains required to achieve a target
+    loudness. 
+    Signals can have individual target loudness values.
+    Signals can have different sampling frequencies (provide as list, otherwise
+    scalar).
+    '''
+
+    def __init__(self,
+                 listOfInputSignals,
+                 fs,
+                 output = None):
+
+        self.listOfInputSignals
+        if type(fs) in [np.ndarray, list]:
+            if len(fs) != len(listOfInputSignals):
+                self.fs = [fs[0]] * len(listOfInputSignals)
+        else:
+            self.fs = fs
+        self.numSamplesToPadEnd = 0
+        self.targetLoudness = None
+        self.globalLoudnessFeature = None
+        self.loudnessLevelFunction = None
+        self.tol = 0.1
+        self.nIters = 5
+        self.alpha = 1.0
+
+        self.output = output
+        if self.output is None or type(self.output) is list:
+            raise ValueError("Only one model output allowed.")
+
+    def process(self, model):
+
+        hasMultipleTargets = False
+        if type(self.targetLoudness) in [np.ndarray, list]:
+            if len(self.targetLoudness) == len(self.wavFiles):
+                hasMultipleTargets = True
+
+        self.gains = {}
+
+        for i, signal in enumerate(self.inputSignals):
+            
+            if signal.ndim == 1:
+                signal = signal.reshape((-1, 1))
+
+            # Instantiate a dynamic loudness iterator
+            processor = DynamicLoudnessIterator(
+                    model, 
+                    self.fs[i],
+                    self.output,
+                    self.globalLoudnessFeature,
+                    self.loudnessLevelFunction
+                    signal.shape[1])
+
+            processor.extractor.nSamplesToPadEnd = self.numSamplesToPadEnd
+
+            # Process the audio file
+            print("Processing signal %d ..." % i)
+
+            if hasMultipleTargets:
+                target = self.targetLoudness[i]
+            else:
+                target = self.targetLoudness
+
+            gain = processor.process(signal, 
+                    target,
+                    self.tol,
+                    self.nIters,
+                    self.alpha)
+
+            # Get gain required for target loudness
+            self.gains[wavFile] = gain 
+
+        return self.gains
+
 class BatchWavFileIterator:
     '''
     A wrapper around DynamicLoudnessIterator for batch processing audio files.
