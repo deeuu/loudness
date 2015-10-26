@@ -14,31 +14,24 @@ class DynamicLoudnessIterator():
             model, 
             fs,
             output = None,
-            globalLoudnessFeature = None,
-            loudnessLevelFunction = None,
+            loudnessFunction = None,
             nInputEars = 1):
 
         self.extractor = DynamicLoudnessExtractor(model, fs, nInputEars, output)
         self.outputName = output
         self.converged = False
 
-        if globalLoudnessFeature is None:
-            self.globalLoudnessFeature = np.mean
+        if loudnessFunction is None:
+            self.loudnessFunction = np.mean
         else:
-            self.globalLoudnessFeature = globalLoudnessFeature
+            self.loudnessFunction = loudnessFunction
         
-        if loudnessLevelFunction is None:
-            self.loudnessLevelFunction = asIs
-        else:
-            self.loudnessLevelFunction = loudnessLevelFunction
-
-    def extractLoudness(self, signal, gainInDecibels = 0):
+    def extractLoudness(self, signal, gainInDecibels = 0.0):
         signalIn = signal.copy() * 10 ** (gainInDecibels / 20.0)
         self.extractor.process(signalIn)
         timeSeries = self.extractor.outputDict[self.outputName]
-        loudness = self.globalLoudnessFeature(timeSeries)
-        loudnessLevel = self.loudnessLevelFunction(loudness)
-        return loudnessLevel
+        loudness = self.loudnessFunction(timeSeries)
+        return loudness
 
     def process(self, inputSignal, targetLoudness, tol = 0.1, nIters = 5, alpha = 1.0):
 
@@ -53,12 +46,12 @@ class DynamicLoudnessIterator():
         self.converged = False
         for i in range(nIters):
 
-            loudnessLevel = self.extractLoudness(inputSignal, storedGain)
+            loudness = self.extractLoudness(inputSignal, storedGain)
 
-            error = targetLoudness - loudnessLevel
+            error = targetLoudness - loudness
 
-            print (('Gain: %0.3f, Loudness Level: %0.3f, Target Level: %0.3f ' +
-                    'Error: %0.3f') % (storedGain, loudnessLevel, targetLoudness, error))
+            print (('Gain: %0.3f, Loudness: %0.3f, Target: %0.3f ' +
+                    'Error: %0.3f') % (storedGain, loudness, targetLoudness, error))
 
             if np.abs(error) < tol:
                 self.converged = True
@@ -72,22 +65,22 @@ class DynamicLoudnessIterator():
 
 class StationaryLoudnessIterator():
 
-    def __init__(self, model, outputName, loudnessLevelFunction = None):
+    def __init__(self, model, outputName, loudnessFunction = None):
         
         self.outputName = outputName
         self.extractor = StationaryLoudnessExtractor(model, outputName)
         self.converged = False
 
-        if loudnessLevelFunction is None:
-            self.loudnessLevelFunction = asIs
+        if loudnessFunction is None:
+            self.loudnessFunction = asIs
         else:
-            self.loudnessLevelFunction = loudnessLevelFunction
+            self.loudnessFunction = loudnessFunction
 
     def extractLoudness(self, frequencies, intensityLevels, gainInDecibels = 0):
         self.extractor.process(frequencies, intensityLevels + gainInDecibels)
         loudness = self.extractor.outputDict[self.outputName]
-        loudnessLevel = self.loudnessLevelFunction(loudness)
-        return loudnessLevel
+        loudness = self.loudnessFunction(loudness)
+        return loudness
 
     def process(self, frequencies, intensityLevels,
             targetLoudnessFrequencies, 
@@ -107,12 +100,12 @@ class StationaryLoudnessIterator():
         self.converged = False
         for i in range(nIters):
 
-            loudnessLevel = self.extractLoudness(frequencies, intensityLevels, storedGain)
+            loudness = self.extractLoudness(frequencies, intensityLevels, storedGain)
 
-            error = targetLoudness - loudnessLevel
+            error = targetLoudness - loudness
 
-            print (('Gain: %0.3f, Loudness Level: %0.3f, ' +
-                    'Error: %0.3f') % (storedGain, loudnessLevel, error))
+            print (('Gain: %0.3f, Loudness: %0.3f, ' +
+                    'Error: %0.3f') % (storedGain, loudness, error))
 
             if np.abs(error) < tol:
                 self.converged = True
@@ -137,18 +130,20 @@ class BatchDynamicLoudnessIterator:
     def __init__(self,
                  listOfInputSignals,
                  fs,
-                 output = None):
+                 output = None,
+                 loudnessFunction = None,
+                 targetLoudness = None):
 
-        self.listOfInputSignals
         if type(fs) in [np.ndarray, list]:
             if len(fs) != len(listOfInputSignals):
                 self.fs = [fs[0]] * len(listOfInputSignals)
-        else:
-            self.fs = fs
+        else: 
+            self.fs = [fs] * len(listOfInputSignals)
+
+        self.listOfInputSignals = listOfInputSignals
         self.numSamplesToPadEnd = 0
-        self.targetLoudness = None
-        self.globalLoudnessFeature = None
-        self.loudnessLevelFunction = None
+        self.targetLoudness = targetLoudness
+        self.loudnessFunction = loudnessFunction
         self.tol = 0.1
         self.nIters = 5
         self.alpha = 1.0
@@ -164,9 +159,9 @@ class BatchDynamicLoudnessIterator:
             if len(self.targetLoudness) == len(self.wavFiles):
                 hasMultipleTargets = True
 
-        self.gains = {}
+        self.gains = np.zeros(len(self.listOfInputSignals))
 
-        for i, signal in enumerate(self.inputSignals):
+        for i, signal in enumerate(self.listOfInputSignals):
             
             if signal.ndim == 1:
                 signal = signal.reshape((-1, 1))
@@ -176,8 +171,7 @@ class BatchDynamicLoudnessIterator:
                     model, 
                     self.fs[i],
                     self.output,
-                    self.globalLoudnessFeature,
-                    self.loudnessLevelFunction
+                    self.loudnessFunction,
                     signal.shape[1])
 
             processor.extractor.nSamplesToPadEnd = self.numSamplesToPadEnd
@@ -197,7 +191,7 @@ class BatchDynamicLoudnessIterator:
                     self.alpha)
 
             # Get gain required for target loudness
-            self.gains[wavFile] = gain 
+            self.gains[i] = gain 
 
         return self.gains
 
@@ -211,7 +205,9 @@ class BatchWavFileIterator:
 
     def __init__(self,
                  wavFileDirectory = "",
-                 output = None):
+                 output = None,
+                 globalLoudnessFeature = None,
+                 targetLoudness = None):
 
         self.wavFileDirectory = os.path.dirname(wavFileDirectory)
         if wavFileDirectory.endswith('.wav'):
@@ -228,9 +224,8 @@ class BatchWavFileIterator:
         
         self.numSamplesToPadEnd = 0
         self.gainInDecibels = 0
-        self.targetLoudness = None
-        self.globalLoudnessFeature = None
-        self.loudnessLevelFunction = None
+        self.targetLoudness = targetLoudness
+        self.loudnessFunction = loudnessFunction
         self.tol = 0.1
         self.nIters = 5
         self.alpha = 1.0
@@ -260,8 +255,7 @@ class BatchWavFileIterator:
                     model, 
                     sound.fs, 
                     self.output,
-                    self.globalLoudnessFeature,
-                    self.loudnessLevelFunction,
+                    self.loudnessFunction,
                     sound.nChannels)
 
             processor.extractor.nSamplesToPadEnd = self.numSamplesToPadEnd
@@ -287,9 +281,9 @@ class BatchWavFileIterator:
 
 class StationaryLoudnessISOThresholdPredictor():
 
-    def __init__(self, model, outputName, loudnessLevelFunction = None):
+    def __init__(self, model, outputName, loudnessFunction = None):
 
-        self.iterator = StationaryLoudnessIterator(model, outputName, loudnessLevelFunction)
+        self.iterator = StationaryLoudnessIterator(model, outputName, loudnessFunction)
 
         #ISO data
         self.freqsISO = np.array([20.0, 25, 31.5, 40, 50, 63, 80, 100, 125, 160,
@@ -329,12 +323,10 @@ class StationaryLoudnessISOThresholdPredictor():
 class DynamicLoudnessISOThresholdPredictor():
 
     def __init__(self, model, fs, outputName,
-            globalLoudnessFeature = None,
-            loudnessLevelFunction = None):
+            loudnessFunction = None):
 
         self.iterator = DynamicLoudnessIterator(model, fs, outputName, 
-                globalLoudnessFeature,
-                loudnessLevelFunction)
+                loudnessFunction)
 
         #ISO data
         self.freqsISO = np.array([20.0, 25, 31.5, 40, 50, 63, 80, 100, 125, 160,
