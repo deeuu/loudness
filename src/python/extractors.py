@@ -103,7 +103,7 @@ class DynamicLoudnessExtractor:
         self.fs = int(fs)
         self.nInputEars = nInputEars
         self.rate = model.getRate() #desired rate in Hz
-        self.hopSize = int(round(fs / self.rate))
+        self.hopSize = int(np.round(fs / self.rate))
         self.timeStep = float(self.hopSize) / fs
         self.inputBuf = ln.SignalBank()
         self.inputBuf.initialize(self.nInputEars, 1, self.hopSize, self.fs)
@@ -120,8 +120,8 @@ class DynamicLoudnessExtractor:
             raise ValueError("Problem initialising the model!")
 
         self.outputDict = {}
-        self.nSamplesToPadStart = int(numSecondsToPadStartBy * self.fs)
-        self.nSamplesToPadEnd = int(numSecondsToPadEndBy * self.fs)
+        self.nSamplesToPadStart = np.round(numSecondsToPadStartBy * self.fs)
+        self.nSamplesToPadEnd = np.round(numSecondsToPadEndBy * self.fs)
         self.frameTimeOffset = frameTimeOffset
         self.x = None
         self.processed = False
