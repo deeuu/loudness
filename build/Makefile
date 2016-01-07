@@ -53,6 +53,10 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/models/DynamicLoudnessGM2002.cpp \
 ../src/models/DynamicLoudnessCH2012.cpp
 
+ifeq ($(UNAME), Linux)
+    SOURCES+= ../src/support/Timer.cpp
+endif
+
 OBJECTS=$(SOURCES:.cpp=.o)
 
 all: $(SOURCES) $(EXECUTABLE)
