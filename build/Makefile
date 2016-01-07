@@ -8,20 +8,19 @@ BASENAME=lib$(NAME).so
 EXECUTABLE=$(BASENAME).$(MAJOR).$(MINOR).$(REVISION)
 TARGET_DIR=/usr/local
 
-CFLAGS = -std=c++11 -c -fPIC -g -Wall -O3
+CFLAGS = -I/usr/local/include -std=c++11 -c -fPIC -g -Wall -O3
 
 #Debug mode or not
 ifeq ($(DEBUG),1)
     CFLAGS += -DDEBUG
 endif
 
-LDFLAGS=-shared -L/usr/local/lib
-LIBS=-lfftw3 -lsndfile #-lrt 
+LDFLAGS=-shared -L/usr/local/lib -L/usr/local/include
+LIBS=-lfftw3 -lsndfile #-lrt
 INCS=-I.
 
 SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/thirdParty/spline/Spline.cpp \
-../src/support/Timer.cpp \
 ../src/support/AuditoryTools.cpp \
 ../src/support/SignalBank.cpp \
 ../src/support/Module.cpp \
@@ -58,7 +57,7 @@ OBJECTS=$(SOURCES:.cpp=.o)
 
 all: $(SOURCES) $(EXECUTABLE)
 
-$(EXECUTABLE): $(OBJECTS) 
+$(EXECUTABLE): $(OBJECTS)
 	@echo "Creating shared library"
 	@$(CC) $(OBJECTS) -o $@ $(LDFLAGS) $(LIBS)
 .cpp.o:
