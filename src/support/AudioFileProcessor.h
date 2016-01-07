@@ -14,7 +14,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
+ * along with Loudness.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef AUDIOFILEPROCESSOR_H
@@ -22,11 +22,13 @@
 
 #include "Common.h"
 #include "Model.h"
+#ifdef __linux__
 #include "Timer.h"
+#endif
 #include "../modules/AudioFileCutter.h"
 
 namespace loudness{
-    
+
     /**
      * @class AudioFileProcessor
      *
@@ -79,9 +81,11 @@ namespace loudness{
         /** Set the gain in decibels to be applied to the audio file. */
         void setGainInDecibels(Real gainInDecibels);
 
+    #ifdef __linux__
         /** Returns the elapsed time that occurs between calling
          * processAllFrames() and when the returns. */
         Real getProcessingTime() const;
+    #endif
 
         /** Returns the duration of the audio file in seconds. */
         Real getDuration() const;
@@ -93,14 +97,16 @@ namespace loudness{
         int getNFrames() const;
 
         void reset();
-        
+
     private:
 
         string fileName_;
         int nFrames_, hopSize_;
         AudioFileCutter cutter_;
         Real timeStep_, gainInDecibels_;
+        #ifdef __linux__
         Timer timer_;
+        #endif
         vector<string> modelOutputsToSave_;
     };
 }

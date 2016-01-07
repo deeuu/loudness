@@ -14,13 +14,13 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
+ * along with Loudness.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "AudioFileProcessor.h"
 
 namespace loudness{
-    
+
     AudioFileProcessor::AudioFileProcessor(const string& fileName) :
         cutter_(fileName),
         gainInDecibels_(0)
@@ -61,14 +61,18 @@ namespace loudness{
     {
         cutter_.reset();
         model.reset();
+        #ifdef __linux__
         timer_.tic();
+        #endif
         int frame = nFrames_;
         while(frame-- > 0)
         {
             cutter_.process();
             model.process(cutter_.getOutput());
         }
+        #ifdef __linux__
         timer_.toc();
+        #endif
         cutter_.reset();
     }
 
@@ -92,10 +96,12 @@ namespace loudness{
         gainInDecibels_ = gainInDecibels;
     }
 
+    #ifdef __linux__
     Real AudioFileProcessor::getProcessingTime() const
     {
         return timer_.getElapsedTime();
     }
+    #endif
 
     Real AudioFileProcessor::getDuration() const
     {
