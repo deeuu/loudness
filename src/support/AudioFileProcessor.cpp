@@ -61,18 +61,12 @@ namespace loudness{
     {
         cutter_.reset();
         model.reset();
-        #ifdef __linux__
-        timer_.tic();
-        #endif
         int frame = nFrames_;
         while(frame-- > 0)
         {
             cutter_.process();
             model.process(cutter_.getOutput());
         }
-        #ifdef __linux__
-        timer_.toc();
-        #endif
         cutter_.reset();
     }
 
@@ -95,13 +89,6 @@ namespace loudness{
     {
         gainInDecibels_ = gainInDecibels;
     }
-
-    #ifdef __linux__
-    Real AudioFileProcessor::getProcessingTime() const
-    {
-        return timer_.getElapsedTime();
-    }
-    #endif
 
     Real AudioFileProcessor::getDuration() const
     {

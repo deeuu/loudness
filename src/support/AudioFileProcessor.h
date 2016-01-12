@@ -22,9 +22,6 @@
 
 #include "Common.h"
 #include "Model.h"
-#ifdef __linux__
-#include "Timer.h"
-#endif
 #include "../modules/AudioFileCutter.h"
 
 namespace loudness{
@@ -73,19 +70,13 @@ namespace loudness{
          * specification. */
         void loadNewAudioFile(const string& fileName);
 
-        /** Processes all frames of the audio file and uses the Timer object to
-         * measure elapsed time. This function will call model.reset() before
+        /** Processes all frames of the audio file.
+         * This function will call model.reset() before
          * processing the audio file, but not after. */
         void processAllFrames(Model& model);
 
         /** Set the gain in decibels to be applied to the audio file. */
         void setGainInDecibels(Real gainInDecibels);
-
-    #ifdef __linux__
-        /** Returns the elapsed time that occurs between calling
-         * processAllFrames() and when the returns. */
-        Real getProcessingTime() const;
-    #endif
 
         /** Returns the duration of the audio file in seconds. */
         Real getDuration() const;
@@ -104,9 +95,6 @@ namespace loudness{
         int nFrames_, hopSize_;
         AudioFileCutter cutter_;
         Real timeStep_, gainInDecibels_;
-        #ifdef __linux__
-        Timer timer_;
-        #endif
         vector<string> modelOutputsToSave_;
     };
 }
