@@ -47,10 +47,10 @@ class StationaryLoudnessContourPredictor():
             levels[i] = self.sPLs[i]
             self.predictions[i] = self.sPLs[i]
             self.predictions[i] += self.iterator.process(self.freqs,
-                    levels, 
+                    levels,
                     None,
-                    self.targetLoudnessLevel, 
-                    self.tol, 
+                    self.targetLoudnessLevel,
+                    self.tol,
                     self.nIters,
                     self.alpha)
             self.converged[i] = self.iterator.converged
@@ -58,7 +58,7 @@ class StationaryLoudnessContourPredictor():
     def plotPredictions(self):
 
         plt.semilogx(self.freqs, self.sPLs, label = 'ISO target')
-        plt.semilogx(self.freqs, self.predictions, color = 'r', 
+        plt.semilogx(self.freqs, self.predictions, color = 'r',
                 linestyle = '--', label = 'Predicted')
         plt.legend()
         plt.show()
@@ -89,7 +89,7 @@ class DynamicLoudnessContourPredictor():
             loudnessLevelFunction = None,
             loudnessLevel = 'abs'):
 
-        self.iterator = DynamicLoudnessIterator(model, fs, outputName, 
+        self.iterator = DynamicLoudnessIterator(model, fs, outputName,
                 globalLoudnessFeature,
                 loudnessLevelFunction)
 
@@ -125,7 +125,7 @@ class DynamicLoudnessContourPredictor():
             self.predictions[i] = self.sPLs[i]
             self.predictions[i] += self.iterator.process(s.data,
                     self.targetLoudnessLevel,
-                    self.tol, 
+                    self.tol,
                     self.nIters,
                     self.alpha)
             self.converged[i] = self.iterator.converged
@@ -133,7 +133,7 @@ class DynamicLoudnessContourPredictor():
     def plotPredictions(self):
 
         plt.semilogx(self.freqs, self.sPLs, label = 'ISO')
-        plt.semilogx(self.freqs, self.predictions, color = 'r', 
+        plt.semilogx(self.freqs, self.predictions, color = 'r',
                 linestyle = '--', label = 'Predicted')
         plt.legend()
         plt.show()
@@ -185,7 +185,7 @@ class ISO2262003LoudnessContours():
 	self.alpha_params = np.array([0.532,0.506,0.480,0.455,0.432,0.409,0.387,0.367,
             0.349,0.330,0.315,0.301,0.288,0.276,0.267,0.259,0.253,0.250,0.246,0.244,
             0.243,0.243,0.243,0.242,0.242,0.245,0.254,0.271,0.301])
-        
+
     def lu_dB(self, f):
 	return interp1d(self.freqs, self.l_params,'cubic')(f)
 
@@ -199,7 +199,7 @@ class ISO2262003LoudnessContours():
 	return (0.4*10**(((level+l)/10.0) - 9))**a - (0.4*10**(((t+l)/10.0) - 9))**a + 0.005135
 
     def af(self, l, t, a, ln):
-	return 4.47e-3 * (10**(0.025*ln)-1.15) + (0.4*10**(((t+l)/10.0) - 9))**a 
+	return 4.47e-3 * (10**(0.025*ln)-1.15) + (0.4*10**(((t+l)/10.0) - 9))**a
 
     def phonToSPL(self, f, phon):
         '''
