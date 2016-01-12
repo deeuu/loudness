@@ -35,7 +35,6 @@ if __name__ == "__main__":
                     "../src/support/Model.cpp",
                     "../src/support/FFT.cpp",
                     "../src/support/Filter.cpp",
-                    "../src/support/Timer.cpp",
                     "../src/support/AudioFileProcessor.cpp",
                     "../src/modules/FIR.cpp",
                     "../src/modules/IIR.cpp",
