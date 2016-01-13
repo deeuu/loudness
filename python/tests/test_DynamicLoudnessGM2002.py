@@ -1,5 +1,4 @@
 import loudness as ln
-import numpy as np
 
 model = ln.DynamicLoudnessGM2002()
 model.setRate(500)
