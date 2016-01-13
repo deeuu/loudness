@@ -2,53 +2,54 @@ import numpy as np
 import matplotlib.pyplot as plt
 import loudness as ln
 
-def hann(N = 1024, periodic = True, fullSize = 2048):
+
+def hann(N=1024, periodic=True, fullSize=2048):
     n = np.arange(0, N)
     if periodic:
-        #Harris (1978) Eq 27b
-        window = 0.5 - 0.5 * np.cos(2*np.pi*n/N)
+        # Harris (1978) Eq 27b
+        window = 0.5 - 0.5 * np.cos(2 * np.pi * n / N)
     else:
-        #Produce zeros on both sides
-        window = 0.5 - 0.5 * np.cos(2*np.pi*n/(N-1))
+        # Produce zeros on both sides
+        window = 0.5 - 0.5 * np.cos(2 * np.pi * n / (N - 1))
     if N < fullSize:
         window = np.hstack((window, np.zeros(fullSize - N)))
     return window
 
-#Specification
+# Specification
 fs = 32000
 windowSizeSeconds = np.array([0.064, 0.032, 0.016, 0.008, 0.004, 0.002])
 windowSize = np.round(windowSizeSeconds * fs).astype('int')
-windowSize += windowSize%2 #Force even
+windowSize += windowSize % 2  # Force even
 
 '''Loudness side'''
 window = ln.Window("hann", windowSize, True)
 window.setNormalisation("none")
 bank = ln.SignalBank()
-#two ears
+# two ears
 bank.initialize(2, 1, windowSize[0], fs)
 window.initialize(bank)
 
-#vector of ones
-bank.setSignals(np.ones((2,1,windowSize[0])))
+# vector of ones
+bank.setSignals(np.ones((2, 1, windowSize[0])))
 
-#process
+# process
 window.process(bank)
 
-#output
+# output
 bankOut = window.getOutput()
 windowsLn = bankOut.getSignals()
 
-#plot all windows in both ears
+# plot all windows in both ears
 for w in range(bankOut.getNChannels()):
-    plt.plot(windowsLn[0,w], 'k')
-    plt.plot(windowsLn[1,w], 'r', linestyle='--')
+    plt.plot(windowsLn[0, w], 'k')
+    plt.plot(windowsLn[1, w], 'r', linestyle='--')
 plt.show()
 
 '''Python side'''
 windowsPy = [hann(N, True, windowSize[0]) for N in windowSize]
 
-#Test windows are ~= in both ears
+# Test windows are ~= in both ears
 for w in range(windowSize.size):
     test = np.allclose(windowsLn[0, w], windowsPy[w]) * \
-            np.allclose(windowsLn[1, w], windowsPy[w]) 
+        np.allclose(windowsLn[1, w], windowsPy[w])
     print ("Equality test for window %d (both ears) : %r" % (w, test))
