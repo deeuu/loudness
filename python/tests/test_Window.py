@@ -22,8 +22,8 @@ windowSize = np.round(windowSizeSeconds * fs).astype('int')
 windowSize += windowSize % 2  # Force even
 
 '''Loudness side'''
-window = ln.Window("hann", windowSize, True)
-window.setNormalisation("none")
+window = ln.Window(0, windowSize, True)
+window.setNormalisation(0)
 bank = ln.SignalBank()
 # two ears
 bank.initialize(2, 1, windowSize[0], fs)
