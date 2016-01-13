@@ -1,9 +1,8 @@
-import matplotlib.pylab as plt
 import numpy as np
 import loudness as ln
-from audiolab import wavread
+import soundfile as sf
 
-#Audio loader
+# Audio loader
 fs = 32000
 frameSize = 32
 fileToLoad = "../../wavs/pureTones/pureTone_1000Hz_40dBSPL_32000Hz.wav"
@@ -16,12 +15,12 @@ out = np.zeros((audioBank.getNEars(), nFrames, frameSize))
 for frame in range(nFrames):
     audio.process()
     for ear in range(audioBank.getNEars()):
-        out[ear, frame] = audioBank.getSignal(ear,0)
+        out[ear, frame] = audioBank.getSignal(ear, 0)
 
-x, fs, enc = wavread(fileToLoad)
+x, fs = sf.read(fileToLoad)
 y = out.flatten()[0:x.size]
 
 if np.allclose(y, x):
-    print "Test comparing result of AudioFileCutter with audiolab's wavread: successful"
+    print "Test comparing result of AudioFileCutter with sf.read: successful"
 else:
-    print "Test comparing result of AudioFileCutter with audiolab's wavread: unsuccessful"
+    print "Test comparing result of AudioFileCutter with sf.read: unsuccessful"
