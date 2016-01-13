@@ -3,7 +3,7 @@ import loudness as ln
 
 model = ln.DynamicLoudnessGM2002()
 model.setRate(250)
-model.setOutputModulesToAggregate(['LongTermLoudness'])
+model.setOutputsToAggregate(['LongTermLoudness'])
 
 processor = ln.AudioFileProcessor(
     '../../wavs/pureTones/pureTone_1000Hz_40dBSPL_32000Hz.wav'
@@ -13,7 +13,7 @@ processor.initialize(model)
 
 processor.processAllFrames(model)
 
-bankSTL = model.getOutputModuleSignalBank('LongTermLoudness')
+bankSTL = model.getOutput('LongTermLoudness')
 aggregatedFrames = bankSTL.getAggregatedSignals()
 
 plt.plot(aggregatedFrames.flatten())

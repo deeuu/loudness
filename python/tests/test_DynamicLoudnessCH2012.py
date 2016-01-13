@@ -1,5 +1,4 @@
 import loudness as ln
-import numpy as np
 
 model = ln.DynamicLoudnessCH2012()
 model.setRate(500)
@@ -11,7 +10,7 @@ outputsOfInterest = [
     "PeakShortTermLoudness"
 ]
 
-model.setOutputModulesToAggregate(outputsOfInterest)
+model.setOutputsToAggregate(outputsOfInterest)
 
 fs = 44100
 extractor = ln.tools.extractors.DynamicLoudnessExtractor(
@@ -26,5 +25,5 @@ signal.applyRamp(0.1)
 
 extractor.process(signal.data)
 extractor.plotLoudnessTimeSeries(outputsOfInterest)
-extractor.computeGlobalLoudnessFeatures(outputsOfInterest)
+extractor.computeGlobalLoudnessFeatures(outputsOfInterest[:-1])
 print extractor.outputDict['Features']['ShortTermLoudness']['Max']
