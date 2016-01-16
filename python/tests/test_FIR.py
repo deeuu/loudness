@@ -26,7 +26,7 @@ for i in range(2):
     end = start + blockSize
 
     for ear in range(2):
-        bank.setSignal(ear, 0, x[ear, start : end])
+        bank.setSignal(ear, 0, x[ear, start:end])
 
     fir.process(bank)
 

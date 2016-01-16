@@ -14,9 +14,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
+ * along with Loudness.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef __linux__
 #ifndef TIMER_H
 #define TIMER_H
 
@@ -27,7 +28,7 @@ namespace loudness{
 
     /**
      * @class Timer
-     * 
+     *
      * @brief A simple class for tic/toc style perfomance timing.
      *
      * There are two clocks available:
@@ -37,7 +38,7 @@ namespace loudness{
      *
      * These clocks are accessed using clock_gettime().
      *
-     * See: http://linux.die.net/man/3/clock_gettime 
+     * See: http://linux.die.net/man/3/clock_gettime
      *
      */
     class Timer
@@ -78,4 +79,5 @@ namespace loudness{
     };
 }
 
+#endif
 #endif

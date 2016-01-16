@@ -14,7 +14,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
+ * along with Loudness.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 %module core
@@ -31,7 +31,6 @@
 #include "../src/support/Model.h"
 #include "../src/support/FFT.h"
 #include "../src/support/Filter.h"
-#include "../src/support/Timer.h"
 #include "../src/support/AudioFileProcessor.h"
 #include "../src/modules/FIR.h"
 #include "../src/modules/IIR.h"
@@ -90,8 +89,8 @@ namespace std {
     %apply const vector<string>& { const StringVec& };
 }
 
-%apply (double* IN_ARRAY1, int DIM1) {(Real* data, int nSamples)}; 
-%apply (double* IN_ARRAY1, int DIM1) {(Real* data, int nChannels)}; 
+%apply (double* IN_ARRAY1, int DIM1) {(Real* data, int nSamples)};
+%apply (double* IN_ARRAY1, int DIM1) {(Real* data, int nChannels)};
 %apply (double* IN_ARRAY3, int DIM1, int DIM2, int DIM3) {(Real* data, int nEars, int nChannels, int nSamples)};
 
 using namespace std;
@@ -111,7 +110,6 @@ using std::vector;
 %include "../src/support/Model.h"
 %include "../src/support/FFT.h"
 %include "../src/support/Filter.h"
-%include "../src/support/Timer.h"
 %include "../src/support/AudioFileProcessor.h"
 %include "../src/modules/FIR.h"
 %include "../src/modules/IIR.h"

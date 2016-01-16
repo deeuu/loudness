@@ -6,7 +6,8 @@ model = ln.StationaryLoudnessANSIS342007()
 freqs = np.array([1000.0])
 intensityLevels = np.array([2.2])
 
-extractor = ln.tools.extractors.StationaryLoudnessExtractor(model, 'InstantaneousLoudness')
+extractor = ln.tools.extractors.StationaryLoudnessExtractor(
+    model, 'InstantaneousLoudness')
 extractor.process(freqs, intensityLevels)
 
 sones = float(extractor.outputDict['InstantaneousLoudness'])

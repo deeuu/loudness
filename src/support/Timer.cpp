@@ -14,9 +14,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
+ * along with Loudness.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef __linux__
 #include "Timer.h"
 
 namespace loudness{
@@ -38,17 +39,17 @@ namespace loudness{
     }
 
 
-    //See: http://www.guyrutenberg.com/2007/09/22/profiling-code-using-clock_gettime/  
+    //See: http://www.guyrutenberg.com/2007/09/22/profiling-code-using-clock_gettime/
     void Timer::toc()
     {
         clock_gettime(id_, &time2_);
 
-	if ((time2_.tv_nsec-time1_.tv_nsec)<0) 
+	if ((time2_.tv_nsec-time1_.tv_nsec)<0)
         {
-            elapsedTime_ = (time2_.tv_sec-time1_.tv_sec-1) + 
+            elapsedTime_ = (time2_.tv_sec-time1_.tv_sec-1) +
                 (1e9+time2_.tv_nsec-time1_.tv_nsec)*1e-9;
-	} 
-        else 
+	}
+        else
         {
             elapsedTime_ = (time2_.tv_sec-time1_.tv_sec) +
                 (time2_.tv_nsec-time1_.tv_nsec)*1e-9;
@@ -63,8 +64,9 @@ namespace loudness{
 
     long int Timer::getResolution()
     {
-        timespec res; 
+        timespec res;
         clock_getres(id_, &res);
         return res.tv_nsec;
     }
 }
+#endif

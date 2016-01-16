@@ -2,7 +2,7 @@
 *.swp
 *.swo
 *.pyc
-*.so
+*.so*
 *.csv
 *.o
 Excluded
