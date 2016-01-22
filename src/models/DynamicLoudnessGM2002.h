@@ -152,13 +152,11 @@ namespace loudness{
 
             void setBinauralInhibitionUsed(bool isBinauralInhibitionUsed);
 
-            void setHPFUsed(bool isHPFUsed);
-
-            void setSpectrumWeighted(bool isSpectrumWeighted);
-
             void setPeakSTLFollowerUsed(bool isPeakSTLFollowerUsed);
 
             void setOuterEarFilter(const OME::Filter& outerEarFilter);
+
+            void setMiddleEarFilter(const OME::Filter& MiddleEarFilter);
 
             void setSpecificLoudnessANSIS342007(bool isSpecificLoudnessANSIS342007_);
 
@@ -181,11 +179,11 @@ namespace loudness{
             bool isRoexBankFast_, isExcitationPatternInterpolated_, isInterpolationCubic_;
             bool isSpectrumSampledUniformly_, isHoppingGoertzelDFTUsed_;
             bool isSpectralResolutionDoubled_, isPresentationDiotic_;
-            bool  isBinauralInhibitionUsed_, isHPFUsed_, isSpectrumWeighted_;
+            bool  isBinauralInhibitionUsed_;
             bool isSpecificLoudnessANSIS342007_, isFirstSampleAtWindowCentre_;
             bool isPeakSTLFollowerUsed_;
             string pathToFilterCoefs_;
-            OME::Filter outerEarFilter_;
+            OME::Filter outerEarFilter_, middleEarFilter_;
     }; 
 }
 

@@ -62,16 +62,6 @@ namespace loudness{
         isFirstSampleAtWindowCentre_ = isFirstSampleAtWindowCentre;
     }
     
-    void DynamicLoudnessGM2002::setHPFUsed(bool isHPFUsed)
-    {
-        isHPFUsed_ = isHPFUsed;
-    }
-
-    void DynamicLoudnessGM2002::setSpectrumWeighted(bool isSpectrumWeighted)
-    {
-        isSpectrumWeighted_ = isSpectrumWeighted;
-    }
-
     void DynamicLoudnessGM2002::setPeakSTLFollowerUsed(bool isPeakSTLFollowerUsed)
     {
         isPeakSTLFollowerUsed_ = isPeakSTLFollowerUsed;
@@ -80,6 +70,11 @@ namespace loudness{
     void DynamicLoudnessGM2002::setOuterEarFilter(const OME::Filter& outerEarFilter)
     {
         outerEarFilter_ = outerEarFilter;
+    }
+
+    void DynamicLoudnessGM2002::setMiddleEarFilter(const OME::Filter& middleEarFilter)
+    {
+        middleEarFilter_ = middleEarFilter;
     }
 
     void DynamicLoudnessGM2002::setPresentationDiotic(bool isPresentationDiotic)
@@ -169,10 +164,9 @@ namespace loudness{
     {
         //common to all
         setRate(1000);
-        setHPFUsed(true);
-        setSpectrumWeighted(true);
         setPeakSTLFollowerUsed(false);
         setOuterEarFilter(OME::ANSIS342007_FREEFIELD);
+        setMiddleEarFilter(OME::ANSIS342007_MIDDLE_EAR_HPF);
         setSpectrumSampledUniformly(true);
         setHoppingGoertzelDFTUsed(false);
         setSpectralResolutionDoubled(false);
@@ -235,16 +229,18 @@ namespace loudness{
 
         //if filter coefficients have not been provided
         //use spectral weighting to approximate outer and middle ear response
-        //so long as weight spectrum is true (default)
+        bool weightSpectrum = false;
         if (pathToFilterCoefs_.empty())
         {
+            weightSpectrum = true;
             //should we use for useHpf for low freqs? default is true
-            if (isHPFUsed_)
+            if (middleEarFilter_ == OME::ANSIS342007_MIDDLE_EAR_HPF)
             {
                 modules_.push_back(unique_ptr<Module> (new Butter(3, 0, 50.0)));
             }
         }
-        else { //otherwise, load them
+        else
+        { //otherwise, load them
 
             //load numpy array holding the filter coefficients
             cnpy::NpyArray arr = cnpy::npy_load(pathToFilterCoefs_);
@@ -342,15 +338,13 @@ namespace loudness{
         /*
          * Spectral weighting if necessary
          */
-        if (isSpectrumWeighted_)
+        if (weightSpectrum)
         {
-            OME::Filter middleEar = OME::ANSIS342007_MIDDLE_EAR;
-
-            if (isHPFUsed_)
-                middleEar = OME::ANSIS342007_MIDDLE_EAR_HPF;
-
-            modules_.push_back(unique_ptr<Module> 
-                    (new WeightSpectrum(middleEar, outerEarFilter_)));
+            if ((middleEarFilter_ != OME::NONE) || (outerEarFilter_ != OME::NONE))
+            {
+                modules_.push_back(unique_ptr<Module> 
+                        (new WeightSpectrum(middleEarFilter_, outerEarFilter_)));
+            }
         }
 
         /*
