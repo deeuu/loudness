@@ -154,6 +154,8 @@ namespace loudness{
 
             void setHPFUsed(bool isHPFUsed);
 
+            void setSpectrumWeighted(bool isSpectrumWeighted);
+
             void setPeakSTLFollowerUsed(bool isPeakSTLFollowerUsed);
 
             void setOuterEarFilter(const OME::Filter& outerEarFilter);
@@ -179,7 +181,7 @@ namespace loudness{
             bool isRoexBankFast_, isExcitationPatternInterpolated_, isInterpolationCubic_;
             bool isSpectrumSampledUniformly_, isHoppingGoertzelDFTUsed_;
             bool isSpectralResolutionDoubled_, isPresentationDiotic_;
-            bool  isBinauralInhibitionUsed_, isHPFUsed_;
+            bool  isBinauralInhibitionUsed_, isHPFUsed_, isSpectrumWeighted_;
             bool isSpecificLoudnessANSIS342007_, isFirstSampleAtWindowCentre_;
             bool isPeakSTLFollowerUsed_;
             string pathToFilterCoefs_;

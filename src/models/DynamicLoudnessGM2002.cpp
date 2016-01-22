@@ -67,6 +67,11 @@ namespace loudness{
         isHPFUsed_ = isHPFUsed;
     }
 
+    void DynamicLoudnessGM2002::setSpectrumWeighted(bool isSpectrumWeighted)
+    {
+        isSpectrumWeighted_ = isSpectrumWeighted;
+    }
+
     void DynamicLoudnessGM2002::setPeakSTLFollowerUsed(bool isPeakSTLFollowerUsed)
     {
         isPeakSTLFollowerUsed_ = isPeakSTLFollowerUsed;
@@ -165,6 +170,7 @@ namespace loudness{
         //common to all
         setRate(1000);
         setHPFUsed(true);
+        setSpectrumWeighted(true);
         setPeakSTLFollowerUsed(false);
         setOuterEarFilter(OME::ANSIS342007_FREEFIELD);
         setSpectrumSampledUniformly(true);
@@ -229,14 +235,9 @@ namespace loudness{
 
         //if filter coefficients have not been provided
         //use spectral weighting to approximate outer and middle ear response
-        bool weightSpectrum = false;
+        //so long as weight spectrum is true (default)
         if (pathToFilterCoefs_.empty())
         {
-            LOUDNESS_DEBUG(name_ 
-                    << ": No filter coefficients, opting to weight power spectrum.");
-
-            weightSpectrum = true; 
-
             //should we use for useHpf for low freqs? default is true
             if (isHPFUsed_)
             {
@@ -341,7 +342,7 @@ namespace loudness{
         /*
          * Spectral weighting if necessary
          */
-        if (weightSpectrum)
+        if (isSpectrumWeighted_)
         {
             OME::Filter middleEar = OME::ANSIS342007_MIDDLE_EAR;
 

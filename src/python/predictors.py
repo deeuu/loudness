@@ -229,13 +229,15 @@ class ISO2262003LoudnessContours():
 	phons = 40*np.log10(self.bf(l, t, a, level)) + 94
         return phons
 
-    def plotContours(self, phonLevels=None):
+    def plotContours(self, phonLevels=None, ax = None):
 
+        if not ax:
+            fig, ax = plt.subplots(figsize = (6, 4))
         if phonLevels is None:
             phonLevels = np.array([10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
 
         for phon in phonLevels:
-            plt.semilogx(self.freqs, self.phonToSPL(None, phon))
+            ax.semilogx(self.freqs, self.phonToSPL(None, phon))
         plt.xlabel("Frequency, Hz")
         plt.ylabel("Level, dB SPL")
         plt.xlim((16, 16e3))
