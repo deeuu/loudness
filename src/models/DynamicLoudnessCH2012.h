@@ -129,6 +129,8 @@ namespace loudness{
 
             void setOuterEarFilter(const OME::Filter& outerEarFilter);
 
+            void setMiddleEarFilter(const OME::Filter& middleEarFilter);
+
             void setFirstSampleAtWindowCentre(bool isFirstSampleAtWindowCentre);
 
             void setSpecificLoudnessOutput(bool isSpecificLoudnessOutput);
@@ -151,7 +153,7 @@ namespace loudness{
             bool isInterpolationCubic_, isPresentationDiotic_;
             bool isSpecificLoudnessOutput_, isBinauralInhibitionUsed_;
             bool isFirstSampleAtWindowCentre_, isPeakSTLFollowerUsed_;
-            OME::Filter outerEarFilter_;
+            OME::Filter outerEarFilter_, middleEarFilter_;
     }; 
 }
 

@@ -64,6 +64,11 @@ namespace loudness{
         outerEarFilter_ = outerEarFilter;
     }
 
+    void DynamicLoudnessCH2012::setMiddleEarFilter(const OME::Filter& middleEarFilter)
+    {
+        middleEarFilter_ = middleEarFilter;
+    }
+
     void DynamicLoudnessCH2012::setPresentationDiotic(bool isPresentationDiotic)
     {
         isPresentationDiotic_ = isPresentationDiotic;
@@ -124,6 +129,7 @@ namespace loudness{
         //common to all
         setRate(1000);
         setOuterEarFilter(OME::ANSIS342007_FREEFIELD);
+        setMiddleEarFilter(OME::CHGM2011_MIDDLE_EAR);
         setSpectrumSampledUniformly(true);
         setHoppingGoertzelDFTUsed(false);
         setExcitationPatternInterpolated(false);
@@ -255,7 +261,7 @@ namespace loudness{
         if(pathToFilterCoefs_.empty())
         {
             modules_.push_back(unique_ptr<Module> 
-                    (new WeightSpectrum(OME::CHGM2011_MIDDLE_EAR, outerEarFilter_))); 
+                    (new WeightSpectrum(middleEarFilter_, outerEarFilter_))); 
         }
 
         /*
