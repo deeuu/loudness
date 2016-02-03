@@ -50,7 +50,7 @@ namespace loudness{
         Model("DynamicLoudnessGM2002", true),
         pathToFilterCoefs_("")
     {
-        configureModelParameters("RecentAndFaster");
+        configureModelParameters("FasterAndRecent");
     }
     
     DynamicLoudnessGM2002::~DynamicLoudnessGM2002()
@@ -187,7 +187,7 @@ namespace loudness{
             {
                 setRoexBankFast(true);
                 setExcitationPatternInterpolated(true);
-                setFilterSpacingInCams(0.75);
+                setFilterSpacingInCams(0.5);
                 setCompressionCriterionInCams(0.2);
                 LOUDNESS_DEBUG(name_ << ": Using faster params for Glasberg and Moore's 2002 model.");
             }
@@ -206,7 +206,7 @@ namespace loudness{
                 setSpecificLoudnessANSIS342007(true);
                 setRoexBankFast(true);
                 setExcitationPatternInterpolated(true);
-                setFilterSpacingInCams(0.75);
+                setFilterSpacingInCams(0.5);
                 setCompressionCriterionInCams(0.2);
                 LOUDNESS_DEBUG(name_
                         << ": Using faster params and "
