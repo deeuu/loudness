@@ -47,12 +47,16 @@
 #include "../src/modules/RoexBankANSIS342007.h"
 #include "../src/modules/FastRoexBank.h"
 #include "../src/modules/DoubleRoexBank.h"
+#include "../src/modules/OctaveBank.h"
 #include "../src/modules/SpecificLoudnessANSIS342007.h"
+#include "../src/modules/MainLoudnessDIN456311991.h"
 #include "../src/modules/BinauralInhibitionMG2007.h"
 #include "../src/modules/InstantaneousLoudness.h"
+#include "../src/modules/InstantaneousLoudnessDIN456311991.h"
 #include "../src/modules/ARAverager.h"
 #include "../src/modules/PeakFollower.h"
 #include "../src/models/StationaryLoudnessANSIS342007.h"
+#include "../src/models/StationaryLoudnessDIN456311991.h"
 #include "../src/models/StationaryLoudnessCHGM2011.h"
 #include "../src/models/DynamicLoudnessGM2002.h"
 #include "../src/models/DynamicLoudnessCH2012.h"
@@ -86,7 +90,6 @@ namespace std {
     %apply vector<int>& { IntVec& };
     %apply const vector<int>& { const IntVec& };
     %apply vector<string>& { StringVec };
-    %apply const vector<string>& { const StringVec& };
 }
 
 %apply (double* IN_ARRAY1, int DIM1) {(Real* data, int nSamples)};
@@ -126,12 +129,16 @@ using std::vector;
 %include "../src/modules/RoexBankANSIS342007.h"
 %include "../src/modules/FastRoexBank.h"
 %include "../src/modules/DoubleRoexBank.h"
+%include "../src/modules/OctaveBank.h"
 %include "../src/modules/SpecificLoudnessANSIS342007.h"
+%include "../src/modules/MainLoudnessDIN456311991.h"
 %include "../src/modules/BinauralInhibitionMG2007.h"
 %include "../src/modules/InstantaneousLoudness.h"
+%include "../src/modules/InstantaneousLoudnessDIN456311991.h"
 %include "../src/modules/ARAverager.h"
 %include "../src/modules/PeakFollower.h"
 %include "../src/models/StationaryLoudnessANSIS342007.h"
+%include "../src/models/StationaryLoudnessDIN456311991.h"
 %include "../src/models/StationaryLoudnessCHGM2011.h"
 %include "../src/models/DynamicLoudnessGM2002.h"
 %include "../src/models/DynamicLoudnessCH2012.h"

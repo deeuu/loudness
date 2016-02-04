@@ -71,7 +71,7 @@ namespace loudness{
             output_.initialize (input.getNEars(), 388, 1, input.getFs());
             output_.setChannelSpacingInCams (0.1);
             for (int i = 0; i < 388; ++i)
-                output_.setCentreFreq (i, camToFreq (camLo_ + (i * 0.1)));
+                output_.setCentreFreq (i, camToHertz (camLo_ + (i * 0.1)));
         }
         else
         {
@@ -93,7 +93,7 @@ namespace loudness{
             //filter frequency in Cams
             Real cam = camLo_ + (i * camStep_);
             //filter frequency in Hz
-            Real fc = camToFreq (cam);
+            Real fc = camToHertz (cam);
 
             if (isExcitationPatternInterpolated_)
                 cams_[i] = cam;

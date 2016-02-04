@@ -121,7 +121,7 @@ namespace loudness{
         //if we have an audio file
         if (sndFile_)
         {
-            //If we have extrated all data from buffer, get more
+            //If we have extracted all data from buffer, get more
             if (bufferIdx_ == audioBufferSize_)
             {
                 int readCount = sf_readf_float(sndFile_, &audioBuffer_[0], nSamplesToLoadPerChannel_);

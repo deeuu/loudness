@@ -23,6 +23,7 @@ class StationaryLoudnessExtractor:
         self.outputDict['Frequencies'] = np.array([])
         self.nEars = 0
         self.bank = ln.SignalBank()
+        self.initialize = True
 
     def process(self, frequencies, intensityLevels):
 
@@ -45,13 +46,13 @@ class StationaryLoudnessExtractor:
         nComponents = frequencies.size
         nEars = intensities.shape[1]
 
-        if (np.any(self.outputDict['Frequencies'] != frequencies) or
-                (nEars != self.nEars)):
+        if self.initialize:
             self.bank.initialize(nEars, nComponents, 1, 1)
             self.bank.setCentreFreqs(frequencies)
             self.outputDict['Frequencies'] = frequencies
             self.nEars = nEars
             self.model.initialize(self.bank)
+        self.initialize = False
 
         self.bank.setSignals(intensities.reshape((nEars, nComponents, 1)))
 
@@ -78,21 +79,22 @@ class DynamicLoudnessExtractor:
     features listed in `modelOutputsToExtract'.
 
     Processing frames are per hop size, which is determined by the rate of the
-    model. Frame times start at time 0 and increment at the hop size in
-    seconds. For example, consider a hop size of 48 @ fs = 48kHz, the frame
-    time corresponding to the first and second frame would be 0 and 1ms
-    respectively. You can offset the frame times using self.frameTimeOffset.
-    '''
+    model. Frame times start at time 0 and increment at the hop size in seconds.
+    For example, consider a hop size of 48 @ fs = 48kHz, the frame time
+    corresponding to the first and second frame would be 0 and 1ms respectively.
+    You can offset the frame times using self.frameTimeOffset.  '''
 
-    def __init__(
-        self,
-        model,
-        fs=32000,
-        nInputEars=1,
-        outputs=None
-    ):
-        '''
-        Model
+    def __init__(self, 
+                 model,
+                 fs = 32000, 
+                 outputs = None,
+                 nInputEars = 1,
+                 numSecondsToPadStartBy = 0,
+                 numSecondsToPadEndBy = 0.2,
+                 frameTimeOffset = 0,
+                 gainInDecibels = 0.0):
+        ''' 
+        Model   
             The input loudness model - must be dynamic.
         fs
             The sampling frequency
@@ -106,12 +108,13 @@ class DynamicLoudnessExtractor:
         self.model = model
         self.fs = int(fs)
         self.nInputEars = nInputEars
-        self.rate = model.getRate()  # desired rate in Hz
-        self.hopSize = int(round(fs / self.rate))
+        self.rate = model.getRate() # desired rate in Hz
+        self.hopSize = int(np.round(fs / self.rate))
         self.timeStep = float(self.hopSize) / fs
         self.inputBuf = ln.SignalBank()
         self.inputBuf.initialize(self.nInputEars, 1, self.hopSize, self.fs)
         self.outputs = outputs
+        self.gainInDecibels = gainInDecibels
         if self.outputs is not None:
             if type(self.outputs) is not list:
                 self.outputs = [self.outputs]
@@ -123,9 +126,9 @@ class DynamicLoudnessExtractor:
             raise ValueError("Problem initialising the model!")
 
         self.outputDict = {}
-        self.nSamplesToPadStart = 0
-        self.nSamplesToPadEnd = int(0.2*self.fs)  # see below
-        self.frameTimeOffset = 0
+        self.nSamplesToPadStart = np.round(numSecondsToPadStartBy * self.fs)
+        self.nSamplesToPadEnd = np.round(numSecondsToPadEndBy * self.fs)
+        self.frameTimeOffset = frameTimeOffset
         self.x = None
         self.processed = False
         self.loudness = None
@@ -161,9 +164,12 @@ class DynamicLoudnessExtractor:
             self.inputSignal,
             np.zeros((self.nInputEars, 1, self.nSamplesToPadEnd))), 2)
 
-        # configure the number of output frames needed
+        # Apply any gain
+        self.inputSignal *= 10 ** (self.gainInDecibels / 20.0)
+
+        #configure the number of output frames needed
         nOutputFrames = int(
-            np.ceil(self.inputSignal.size / float(self.hopSize))
+            np.ceil(self.inputSignal.shape[2] / float(self.hopSize))
         )
         self.outputDict['FrameTimes'] = (
             self.frameTimeOffset + np.arange(nOutputFrames) *
@@ -193,76 +199,6 @@ class DynamicLoudnessExtractor:
         self.model.reset()
         self.processed = True
 
-    def plotLoudnessTimeSeries(self, modelOutputsToPlot):
-        '''
-        Plots the input waveform and the features listed in
-        `modelOutputsToPlot'. These features should have been extracted when
-        calling `process()' and should have one sample per ear and frame, i.e.,
-        each feature should be one vector of loudness values per ear.
-        '''
-        if self.processed:
-
-            if type(modelOutputsToPlot) is not list:
-                    modelOutputsToPlot = [modelOutputsToPlot]
-
-            time = np.arange(self.nSamples) / float(self.fs)
-            fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
-
-            for ear in range(self.nInputEars):
-                ax1.plot(
-                    time,
-                    self.inputSignal[
-                        ear,
-                        0,
-                        self.nSamplesToPadStart:
-                        self.nSamplesToPadStart+self.nSamples
-                    ]
-                )
-            ax1.set_ylabel("Amplitude")
-
-            for name in modelOutputsToPlot:
-                    ax2.plot(
-                        self.outputDict['FrameTimes'],
-                        self.outputDict[name]
-                    )
-            ax2.set_ylabel("Loudness")
-            ax2.set_xlabel("Time, seconds")
-            plt.tight_layout()
-            plt.xlim(0, time[-1])
-            plt.show()
-
-    def saveLoudnessTimeSeriesToCSV(self, filename, modelOutputsToSave):
-        '''
-        Saves the the features listed in `modelOutputsToSave' to a CSV file.
-        These features should have been extracted when calling `process()' and
-        should have one sample per ear and frame, i.e.  each feature should be
-        one vector of loudness values per ear.
-        '''
-        if self.processed:
-
-            if type(modelOutputsToSave) is not list:
-                    modelOutputsToSave = [modelOutputsToSave]
-
-            dataToSave = self.outputDict['FrameTimes'].reshape((-1, 1))
-            header = ['FrameTimes']
-            for name in modelOutputsToSave:
-                header.append(',' + name)
-                for ear in range(self.outputDict[name].shape[1]):
-                    dataToSave = np.hstack(
-                        (
-                            dataToSave,
-                            self.outputDict[name][:, ear].reshape(-1, 1)
-                        )
-                    )
-
-            filename, ext = os.path.splitext(filename)
-            np.savetxt(
-                filename + '.csv',
-                dataToSave,
-                delimiter=',',
-                header=','.join(self.outputDict.keys()),
-                comments=""
-            )
 
     def saveOutputToPickle(self, filename):
         '''
@@ -273,49 +209,9 @@ class DynamicLoudnessExtractor:
             filename, ext = os.path.splitext(filename)
             with open(filename + '.pickle', 'wb') as outfile:
                 pickle.dump(
-                    self.outputDict,
+                    self.outputDict, 
                     outfile,
-                    protocol=pickle.HIGHEST_PROTOCOL
-                )
-
-    def computeGlobalLoudnessFeatures(
-        self,
-        modelOutputs,
-        startSeconds=0,
-        endSeconds=None
-    ):
-        '''
-        Compute the average loudness from startSeconds to endSeconds.
-        Time points are based on nearest sample, so it is possible that
-        sample points outside of this range are included.
-        Loudness features are stored in the output dictionary.
-        '''
-        if self.processed:
-
-            if type(modelOutputs) is not list:
-                    modelOutputs = [modelOutputs]
-
-            start = int(np.round(startSeconds/self.timeStep))
-            end = endSeconds
-            if end is not None:
-                end = int(np.round(endSeconds/self.timeStep)+1)
-            self.outputDict['Features'] = {}
-            for name in modelOutputs:
-                self.outputDict['Features'][name] = {}
-                # Sum both ears
-                loudnessVec = np.sum(self.outputDict[name][start:end], 1)
-                self.outputDict['Features'][name]['Mean'] = \
-                    np.mean(loudnessVec, 0)
-                self.outputDict['Features'][name]['Median'] = \
-                    np.median(loudnessVec, 0)
-                self.outputDict['Features'][name]['Max'] = \
-                    np.max(loudnessVec, 0)
-                self.outputDict['Features'][name]['N5'] = \
-                    np.percentile(loudnessVec, 95, 0)
-                self.outputDict['Features'][name]['IQR'] = \
-                    np.percentile(loudnessVec, 75, 0) - \
-                    np.percentile(loudnessVec, 25, 0)
-
+                    protocol=pickle.HIGHEST_PROTOCOL)
 
 class BatchWavFileProcessor:
     """Class for processing multiple wav files using a given loudness model.
@@ -346,9 +242,12 @@ class BatchWavFileProcessor:
     """
 
     def __init__(self,
-                 wavFileDirectory="",
-                 filename="",
-                 outputs=None):
+                 wavFileDirectory = "",
+                 filename = "",
+                 outputs = None,
+                 numFramesToAppend = 0,
+                 frameTimeOffset = 0,
+                 audioFilesHaveSameSpec = False):
 
         self.filename = os.path.abspath(filename)
         self.wavFileDirectory = os.path.dirname(wavFileDirectory)
@@ -363,13 +262,13 @@ class BatchWavFileProcessor:
             self.wavFiles.sort()  # sort to avoid platform specific order
             if not self.wavFiles:
                 raise ValueError("No wav files found")
-
-        self.frameTimeOffset = 0
-        self.audioFilesHaveSameSpec = False
-        self.numFramesToAppend = 0
-        self.gainInDecibels = 0
-
+       
+        self.frameTimeOffset = frameTimeOffset
+        self.audioFilesHaveSameSpec = audioFilesHaveSameSpec
+        self.numFramesToAppend = numFramesToAppend
+        self.gainInDecibels = gainInDecibels
         self.outputs = outputs
+
         if self.outputs is not None:
             if type(outputs) is not list:
                 self.outputs = [outputs]

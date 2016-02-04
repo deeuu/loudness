@@ -6,29 +6,23 @@ from scipy.interpolate import interp1d
 
 # ISO 389-7 - free-field values
 freqsISO389 = np.array([
-    20.0, 25, 31.5, 40, 50, 63, 80, 100, 125, 160,
-    200, 250, 315, 400, 500, 630, 750, 800, 1000, 1250, 1500, 1600,
-    2000, 2500, 3000, 3150, 4000, 5000, 6000, 6300, 8000, 9000, 10000,
-    11200, 12500, 14000
-])
+    20.0, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630,
+    750, 800, 1000, 1250, 1500, 1600, 2000, 2500, 3000, 3150, 4000, 5000, 6000,
+    6300, 8000, 9000, 10000, 11200, 12500, 14000, 16000, 18000])
 
 thresholdsISO389 = np.array([
-    78.5, 68.7, 59.5, 51.1, 44, 37.5, 31.5,
-    26.5, 22.1, 17.9, 14.4, 11.4, 8.6, 6.2, 4.4, 3, 2.4, 2.2, 2.4, 3.5,
-    2.4, 1.7, -1.3, -4.2, -5.8, -6.0, -5.4, -1.5, 4.3, 6, 12.6, 13.9,
-    13.9, 13, 12.3, 18.4
-])
-
+    78.5, 68.7, 59.5, 51.1, 44, 37.5, 31.5, 26.5, 22.1, 17.9, 14.4, 11.4, 8.6,
+    6.2, 4.4, 3, 2.4, 2.2, 2.4, 3.5, 2.4, 1.7, -1.3, -4.2, -5.8, -6.0, -5.4,
+    -1.5, 4.3, 6, 12.6, 13.9, 13.9, 13, 12.3, 18.4, 40.2, 73.2])
 
 class StationaryLoudnessContourPredictor():
 
-    def __init__(
-        self,
-        model,
-        outputName,
-        loudnessLevelFunction=None,
-        loudnessLevel='abs'
-    ):
+    def __init__(self,
+                 model, 
+                 outputName, 
+                 loudnessLevelFunction = None,
+                 loudnessLevel = 'abs', 
+                 useISO2261987 = False):
 
         self.iterator = StationaryLoudnessIterator(
             model,
@@ -48,19 +42,17 @@ class StationaryLoudnessContourPredictor():
             self.sPLs = thresholdsISO389
             self.targetLoudnessLevel = 2.4
         else:
-            contour = ISO2262003LoudnessContours()
-            self.freqs, self.sPLs = contour.phonToSPL(
-                None,
-                loudnessLevel
-            )
+            if useISO2261987:
+                contour = ISO2261987LoudnessContours()
+            else:
+                contour = ISO2262003LoudnessContours()
+            self.freqs = contour.freqs
+            self.sPLs = contour.phonToSPL(None, loudnessLevel)
 
     def process(self):
 
         self.predictions = np.zeros(self.freqs.size)
-        self.converged = np.zeros(
-            self.freqs.size,
-            dtype=bool
-        )
+        self.converged = np.zeros(self.freqs.size, dtype=bool)
         for i, freq in enumerate(self.freqs):
             print 'Freq: %0.2f, initial guess: %0.2f' % (freq, self.sPLs[i])
             levels = np.zeros(self.freqs.size) - 100
@@ -109,16 +101,14 @@ class StationaryLoudnessContourPredictor():
 
 
 class DynamicLoudnessContourPredictor():
-
-    def __init__(
-        self,
-        model,
-        fs,
-        outputName,
-        globalLoudnessFeature=None,
-        loudnessLevelFunction=None,
-        loudnessLevel='abs'
-    ):
+    def __init__(self, 
+                 model, 
+                 fs,
+                 outputName,
+                 globalLoudnessFeature = None,
+                 loudnessLevelFunction = None,
+                 loudnessLevel = 'abs',
+                 useISO2261987 = False):
 
         self.iterator = DynamicLoudnessIterator(
             model,
@@ -142,16 +132,18 @@ class DynamicLoudnessContourPredictor():
             self.sPLs = thresholdsISO389
             self.targetLoudnessLevel = 2.4
         else:
-            contour = ISO2262003LoudnessContours()
-            self.freqs, self.sPLs = contour.phonToSPL(None, loudnessLevel)
+            if useISO2261987:
+                contour = ISO2261987LoudnessContours()
+            else:
+                contour = ISO2262003LoudnessContours()
+            self.freqs = contour.freqs
+            self.sPLs = contour.phonToSPL(None, loudnessLevel)
         self.predictions = np.zeros(self.sPLs.size)
 
     def process(self):
 
         self.predictions = np.zeros(self.freqs.size)
-        self.converged = np.zeros(
-            self.freqs.size, dtype=bool
-        )
+        self.converged = np.zeros(self.freqs.size, dtype=bool)
         for i, freq in enumerate(self.freqs):
             print 'Freq: %0.2f, initial guess: %0.2f' % (freq, self.sPLs[i])
             s = Sound.tone([freq], dur=self.duration, fs=self.fs)
@@ -263,25 +255,14 @@ class ISO2262003LoudnessContours():
             (0.4 * 10 ** (((t + l) / 10.0) - 9)) ** a
 
     def phonToSPL(self, f, phon):
-        '''
-        If frequencies not entered then this function will only
-        return points in the range of those measured experimentally.
-        '''
         if f is None:
             f = self.freqs.copy()
-            if (phon > 80) & (phon < 90):
-                idx = (f >= 20) & (f <= 4e3)
-                f = f[idx]
-            elif phon > 90:
-                idx = (f >= 20) & (f <= 1e3)
-                f = f[idx]
-
         l = self.lu_dB(f)
         t = self.t_dB(f)
         a = self.alpha(f)
-        spls = (np.log10(self.af(l, t, a, phon)) *
-                10 / self.alpha(f)) - self.lu_dB(f) + 94
-        return f, spls
+        spls = (np.log10(self.af(l, t, a, phon)) * 
+                10.0 / self.alpha(f)) - self.lu_dB(f) + 94.0
+        return spls
 
     def sPLToPhon(self, f, level):
         if f is None:
@@ -289,9 +270,72 @@ class ISO2262003LoudnessContours():
         l = self.lu_dB(f)
         t = self.t_dB(f)
         a = self.alpha(f)
-        phons = 40 * np.log10(self.bf(l, t, a, level)) + 94
+        phons = 40.0 * np.log10(self.bf(l, t, a, level)) + 94.0
+        return phons
 
-        return f, phons
+    def plotContours(self, phonLevels=None, ax = None):
+
+        if not ax:
+            fig, ax = plt.subplots(figsize = (6, 4))
+        if phonLevels is None:
+            phonLevels = np.array([10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
+
+        for phon in phonLevels:
+            ax.semilogx(self.freqs, self.phonToSPL(None, phon))
+        plt.xlabel("Frequency, Hz")
+        plt.ylabel("Level, dB SPL")
+        plt.xlim((16, 16e3))
+        plt.ylim((-10, 130))
+        plt.show()
+
+class ISO2261987LoudnessContours():
+
+    def __init__(self):
+
+        self.freqs = np.array([20,25,31.5,40,50,63,80,100,125,160,200,250,315,400,
+            500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500])
+
+        self.afParams = np.array([2.347, 2.190, 2.050, 1.879,1.724, 1.597, 1.512,
+            1.466, 1.426, 1.394, 1.372, 1.344, 1.304, 1.256, 1.203, 1.135,1.062,
+            1.0, 0.967, 0.943, 0.932, 0.933, 0.937, 0.952, 0.974, 1.027, 1.135,
+            1.266, 1.501])
+        self.bfParams = np.array([0.00561,0.00527,0.00481, 0.00404,0.00338,0.00286,
+            0.00259,0.00257,0.00256, 0.00255, 0.00254,0.00248,
+            0.00229,0.00201,0.00162, 0.00111,0.00052,0, -0.00039, -0.00067,
+            -0.00092, -0.00105, -0.00104, -0.00088, -0.00055,    0.00000,
+            0.00089, 0.00211, 0.00488])
+        self.tfParams = np.array([74.3, 65.0,56.3, 48.4, 41.7,35.5, 29.8, 25.1,20.7,
+            16.8, 13.8,11.2, 8.9,7.2,6.0, 5.0,4.4,4.2, 3.7,2.6,1.0,
+            -1.2,-3.6,-3.9, -1.1,6.6,15.3, 16.4,11.6])
+        
+    def af(self, f):
+	return interp1d(self.freqs, self.afParams, 'cubic')(f)
+
+    def bf(self, f):
+	return interp1d(self.freqs, self.bfParams, 'cubic')(f)
+
+    def tf(self, f):
+	return interp1d(self.freqs, self.tfParams, 'cubic')(f)
+
+    def phonToSPL(self, f, phon):
+        if f is None:
+            f = self.freqs.copy()
+	af = self.af(f)
+	bf = self.bf(f)
+	tf = self.tf(f)
+        num = 5.0 * tf * (af - bf * phon + bf * 4.2) + 5.0 * phon - 21.0
+        den = 5.0 * (af - bf * phon) + 21.0 * bf
+        spl =  num / den
+        return spl
+
+    def sPLToPhon(self, f, spl):
+        if f is None:
+            f = self.freqs
+	af = self.af(f)
+	bf = self.bf(f)
+	tf = self.tf(f)
+	phons = 4.2 + af * (spl - tf) / (1.0 + bf * (spl - tf))
+        return phons
 
     def plotContours(self, phonLevels=None):
 
@@ -299,7 +343,7 @@ class ISO2262003LoudnessContours():
             phonLevels = np.array([10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
 
         for phon in phonLevels:
-            plt.semilogx(*self.phonToSPL(None, phon))
+            plt.semilogx(self.freqs, self.phonToSPL(None, phon))
         plt.xlabel("Frequency, Hz")
         plt.ylabel("Level, dB SPL")
         plt.xlim((16, 16e3))

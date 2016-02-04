@@ -47,11 +47,11 @@ namespace loudness{
         for (int i = 0; i < input.getNChannels(); ++i)
         {
             //ERB number of Centre frequency
-            Real cam = freqToCam (input.getCentreFreq(i));
+            Real cam = hertzToCam (input.getCentreFreq(i));
 
             //rectangular ERB band edges in Hz
-            Real freqLo = camToFreq (cam - 0.5);
-            Real freqHi = camToFreq (cam + 0.5);
+            Real freqLo = camToHertz (cam - 0.5);
+            Real freqHi = camToHertz (cam + 0.5);
 
             //lower and upper bin indices
             rectBinIndices_[i].resize(2);
@@ -98,7 +98,7 @@ namespace loudness{
                 << " Total number of filters: " << nFilters_);
 
         //see ANSI S3.4 2007 p.11
-        const Real p51_1k = 4000.0 / freqToERB (1000.0);
+        const Real p51_1k = 4000.0 / centreFreqToCambridgeERB (1000.0);
 
         //p upper is level invariant
         pu_.assign (nFilters_, 0.0);
@@ -125,7 +125,7 @@ namespace loudness{
             output_.initialize (input.getNEars(), 372, 1, input.getFs());
             output_.setChannelSpacingInCams (0.1);
             for (int i = 0; i < 372; ++i)
-                output_.setCentreFreq (i, camToFreq (1.8 + i * 0.1));
+                output_.setCentreFreq (i, camToHertz (1.8 + i * 0.1));
         }
         else
         {
@@ -141,7 +141,7 @@ namespace loudness{
             Real cam = camLo + (i * camStep_);
 
             //filter frequency in Hz
-            fc_[i] = camToFreq (cam);
+            fc_[i] = camToHertz (cam);
 
             if (isExcitationPatternInterpolated_)
                 cams_[i] = cam;
@@ -149,7 +149,7 @@ namespace loudness{
                 output_.setCentreFreq (i, fc_[i]); //some redundancy here
 
             //get the ERB of the filter
-            Real erb = freqToERB (fc_[i]);
+            Real erb = centreFreqToCambridgeERB (fc_[i]);
             //ANSI S3.4 sec 3.5 p.11
             pu_[i] = 4.0 * fc_[i] / erb;
             //from Eq (3)

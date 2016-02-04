@@ -25,18 +25,16 @@
 namespace loudness{
 
     /**
-     * @brief Returns the ERB of the auditory filter for normally hearing
-     * listeners at centre frequency @a freq in Hz.
+     * @brief Returns the ERB in Cams of the auditory filter for normally hearing
+     * listeners at the @a centreFreq in Hz.
      *
      * See ANSI S3.04-2007 sec 3.5 Eq (1)
      *
-     * @param freq Centre frequency in Hz.
-     *
-     * @return ERB.
+     * @return ERB in Cams.
      */
-    inline Real freqToERB(Real freq)
+    inline Real centreFreqToCambridgeERB(Real centreFreq)
     {
-        return 24.673*(4368e-6*freq+1);
+        return 24.673 * (4368e-6 * centreFreq + 1.0);
     }
 
     /**
@@ -48,9 +46,9 @@ namespace loudness{
      *
      * @return ERB number in Cams.
      */
-    inline Real freqToCam(Real freq)
+    inline Real hertzToCam (Real freq)
     {
-        return 21.366*log10(4368e-6*freq+1);
+        return 21.366 * log10(4368e-6 * freq + 1.0);
     }
 
     /**
@@ -62,9 +60,59 @@ namespace loudness{
      *
      * @return Frequency in Hz.
      */
-    inline Real camToFreq(Real cam)
+    inline Real camToHertz(Real cam)
     {
-        return (pow(10, (cam/21.366))-1)/4368e-6;
+        return (pow (10.0, (cam / 21.366)) - 1.0) / 4368e-6;
+    }
+
+    /**
+     * @brief Returns the ERB in Bark of the auditory filter for normally hearing
+     * listeners at @a centreFreq in Hz.
+     *
+     * Hartmann, 1997 p.249. Signals, Sound and Sensation.
+     *
+     * @return ERB in Bark.
+     */
+    inline Real centreFreqToMunichERB(Real centreFreq)
+    {
+        return 25.0 + 75.0 * pow(1.0 + 1.4e-6 * centreFreq*centreFreq, 0.69);
+    }
+
+    /**
+     * @brief Converts frequency in Hz to corresponding critical-band number in Bark.
+     *
+     * Hartmann, 1997 p.252. Signals, Sound and Sensation.
+     *
+     * @param freq Frequency in Hz.
+     *
+     * @return Critical-band number in Bark;
+     */
+    inline Real hertzToBark (Real freq)
+    {
+        Real z = 26.81 * freq / (1960 + freq) - 0.53;
+        if (z < 2.0)
+            z = z + 0.15 * (2.0 - z);
+        else if (z > 20.1)
+            z = z + 0.22 * (z - 20.1);
+        return z;
+    }
+
+    /**
+     * @brief Converts critical-band number in Bark to frequency in Hz.
+     *
+     * Hartmann, 1997 p.253. Signals, Sound and Sensation.
+     *
+     * @param z Critical-band number in Bark.
+     *
+     * @return Frequency in Hz.
+     */
+    inline Real barkToHertz(Real z)
+    {
+        if (z < 2.0)
+            z = 2.0 + (z - 2.0) / 0.85;
+        else if (z > 20.1)
+            z = 20.1 + (z - 20.1) / 1.22;
+        return 1960 * (z + 0.53) / (26.28 - z);
     }
 
     /**
@@ -109,7 +157,29 @@ namespace loudness{
      *  
      * @return Loudness in phons.
      */
-    Real soneToPhonCHGM2011(Real sone);
+    Real soneToPhonCHGM2011 (Real sone);
+
+    /**
+     * @brief Returns loudness level in phons given loudness in sones.
+     *
+     * Piecewise polynomials were calculating by inputting a 1kHz tone at levels
+     * spanning 5 - 120 dB SPL using the model StationaryLoudnessDIN456311991 with
+     * isOutputRounded_ set to false.  Values are accurate to within +/- 0.35
+     * phons across the entire range of input levels tested.  
+     *
+     * If @a isPolyApprox is false (default is true), the transformation is
+     * calculated using the equations given in Zwicker et al. (1991). However,
+     * these functions appears to be less accurate than the polynomial
+     * approximations (at least for the implementation of the model presented in
+     * this library).
+     *
+     * REFERENCES:
+     *
+     * Zwicker, E., Fastl, H., Widmann, U., Kurakata, K., Kuwano, S., & Germtuo,
+     * E. R. (1991). Program for calculating loudness according to DIN 45631 (ISO
+     * 532B). Journal of the Acoustical Society of America, 12(1), 39–42.
+     */
+    Real soneToPhonDIN456311991 (Real sone, bool isPolyApprox = true);
 
     /**
      * @class OME

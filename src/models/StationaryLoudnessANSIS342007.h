@@ -38,11 +38,11 @@ namespace loudness{
      *
      * If the input SignalBank used to initialise this model has one ear, then
      * the instantaneous loudness is multiplied by two. If you don't want this,
-     * call the method setDioticPresentation(false) (default is true). If the input
+     * call the method setPresentationDiotic(false) (default is true). If the input
      * SignalBank has two ears, the default the instantaneous loudness is a sum
      * of the loudness in both left and right ears. If you want to access the
      * loudness in both left and right ears separately, call method
-     * setDioticPresentation(false). When there are two ears, the binaural
+     * setPresentationDiotic(false). When there are two ears, the binaural
      * inhibition model proposed by Moore and Glasberg (2007) is used. If you
      * don't want this call method setInhibitSpecificLoudness(false). 
      *
@@ -96,9 +96,9 @@ namespace loudness{
 
             void setBinauralInhibitionUsed(bool isBinauralInhibitionUsed);
 
-            void setOuterEarType(const OME::Filter outerEarType);
+            void setOuterEarFilter(const OME::Filter outerEarFilter);
 
-            void setfilterSpacingInCams(Real filterSpacingInCams);
+            void setFilterSpacingInCams(Real filterSpacingInCams);
 
             void setSpecificLoudnessANSIS342007(bool isSpecificLoudnessANSIS342007_);
             
@@ -108,7 +108,7 @@ namespace loudness{
             Real filterSpacingInCams_;
             bool isPresentationDiotic_, isBinauralInhibitionUsed_;
             bool isSpecificLoudnessANSIS342007_;
-            OME::Filter outerEarType_;
+            OME::Filter outerEarFilter_;
     }; 
 }
 

@@ -186,7 +186,6 @@ class Sound:
         Multiplies the data with a sinusoid.
         Modulation can be linear (default) or logarithmic.
         '''
-        minVal = np.min(maxVal, minVal)
         amp = (maxVal-minVal)*0.5
         offset = minVal+amp
 
@@ -209,6 +208,7 @@ class Sound:
             self.data = lfilter(b, [1.0], self.data, 0)
         else:
             self.data = lfilter(b, a, self.data, 0)
+        self.nSamples, self.nChannels = self.data.shape
 
     def pad(self, samps, end=True):
         '''
@@ -298,6 +298,6 @@ class Sound:
         if (sound.data.shape == self.data.shape) and (sound.fs == self.fs):
             return Sound(self.data + sound.data, self.fs)
 
-    def segment(self, start=0, end=None):
+    def segment(self, start = 0, end = None):
         self.data = self.data[start:end]
         self.nSamples, self.nChannels = self.data.shape

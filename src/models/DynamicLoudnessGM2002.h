@@ -36,7 +36,7 @@ namespace loudness{
      *      - The specification used by Glasberg and Moore (2002). 
      *      - This computes excitation patterns according to ANSI S3.4:2007 and will be
      *      extremely slow. 
-     *      - Use setFastRoexBank(true) (default false) to speed it up.
+     *      - Use setRoexBankFast(true) (default false) to speed it up.
      * 2. "Faster" 
      *      - Uses a compressed spectrum according to a 0.2 Cam criterion.
      *      - Uses a filter spacing of 0.75 Cams with interpolation.
@@ -65,11 +65,11 @@ namespace loudness{
      *
      * If the input SignalBank used to initialise this model has one ear, then
      * the instantaneous loudness is multiplied by two. If you don't want this,
-     * call method setDioticPresentation(false) (default is true). If the input
+     * call method setPresentationDiotic(false) (default is true). If the input
      * SignalBank has two ears, the default the instantaneous loudness is a sum
      * of the loudness in both left and right ears. If you want to access the
      * loudness in both left and right ears separately, call method
-     * setDioticPresentation(false). When there are two ears, the binaural
+     * setPresentationDiotic(false). When there are two ears, the binaural
      * inhibition model proposed by Moore and Glasberg (2007) is used. If you
      * don't want this call method setInhibitSpecificLoudness(false). 
      * 
@@ -152,11 +152,11 @@ namespace loudness{
 
             void setBinauralInhibitionUsed(bool isBinauralInhibitionUsed);
 
-            void setHPFUsed(bool isHPFUsed);
-
             void setPeakSTLFollowerUsed(bool isPeakSTLFollowerUsed);
 
-            void setOuterEarType(const OME::Filter& outerEarType);
+            void setOuterEarFilter(const OME::Filter& outerEarFilter);
+
+            void setMiddleEarFilter(const OME::Filter& MiddleEarFilter);
 
             void setSpecificLoudnessANSIS342007(bool isSpecificLoudnessANSIS342007_);
 
@@ -179,11 +179,11 @@ namespace loudness{
             bool isRoexBankFast_, isExcitationPatternInterpolated_, isInterpolationCubic_;
             bool isSpectrumSampledUniformly_, isHoppingGoertzelDFTUsed_;
             bool isSpectralResolutionDoubled_, isPresentationDiotic_;
-            bool  isBinauralInhibitionUsed_, isHPFUsed_;
+            bool  isBinauralInhibitionUsed_;
             bool isSpecificLoudnessANSIS342007_, isFirstSampleAtWindowCentre_;
             bool isPeakSTLFollowerUsed_;
             string pathToFilterCoefs_;
-            OME::Filter outerEarType_;
+            OME::Filter outerEarFilter_, middleEarFilter_;
     }; 
 }
 

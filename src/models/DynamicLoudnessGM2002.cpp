@@ -50,7 +50,7 @@ namespace loudness{
         Model("DynamicLoudnessGM2002", true),
         pathToFilterCoefs_("")
     {
-        configureModelParameters("RecentAndFaster");
+        configureModelParameters("FasterAndRecent");
     }
     
     DynamicLoudnessGM2002::~DynamicLoudnessGM2002()
@@ -62,19 +62,19 @@ namespace loudness{
         isFirstSampleAtWindowCentre_ = isFirstSampleAtWindowCentre;
     }
     
-    void DynamicLoudnessGM2002::setHPFUsed(bool isHPFUsed)
-    {
-        isHPFUsed_ = isHPFUsed;
-    }
-
     void DynamicLoudnessGM2002::setPeakSTLFollowerUsed(bool isPeakSTLFollowerUsed)
     {
         isPeakSTLFollowerUsed_ = isPeakSTLFollowerUsed;
     }
 
-    void DynamicLoudnessGM2002::setOuterEarType(const OME::Filter& outerEarType)
+    void DynamicLoudnessGM2002::setOuterEarFilter(const OME::Filter& outerEarFilter)
     {
-        outerEarType_ = outerEarType;
+        outerEarFilter_ = outerEarFilter;
+    }
+
+    void DynamicLoudnessGM2002::setMiddleEarFilter(const OME::Filter& middleEarFilter)
+    {
+        middleEarFilter_ = middleEarFilter;
     }
 
     void DynamicLoudnessGM2002::setPresentationDiotic(bool isPresentationDiotic)
@@ -164,9 +164,9 @@ namespace loudness{
     {
         //common to all
         setRate(1000);
-        setHPFUsed(true);
         setPeakSTLFollowerUsed(false);
-        setOuterEarType(OME::ANSIS342007_FREEFIELD);
+        setOuterEarFilter(OME::ANSIS342007_FREEFIELD);
+        setMiddleEarFilter(OME::ANSIS342007_MIDDLE_EAR_HPF);
         setSpectrumSampledUniformly(true);
         setHoppingGoertzelDFTUsed(false);
         setSpectralResolutionDoubled(false);
@@ -187,7 +187,7 @@ namespace loudness{
             {
                 setRoexBankFast(true);
                 setExcitationPatternInterpolated(true);
-                setFilterSpacingInCams(0.75);
+                setFilterSpacingInCams(0.5);
                 setCompressionCriterionInCams(0.2);
                 LOUDNESS_DEBUG(name_ << ": Using faster params for Glasberg and Moore's 2002 model.");
             }
@@ -206,7 +206,7 @@ namespace loudness{
                 setSpecificLoudnessANSIS342007(true);
                 setRoexBankFast(true);
                 setExcitationPatternInterpolated(true);
-                setFilterSpacingInCams(0.75);
+                setFilterSpacingInCams(0.5);
                 setCompressionCriterionInCams(0.2);
                 LOUDNESS_DEBUG(name_
                         << ": Using faster params and "
@@ -232,18 +232,15 @@ namespace loudness{
         bool weightSpectrum = false;
         if (pathToFilterCoefs_.empty())
         {
-            LOUDNESS_WARNING(name_ 
-                    << ": No filter coefficients, opting to weight power spectrum.");
-
-            weightSpectrum = true; 
-
+            weightSpectrum = true;
             //should we use for useHpf for low freqs? default is true
-            if (isHPFUsed_)
+            if (middleEarFilter_ == OME::ANSIS342007_MIDDLE_EAR_HPF)
             {
                 modules_.push_back(unique_ptr<Module> (new Butter(3, 0, 50.0)));
             }
         }
-        else { //otherwise, load them
+        else
+        { //otherwise, load them
 
             //load numpy array holding the filter coefficients
             cnpy::NpyArray arr = cnpy::npy_load(pathToFilterCoefs_);
@@ -343,13 +340,11 @@ namespace loudness{
          */
         if (weightSpectrum)
         {
-            OME::Filter middleEar = OME::ANSIS342007_MIDDLE_EAR;
-
-            if (isHPFUsed_)
-                middleEar = OME::ANSIS342007_MIDDLE_EAR_HPF;
-
-            modules_.push_back(unique_ptr<Module> 
-                    (new WeightSpectrum(middleEar, outerEarType_)));
+            if ((middleEarFilter_ != OME::NONE) || (outerEarFilter_ != OME::NONE))
+            {
+                modules_.push_back(unique_ptr<Module> 
+                        (new WeightSpectrum(middleEarFilter_, outerEarFilter_)));
+            }
         }
 
         /*
