@@ -8,34 +8,38 @@ from extractors import DynamicLoudnessExtractor, StationaryLoudnessExtractor
 def asIs(x):
     return x
 
+
 def powerToDecibels(power):
     return 10 * np.log10(power + 1e-10)
+
 
 def meanSoneToDecibels(sone):
     return powerToDecibels(np.mean(sone[sone > 0.0]))
 
+
 def maxSoneToDecibels(sone):
     return powerToDecibels(np.max(sone[sone > 0.0]))
 
+
 class DynamicLoudnessIterator():
-    
-    def __init__(self, 
-                 model, 
+
+    def __init__(self,
+                 model,
                  fs,
-                 output = None,
-                 loudnessFunction = None,
-                 nInputEars = 1,
-                 tol = 0.1,
-                 nIters = 10,
-                 alpha = 1.0,
-                 nSecondsToPadStartBy = 0.0,
-                 nSecondsToPadEndBy = 0.2):
+                 output=None,
+                 loudnessFunction=None,
+                 nInputEars=1,
+                 tol=0.1,
+                 nIters=10,
+                 alpha=1.0,
+                 nSecondsToPadStartBy=0.0,
+                 nSecondsToPadEndBy=0.2):
 
         if type(output) is list:
             output = output[0]
 
-        self.extractor = DynamicLoudnessExtractor(model, 
-                                                  fs, 
+        self.extractor = DynamicLoudnessExtractor(model,
+                                                  fs,
                                                   output,
                                                   nInputEars,
                                                   nSecondsToPadStartBy,
@@ -50,8 +54,8 @@ class DynamicLoudnessIterator():
             self.loudnessFunction = np.mean
         else:
             self.loudnessFunction = loudnessFunction
-        
-    def extractLoudness(self, signal, gainInDecibels = 0.0):
+
+    def extractLoudness(self, signal, gainInDecibels=0.0):
 
         self.extractor.gainInDecibels = gainInDecibels
         self.extractor.process(signal)
@@ -76,8 +80,9 @@ class DynamicLoudnessIterator():
 
             error = targetLoudness - loudness
 
-            print (('Gain: %0.3f, Loudness: %0.3f, Target: %0.3f, Error: %0.3f') 
-                    % (storedGain, loudness, targetLoudness, error))
+            print (('Gain: %0.3f, Loudness: %0.3f' +
+                    ' Target: %0.3f, Error: %0.3f')
+                   % (storedGain, loudness, targetLoudness, error))
 
             if np.abs(error) < self.tol:
                 self.converged = True
@@ -93,14 +98,14 @@ class DynamicLoudnessIterator():
 
 class StationaryLoudnessIterator():
 
-    def __init__(self, 
-                 model, 
-                 output = None,
-                 loudnessFunction = None,
-                 tol = 0.1,
-                 nIters = 10,
-                 alpha = 1.0):
-        
+    def __init__(self,
+                 model,
+                 output=None,
+                 loudnessFunction=None,
+                 tol=0.1,
+                 nIters=10,
+                 alpha=1.0):
+
         self.output = output
         self.extractor = StationaryLoudnessExtractor(model, output)
         self.converged = False
@@ -119,11 +124,10 @@ class StationaryLoudnessIterator():
         loudness = self.loudnessFunction(loudness)
         return loudness
 
-
-    def process(self, 
+    def process(self,
                 frequencies,
                 intensityLevels,
-                targetLoudnessFrequencies, 
+                targetLoudnessFrequencies,
                 targetLoudnessIntensityLevels):
 
         if type(targetLoudnessIntensityLevels) is np.ndarray:
@@ -139,7 +143,7 @@ class StationaryLoudnessIterator():
         self.converged = False
         for i in range(self.nIters):
 
-            loudnessLevel = self.extractLoudness(
+            loudness = self.extractLoudness(
                 frequencies, intensityLevels, storedGain
             )
             error = targetLoudness - loudness
@@ -158,24 +162,24 @@ class StationaryLoudnessIterator():
 
         return storedGain
 
+
 class BatchDynamicLoudnessIterator:
     '''
-    A wrapper around DynamicLoudnessIterator for batch processing a list of signals.
-    This class can be used to search for the gains required to achieve a target
-    loudness. 
-    Signals can have individual target loudness values.
+    A wrapper around DynamicLoudnessIterator for batch processing a list of
+    signals. This class can be used to search for the gains required to achieve
+    a target loudness.  Signals can have individual target loudness values.
     '''
 
     def __init__(self,
                  model,
                  fs,
-                 output = None,
-                 loudnessFunction = None,
-                 tol = 0.1,
-                 nIters = 10,
-                 alpha = 1.0,
-                 nSecondsToPadStartBy = 0,
-                 nSecondsToPadEndBy = 0.2):
+                 output=None,
+                 loudnessFunction=None,
+                 tol=0.1,
+                 nIters=10,
+                 alpha=1.0,
+                 nSecondsToPadStartBy=0.0,
+                 nSecondsToPadEndBy=0.2):
 
         self.nSecondsToPadStartBy = nSecondsToPadStartBy
         self.nSecondsToPadEndBy = nSecondsToPadEndBy
@@ -198,13 +202,13 @@ class BatchDynamicLoudnessIterator:
         self.gains = np.zeros(len(self.listOfInputSignals))
 
         for i, signal in enumerate(self.listOfInputSignals):
-            
+
             if signal.ndim == 1:
                 signal = signal.reshape((-1, 1))
 
             # Instantiate a dynamic loudness iterator
             processor = DynamicLoudnessIterator(
-                    self.model, 
+                    self.model,
                     self.fs,
                     self.output,
                     self.loudnessFunction,
@@ -226,9 +230,10 @@ class BatchDynamicLoudnessIterator:
             gain = processor.process(signal, target)
 
             # Get gain required for target loudness
-            self.gains[i] = gain 
+            self.gains[i] = gain
 
         return self.gains
+
 
 class EqualDynamicLoudnessIterator():
     '''
@@ -236,25 +241,25 @@ class EqualDynamicLoudnessIterator():
     two sounds. Method `process' expects a list of paired signals (tuples), in
     the form of (fixedStimulus, variableStimulus). The loudness of the fixed
     stimulus is extracted and the level of the variable stimulus is adjusted to
-    approximate the point of equal loudness.
-    Multiple pairs can be passed to `process' but consider memory if the signals
-    are very long or there are lots of them.
+    approximate the point of equal loudness.  Multiple pairs can be passed to
+    `process' but consider memory if the signals are very long or there are
+    lots of them.
     '''
-    
-    def __init__(self, 
-                 model, 
-                 fs,
-                 output = None,
-                 loudnessFunction = None,
-                 nInputEars = 1,
-                 tol = 0.1,
-                 nIters = 10,
-                 alpha = 1.0,
-                 nSecondsToPadStartBy = 0,
-                 nSecondsToPadEndBy = 0.2):
 
-        self.extractor = DynamicLoudnessIterator(model, 
-                                                 fs, 
+    def __init__(self,
+                 model,
+                 fs,
+                 output=None,
+                 loudnessFunction=None,
+                 nInputEars=1,
+                 tol=0.1,
+                 nIters=10,
+                 alpha=1.0,
+                 nSecondsToPadStartBy=0.0,
+                 nSecondsToPadEndBy=0.2):
+
+        self.extractor = DynamicLoudnessIterator(model,
+                                                 fs,
                                                  output,
                                                  loudnessFunction,
                                                  nInputEars,
@@ -263,6 +268,7 @@ class EqualDynamicLoudnessIterator():
                                                  alpha,
                                                  nSecondsToPadStartBy,
                                                  nSecondsToPadEndBy)
+
     def process(self, pairs):
 
         gain = np.zeros(len(pairs))
@@ -276,6 +282,7 @@ class EqualDynamicLoudnessIterator():
 
         return gain
 
+
 class BatchWavFileIterator:
     '''
     A wrapper around DynamicLoudnessIterator for batch processing audio files.
@@ -287,29 +294,29 @@ class BatchWavFileIterator:
     def __init__(self,
                  wavFileDirectory,
                  model,
-                 output = None,
-                 loudnessFunction = None,
-                 targetLoudness = None,
-                 tol = 0.1,
-                 nIters = 10,
-                 alpha = 1.0,
-                 nSecondsToPadStartBy = 0,
-                 nSecondsToPadEndBy = 0.2,
-                 gainInDecibels = 0):
+                 output=None,
+                 loudnessFunction=None,
+                 targetLoudness=None,
+                 tol=0.1,
+                 nIters=10,
+                 alpha=1.0,
+                 nSecondsToPadStartBy=0,
+                 nSecondsToPadEndBy=0.2,
+                 gainInDecibels=0.0):
 
         self.wavFileDirectory = os.path.dirname(wavFileDirectory)
         if wavFileDirectory.endswith('.wav'):
             self.wavFiles = [os.path.basename(wavFileDirectory)]
         else:
-            #Get a list of all wav files in this directory
+            # Get a list of all wav files in this directory
             self.wavFiles = []
             for file in os.listdir(self.wavFileDirectory):
                 if file.endswith(".wav"):
                     self.wavFiles.append(file)
-            self.wavFiles.sort() #sort to avoid platform specific order
+            self.wavFiles.sort()  # Sort to avoid platform specific order
             if not self.wavFiles:
                 raise ValueError("No wav files found")
-        
+
         self.nSecondsToPadStartBy = nSecondsToPadStartBy
         self.nSecondsToPadEndBy = nSecondsToPadEndBy
         self.gainInDecibels = gainInDecibels
@@ -333,15 +340,15 @@ class BatchWavFileIterator:
         self.gains = {}
 
         for i, wavFile in enumerate(self.wavFiles):
-            
+
             # Load the audio file and configure level
             sound = Sound.readFromAudioFile(
                     self.wavFileDirectory + '/' + wavFile)
             sound.applyGain(self.gainInDecibels)
 
             # Instantiate a dynamic loudness iterator
-            processor = DynamicLoudnessIterator(self.model, 
-                                                sound.fs, 
+            processor = DynamicLoudnessIterator(self.model,
+                                                sound.fs,
                                                 self.output,
                                                 self.loudnessFunction,
                                                 sound.nChannels,
@@ -362,22 +369,23 @@ class BatchWavFileIterator:
             gain = processor.process(sound.data, target)
 
             # Get gain required for target loudness
-            self.gains[wavFile] = gain 
+            self.gains[wavFile] = gain
 
         return self.gains
 
+
 class StationaryLoudnessISOThresholdPredictor():
 
-    def __init__(self, 
-            model, 
-            outputName, 
-            loudnessFunction = None,
-            tol = 0.1,
-            nIters = 10,
-            alpha = 0.1,
-            threshold = 2.2):
+    def __init__(self,
+                 model,
+                 outputName,
+                 loudnessFunction=None,
+                 tol=0.1,
+                 nIters=10,
+                 alpha=0.1,
+                 threshold=2.2):
 
-        self.iterator = StationaryLoudnessIterator(model, 
+        self.iterator = StationaryLoudnessIterator(model,
                                                    outputName,
                                                    loudnessFunction,
                                                    tol,
@@ -431,19 +439,19 @@ class StationaryLoudnessISOThresholdPredictor():
 
 
 class DynamicLoudnessISOThresholdPredictor():
-    def __init__(self, 
-                 model, 
-                 fs, 
-                 outputName = None,
-                 loudnessFunction = None,
-                 tol = 0.1,
-                 nIters = 10,
-                 alpha = 1.0,
-                 threshold = 2.2):
+    def __init__(self,
+                 model,
+                 fs,
+                 outputName=None,
+                 loudnessFunction=None,
+                 tol=0.1,
+                 nIters=10,
+                 alpha=1.0,
+                 threshold=2.2):
 
-        self.iterator = DynamicLoudnessIterator(model, 
-                                                fs, 
-                                                outputName, 
+        self.iterator = DynamicLoudnessIterator(model,
+                                                fs,
+                                                outputName,
                                                 loudnessFunction,
                                                 tol,
                                                 nIters,
@@ -479,7 +487,8 @@ class DynamicLoudnessISOThresholdPredictor():
             s.normalise(self.thresholdsISO[i], 'RMS')
 
             self.predictions[i] = self.thresholdsISO[i]
-            self.predictions[i] += self.iterator.process(s.data, self.threshold)
+            self.predictions[i] += self.iterator.process(s.data,
+                                                         self.threshold)
 
     def plotPredictions(self):
 

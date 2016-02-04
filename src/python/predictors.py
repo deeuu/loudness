@@ -5,23 +5,24 @@ from iterators import StationaryLoudnessIterator, DynamicLoudnessIterator
 from scipy.interpolate import interp1d
 
 # ISO 389-7 - free-field values
-freqsISO389 = np.array([
-    20.0, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630,
-    750, 800, 1000, 1250, 1500, 1600, 2000, 2500, 3000, 3150, 4000, 5000, 6000,
-    6300, 8000, 9000, 10000, 11200, 12500, 14000, 16000, 18000])
+freqsISO389 = np.array([20.0, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200,
+                        250, 315, 400, 500, 630, 750, 800, 1000, 1250, 1500,
+                        1600, 2000, 2500, 3000, 3150, 4000, 5000, 6000, 6300,
+                        8000, 9000, 10000, 11200, 12500, 14000, 16000, 18000])
 
-thresholdsISO389 = np.array([
-    78.5, 68.7, 59.5, 51.1, 44, 37.5, 31.5, 26.5, 22.1, 17.9, 14.4, 11.4, 8.6,
-    6.2, 4.4, 3, 2.4, 2.2, 2.4, 3.5, 2.4, 1.7, -1.3, -4.2, -5.8, -6.0, -5.4,
-    -1.5, 4.3, 6, 12.6, 13.9, 13.9, 13, 12.3, 18.4, 40.2, 73.2])
+thresholdsISO389 = np.array([78.5, 68.7, 59.5, 51.1, 44, 37.5, 31.5, 26.5, 22.1,
+                             17.9, 14.4, 11.4, 8.6, 6.2, 4.4, 3, 2.4, 2.2, 2.4,
+                             3.5, 2.4, 1.7, -1.3, -4.2, -5.8, -6.0, -5.4, -1.5,
+                             4.3, 6, 12.6, 13.9, 13.9, 13, 12.3, 18.4, 40.2,
+                             73.2])
 
 class StationaryLoudnessContourPredictor():
 
     def __init__(self,
-                 model, 
-                 outputName, 
+                 model,
+                 outputName,
                  loudnessLevelFunction = None,
-                 loudnessLevel = 'abs', 
+                 loudnessLevel = 'abs',
                  useISO2261987 = False):
 
         self.iterator = StationaryLoudnessIterator(
@@ -101,8 +102,8 @@ class StationaryLoudnessContourPredictor():
 
 
 class DynamicLoudnessContourPredictor():
-    def __init__(self, 
-                 model, 
+    def __init__(self,
+                 model,
                  fs,
                  outputName,
                  globalLoudnessFeature = None,
@@ -260,7 +261,7 @@ class ISO2262003LoudnessContours():
         l = self.lu_dB(f)
         t = self.t_dB(f)
         a = self.alpha(f)
-        spls = (np.log10(self.af(l, t, a, phon)) * 
+        spls = (np.log10(self.af(l, t, a, phon)) *
                 10.0 / self.alpha(f)) - self.lu_dB(f) + 94.0
         return spls
 
@@ -307,7 +308,7 @@ class ISO2261987LoudnessContours():
         self.tfParams = np.array([74.3, 65.0,56.3, 48.4, 41.7,35.5, 29.8, 25.1,20.7,
             16.8, 13.8,11.2, 8.9,7.2,6.0, 5.0,4.4,4.2, 3.7,2.6,1.0,
             -1.2,-3.6,-3.9, -1.1,6.6,15.3, 16.4,11.6])
-        
+
     def af(self, f):
 	return interp1d(self.freqs, self.afParams, 'cubic')(f)
 

@@ -37,6 +37,9 @@ namespace loudness{
      * 2. "Faster" 
      *      - Uses a compressed spectrum according to a 0.3 Cam criterion.
      *      - Uses a filter spacing of 0.5 Cams.
+     *      - These parameters were used by Ward et al. (2015) for their
+     *        real-time binaural loudness model. For faster performance, use a
+     *        lower processing rate, e.g. call: setRate(500)
      *
      * The default is "Faster". Use configureModelParameters() to switch parameter sets.
      * 
@@ -92,6 +95,11 @@ namespace loudness{
      * excitation patterns and loudness for time-varying sounds. In Proceedings
      * of the IEEE International Conference on Acoustics, Speech, and Signal
      * Processing (ICASSP ’12) (pp. 157–160).
+     *
+     * Ward, D., Enderby, S., Athwal, C., & Reiss, J. D. (2015). Real-time
+     * Excitation Based Binaural Loudness Meters. In 18th International
+     * International Conference on Digital Audio Effects (DAFx-15). Trondheim,
+     * Norway.
      *
      * @sa DoubleRoexBank
      */

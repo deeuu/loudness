@@ -39,18 +39,21 @@ namespace loudness{
      *      - Use setRoexBankFast(true) (default false) to speed it up.
      * 2. "Faster" 
      *      - Uses a compressed spectrum according to a 0.2 Cam criterion.
-     *      - Uses a filter spacing of 0.75 Cams with interpolation.
+     *      - Uses a filter spacing of 0.5 Cams.
+     *      - Excitation pattern is interpolated to estimate filter responses spaced at 0.1 Cams.
      *      - Uses the fast roex filter bank.
-     *      - If you need even faster performance, try: 
-     *          - setExcitationPatternInterpolated(false)
-     *          - setCompressionCriterionInCams(0.8)
-     *          - setRate(500)
      * 3. "Recent"
      *      - Uses modified long-term loudness time-constants from Moore et al. (2003).
      *      - Uses modified equation for computing the specific loudness at very high levels (ANSI S3.4:2007).
-     *
      * 4. "FasterAndRecent"
      *      - A combination of (2) and (3).
+     * 5. "WEAR2015"
+     *      - Uses a compressed spectrum according to a 0.7 Cam criterion.
+     *      - Uses a filter spacing of 1.25 Cams with NO interpolation.
+     *      - Uses the fast roex filter bank.
+     *      - Uses modified equation for computing the specific loudness at very high levels (ANSI S3.4:2007).
+     *      - Time-constants from 2002 paper are used.
+     *      - For faster performance, reduce the processing rate, e.g. call: setRate(500)
      *
      * The default is "FasterAndRecent". Use configureModelParameters() to switch parameter sets.
      *
@@ -61,7 +64,7 @@ namespace loudness{
      * Numpy array stored as a binary file in the '.npy' format. If a file path
      * is not provided, pre-cochlear filtering is performed using the hybrid
      * filter which combines a 3rd order Butterworth high-pass filter with a frequency
-     * domain weighting function.
+     * domain weighting function (See Ward et al., 2013 and Ward et al., 2015).
      *
      * If the input SignalBank used to initialise this model has one ear, then
      * the instantaneous loudness is multiplied by two. If you don't want this,
@@ -116,6 +119,15 @@ namespace loudness{
      *
      * ANSI. (2007). ANSI S3.4-2007. Procedure for the Computation of Loudness
      * of Steady Sounds.
+     *
+     * Ward, D., Athwal, C., & Kokuer, M. (2013).  An Efficient Time-Varying
+     * Loudness Model.  In Proceedings of the IEEE Workshop on Applications of
+     * Signal Processing to Audio and Acoustics.
+     *
+     * Ward, D., Enderby, S., Athwal, C., & Reiss, J. D. (2015). Real-time
+     * Excitation Based Binaural Loudness Meters. In 18th International
+     * International Conference on Digital Audio Effects (DAFx-15). Trondheim,
+     * Norway.
      */
 
     class DynamicLoudnessGM2002 : public Model

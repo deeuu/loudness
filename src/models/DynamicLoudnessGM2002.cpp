@@ -213,6 +213,17 @@ namespace loudness{
                         << "updated time-constants from 2003 paper and "
                         << "high-level specific loudness equation (ANSI S3.4 2007).");
             }
+            else if (setName == "WEAR2015")
+            {
+                setSpecificLoudnessANSIS342007(true);
+                setRoexBankFast(true);
+                setExcitationPatternInterpolated(false);
+                setFilterSpacingInCams(1.25);
+                setCompressionCriterionInCams(0.7);
+                LOUDNESS_DEBUG(name_
+                        << ": Using faster params as per Ward et al. (2015) and "
+                        << "high-level specific loudness equation (ANSI S3.4 2007).");
+            }
             else
             {
                 LOUDNESS_DEBUG(name_
