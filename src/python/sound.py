@@ -298,6 +298,6 @@ class Sound:
         if (sound.data.shape == self.data.shape) and (sound.fs == self.fs):
             return Sound(self.data + sound.data, self.fs)
 
-    def segment(self, start = 0, end = None):
+    def segment(self, start=0, end=None):
         self.data = self.data[start:end]
         self.nSamples, self.nChannels = self.data.shape

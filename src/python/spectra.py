@@ -1,27 +1,45 @@
 import numpy as np
 
 nominalThirdOctBandFC = np.array([50, 62.5, 80, 100, 125, 160, 200, 250, 315,
-    400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300,
-    8000, 10000, 12700, 16000])
+                                  400, 500, 630, 800, 1000, 1250, 1600, 2000,
+                                  2500, 3150, 4000, 5000, 6300, 8000, 10000,
+                                  12700, 16000])
 
 
-def getF1AndF2(fc, bw, fcIsGeometricMean = True):
+def getF1AndF2(fc, bw, fcIsGeometricMean=True):
     if fcIsGeometricMean:
-        f2 = 0.5 * (bw + np.sqrt(bw **2 + 4 * fc ** 2))
+        f2 = 0.5 * (bw + np.sqrt(bw ** 2 + 4 * fc ** 2))
         f1 = f2 - bw
     else:
         f2 = fc + bw * 0.5
         f1 = fc - bw * 0.5
     return (f1, f2)
 
-def generateNToneComplex(fc, bw, nTones, dBSPL, overallLevel = True, fcIsGeometricMean = True):
-    
-    f1, f2 = getF1AndF2(fc, bw, fcIsGeometricMean)
-    return generateNToneComplexBand(f1, f2, nTones, dBSPL, overallLevel, fcIsGeometricMean)
 
-def generateNToneComplexBand(f1, f2, nTones, dBSPL, overallLevel = True, logSpaced = True):
+def generateNToneComplex(fc,
+                         bw,
+                         nTones,
+                         dBSPL,
+                         overallLevel=True,
+                         fcIsGeometricMean=True):
+
+    f1, f2 = getF1AndF2(fc, bw, fcIsGeometricMean)
+    return generateNToneComplexBand(f1,
+                                    f2,
+                                    nTones,
+                                    dBSPL,
+                                    overallLevel,
+                                    fcIsGeometricMean)
+
+
+def generateNToneComplexBand(f1,
+                             f2,
+                             nTones,
+                             dBSPL,
+                             overallLevel=True,
+                             logSpaced=True):
     '''
-    Generates an nTone complex including at minimum the f1 frequency. 
+    Generates an nTone complex including at minimum the f1 frequency.
     If nTones is > 1, both f1 and f2 are included.
     By default, the components are spaced logarithmically.
     '''
@@ -36,8 +54,13 @@ def generateNToneComplexBand(f1, f2, nTones, dBSPL, overallLevel = True, logSpac
         componentIntensities = np.full(nTones, 10 ** (dBSPL / 10.0))
 
     return componentFreqs, componentIntensities
-    
-def generateWhiteNoiseBand(f1, f2, dBSPL, overallLevel = True, spacing = None):
+
+
+def generateWhiteNoiseBand(f1,
+                           f2,
+                           dBSPL,
+                           overallLevel=True,
+                           spacing=None):
     '''
     In the standard the band frequences don't seem to be included i.e. (f1, f2)
     Here we do: [f1 + spacing/2, f2 + spacing/2]
@@ -53,17 +76,24 @@ def generateWhiteNoiseBand(f1, f2, dBSPL, overallLevel = True, spacing = None):
     componentFreqs = np.arange(f1, f2, spacing)
     nComponents = componentFreqs.size
     if overallLevel:
-        componentIntensities = np.full(nComponents, 10**(dBSPL / 10.0) / nComponents)
+        componentIntensities = np.full(nComponents,
+                                       10 ** (dBSPL / 10.0) / nComponents)
     else:
-        componentIntensities = np.full(nComponents, 10**(dBSPL / 10.0) * spacing)
+        componentIntensities = np.full(nComponents,
+                                       10 ** (dBSPL / 10.0) * spacing)
 
     return componentFreqs, componentIntensities
 
-def generatePinkNoiseBand(f1, f2, level, refFreq = None, spacing = None):
+
+def generatePinkNoiseBand(f1,
+                          f2,
+                          level,
+                          refFreq=None,
+                          spacing=None):
     '''
-    if `refFreq' is not None, i.e. a frequency in Hz, `level' is taken to be the
-    spectrum level at that frequency. Otherwise, `level' is taken to be the
-    overall level of the band.  
+    if `refFreq' is not None, i.e. a frequency in Hz,
+    `level' is taken to be the spectrum level at that frequency.
+    Otherwise, `level' is taken to be the overall level of the band.
     '''
     if not spacing:
         if (f2 - f1) > 30:
@@ -82,6 +112,7 @@ def generatePinkNoiseBand(f1, f2, level, refFreq = None, spacing = None):
     componentIntensities = gain / componentFreqs
     return componentFreqs, componentIntensities
 
+
 def generateSpectrumFromThirdOctaveBandLevels(bandLevels):
     '''
     Components are uniformly spaced over each third octave band.
@@ -93,8 +124,10 @@ def generateSpectrumFromThirdOctaveBandLevels(bandLevels):
     freqs = np.array([])
     componentIntensities = np.array([])
     for i, level in enumerate(bandLevels):
-        f, ints = generateWhiteNoiseBand(lower[i], upper[i], 
-                bandLevels[i], True)
+        f, ints = generateWhiteNoiseBand(lower[i],
+                                         upper[i],
+                                         bandLevels[i],
+                                         True)
         freqs = np.hstack((freqs, f))
         componentIntensities = np.hstack((componentIntensities, ints))
     return freqs, componentIntensities

@@ -2,7 +2,6 @@ import os
 import pickle
 import numpy as np
 import loudness as ln
-import matplotlib.pyplot as plt
 import h5py
 
 
@@ -79,22 +78,24 @@ class DynamicLoudnessExtractor:
     features listed in `modelOutputsToExtract'.
 
     Processing frames are per hop size, which is determined by the rate of the
-    model. Frame times start at time 0 and increment at the hop size in seconds.
-    For example, consider a hop size of 48 @ fs = 48kHz, the frame time
-    corresponding to the first and second frame would be 0 and 1ms respectively.
-    You can offset the frame times using self.frameTimeOffset.  '''
+    model. Frame times start at time 0 and increment at the hop size in
+    seconds. For example, consider a hop size of 48 @ fs = 48kHz, the frame
+    time corresponding to the first and second frame would be 0 and 1ms
+    respectively.
+    You can offset the frame times using self.frameTimeOffset.
+    '''
 
-    def __init__(self, 
+    def __init__(self,
                  model,
-                 fs = 32000, 
-                 outputs = None,
-                 nInputEars = 1,
-                 numSecondsToPadStartBy = 0,
-                 numSecondsToPadEndBy = 0.2,
-                 frameTimeOffset = 0,
-                 gainInDecibels = 0.0):
-        ''' 
-        Model   
+                 fs=32000,
+                 outputs=None,
+                 nInputEars=1,
+                 numSecondsToPadStartBy=0,
+                 numSecondsToPadEndBy=0.2,
+                 frameTimeOffset=0,
+                 gainInDecibels=0.0):
+        '''
+        Model
             The input loudness model - must be dynamic.
         fs
             The sampling frequency
@@ -108,7 +109,7 @@ class DynamicLoudnessExtractor:
         self.model = model
         self.fs = int(fs)
         self.nInputEars = nInputEars
-        self.rate = model.getRate() # desired rate in Hz
+        self.rate = model.getRate()  # desired rate in Hz
         self.hopSize = int(np.round(fs / self.rate))
         self.timeStep = float(self.hopSize) / fs
         self.inputBuf = ln.SignalBank()
@@ -167,7 +168,7 @@ class DynamicLoudnessExtractor:
         # Apply any gain
         self.inputSignal *= 10 ** (self.gainInDecibels / 20.0)
 
-        #configure the number of output frames needed
+        # configure the number of output frames needed
         nOutputFrames = int(
             np.ceil(self.inputSignal.shape[2] / float(self.hopSize))
         )
@@ -199,7 +200,6 @@ class DynamicLoudnessExtractor:
         self.model.reset()
         self.processed = True
 
-
     def saveOutputToPickle(self, filename):
         '''
         Saves the complete output dictionary to a pickle file.
@@ -209,9 +209,10 @@ class DynamicLoudnessExtractor:
             filename, ext = os.path.splitext(filename)
             with open(filename + '.pickle', 'wb') as outfile:
                 pickle.dump(
-                    self.outputDict, 
+                    self.outputDict,
                     outfile,
                     protocol=pickle.HIGHEST_PROTOCOL)
+
 
 class BatchWavFileProcessor:
     """Class for processing multiple wav files using a given loudness model.
@@ -242,12 +243,13 @@ class BatchWavFileProcessor:
     """
 
     def __init__(self,
-                 wavFileDirectory = "",
-                 filename = "",
-                 outputs = None,
-                 numFramesToAppend = 0,
-                 frameTimeOffset = 0,
-                 audioFilesHaveSameSpec = False):
+                 wavFileDirectory="",
+                 filename="",
+                 outputs=None,
+                 numFramesToAppend=0,
+                 frameTimeOffset=0,
+                 audioFilesHaveSameSpec=False,
+                 gainInDecibels=0.0):
 
         self.filename = os.path.abspath(filename)
         self.wavFileDirectory = os.path.dirname(wavFileDirectory)
@@ -262,7 +264,7 @@ class BatchWavFileProcessor:
             self.wavFiles.sort()  # sort to avoid platform specific order
             if not self.wavFiles:
                 raise ValueError("No wav files found")
-       
+
         self.frameTimeOffset = frameTimeOffset
         self.audioFilesHaveSameSpec = audioFilesHaveSameSpec
         self.numFramesToAppend = numFramesToAppend
