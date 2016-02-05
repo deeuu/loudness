@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import loudness as ln
 
 model = ln.DynamicLoudnessGM2002()
@@ -11,7 +12,7 @@ outputsOfInterest = [
 
 fs = 44100
 extractor = ln.tools.extractors.DynamicLoudnessExtractor(
-    model, fs, 1, outputsOfInterest
+    model, fs, outputsOfInterest,
 )
 
 # align time 0 with centre of window
@@ -23,6 +24,14 @@ signal.normalise(40, "RMS")
 signal.applyRamp(0.1)
 
 extractor.process(signal.data)
-extractor.plotLoudnessTimeSeries(outputsOfInterest)
-extractor.computeGlobalLoudnessFeatures(outputsOfInterest)
-print extractor.outputDict['Features']['ShortTermLoudness']['Max']
+
+times = extractor.outputDict['FrameTimes']
+il = extractor.outputDict['InstantaneousLoudness']
+stl = extractor.outputDict['ShortTermLoudness']
+ltl = extractor.outputDict['LongTermLoudness']
+plt.plot(times, il)
+plt.plot(times, stl)
+plt.plot(times, ltl)
+plt.xlabel('Time, s')
+plt.ylabel('Loudness, sones')
+plt.show()
