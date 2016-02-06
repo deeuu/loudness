@@ -60,7 +60,7 @@ class StationaryLoudnessExtractor:
         for name in self.outputs:
             outputBank = self.model.getOutput(name)
             self.outputDict[name] = (
-                np.squeeze(outputBank.getSignals())
+                np.squeeze(outputBank.getSignals()).copy()
             ).copy()
 
         self.model.reset()
@@ -192,7 +192,8 @@ class DynamicLoudnessExtractor:
         # get outputs
         for name in self.outputs:
             bank = self.model.getOutput(name)
-            self.outputDict[name] = np.squeeze(bank.getAggregatedSignals())
+            self.outputDict[name] = np.squeeze(
+                bank.getAggregatedSignals()).copy()
             if self.outputDict[name].ndim == 1:
                 self.outputDict[name] = self.outputDict[name].reshape((-1, 1))
 
