@@ -67,6 +67,26 @@ namespace loudness{
         isPeakSTLFollowerUsed_ = isPeakSTLFollowerUsed;
     }
 
+    void DynamicLoudnessGM2002::setAttackTimeSTL(Real attackTimeSTL)
+    {
+        attackTimeSTL_ = attackTimeSTL;
+    }
+
+    void DynamicLoudnessGM2002::setReleaseTimeSTL(Real releaseTimeSTL)
+    {
+        releaseTimeSTL_ = releaseTimeSTL;
+    }
+
+    void DynamicLoudnessGM2002::setAttackTimeLTL(Real attackTimeLTL)
+    {
+        attackTimeLTL_ = attackTimeLTL;
+    }
+
+    void DynamicLoudnessGM2002::setReleaseTimeLTL(Real releaseTimeLTL)
+    {
+        releaseTimeLTL_ = releaseTimeLTL;
+    }
+
     void DynamicLoudnessGM2002::setOuterEarFilter(const OME::Filter& outerEarFilter)
     {
         outerEarFilter_ = outerEarFilter;

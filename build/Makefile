@@ -46,6 +46,7 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/modules/FastRoexBank.cpp \
 ../src/modules/DoubleRoexBank.cpp \
 ../src/modules/OctaveBank.cpp \
+../src/modules/ComplexGammatone.cpp \
 ../src/modules/MainLoudnessDIN456311991.cpp \
 ../src/modules/InstantaneousLoudnessDIN456311991.cpp \
 ../src/modules/SpecificLoudnessANSIS342007.cpp \

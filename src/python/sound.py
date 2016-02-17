@@ -94,6 +94,27 @@ class Sound:
         data = data/np.max(np.abs(data))
         return Sound(data, fs)
 
+    @staticmethod
+    def pinkNoise(dur=0.1, fs=48e3, channels=1):
+        '''
+        Pink noise generation according to JOS:
+        `http://www.dsprelated.com/freebooks/sasp/
+        Example_Synthesis_1_F_Noise.html'
+        '''
+        b = [0.049922035, -0.095993537, 0.050612699, -0.004408786]
+        a = [1.0, -2.494956002, 2.017265875,  -0.522189400]
+        # T60 est.
+        nT60 = np.round(np.log(1000) /
+                        (1-np.max(np.abs(np.roots(a))))
+                        )
+        dur = int(np.round(dur * fs)) + nT60
+        data = np.random.randn(dur, channels)
+        # Apply 1/F roll-off to PSD
+        data = lfilter(b, a, data, 0)
+        # Skip transient response
+        data = data[nT60:]
+        return Sound(data, fs)
+
     def getDuration(self):
         return self.nSamples / float(self.fs)
 

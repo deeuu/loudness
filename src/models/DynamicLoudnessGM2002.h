@@ -164,6 +164,14 @@ namespace loudness{
 
             void setBinauralInhibitionUsed(bool isBinauralInhibitionUsed);
 
+            void setAttackTimeSTL(Real attackTimeSTL);
+
+            void setReleaseTimeSTL(Real releaseTimeSTL);
+
+            void setAttackTimeLTL(Real attackTimeLTL);
+
+            void setReleaseTimeLTL(Real releaseTimeLTL);
+
             void setPeakSTLFollowerUsed(bool isPeakSTLFollowerUsed);
 
             void setOuterEarFilter(const OME::Filter& outerEarFilter);

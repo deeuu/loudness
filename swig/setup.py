@@ -52,6 +52,7 @@ if __name__ == "__main__":
                     "../src/modules/FastRoexBank.cpp",
                     "../src/modules/DoubleRoexBank.cpp",
                     "../src/modules/OctaveBank.cpp",
+                    "../src/modules/ComplexGammatoneBank.cpp",
                     "../src/modules/MainLoudnessDIN456311991.cpp",
                     "../src/modules/SpecificLoudnessANSIS342007.cpp",
                     "../src/modules/BinauralInhibitionMG2007.cpp",

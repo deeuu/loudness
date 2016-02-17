@@ -27,6 +27,13 @@
 
 namespace loudness{
 
+    /** Factorial of a number. */
+    template <typename Type>
+    inline Type factorial (Type const& value)
+    {
+        return (value <= 1) ? 1 : value * factorial (value - 1);
+    }
+
     /** Return the larger of a or b. */
     template <typename Type>
     inline Type max (Type const& a, Type const&b )
