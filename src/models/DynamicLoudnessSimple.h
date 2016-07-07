@@ -1,0 +1,155 @@
+/*
+ * Copyright (C) 2014 Dominic Ward <contactdominicward@CHail.com>
+ *
+ * This file is part of Loudness
+ *
+ * Loudness is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Loudness is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
+ */
+
+#ifndef DYNAMICLOUDNESSSIMPLE_H
+#define DYNAMICLOUDNESSSIMPLE_H
+
+#include "../support/Model.h"
+
+namespace loudness{
+
+    /**
+     * @class DynamicLoudnessSimple
+     *
+     * @brief Implements Chen and Hu's (2012) dynamic loudness model.
+     *
+     * At present, there are two parameter sets available:
+     *
+     * 1. "CH2012"
+     *      - Uses the specification of Chen and Hu (2012).
+     * 2. "Faster" 
+     *      - Uses a compressed spectrum according to a 0.3 Cam criterion.
+     *      - Uses a filter spacing of 0.5 Cams.
+     *      - These parameters were used by Ward et al. (2015) for their
+     *        real-time binaural loudness model. For faster performance, use a
+     *        lower processing rate, e.g. call: setRate(500)
+     *
+     * The default is "Faster". Use configureModelParameters() to switch parameter sets.
+     * 
+     * If you want to use a time-domain filter for simulating the transmission
+     * response of the outer and middle ear, such as the 4096 order FIR filter
+     * used by Glasberg and Moore, then specify the path (string) to the filter
+     * coefficients when constructing the object. The coefficients must be a
+     * Numpy array stored as a binary file in the '.npy' format. If a file path
+     * is not provided, pre-cochlear filtering is performed using the frequency-domain
+     * weighting function as specified by Chen and Hu (2012). The middle ear
+     * function follows the one given in Figure 2 of Chen et al (2011).
+     *
+     * If the input SignalBank used to initialise this model has one ear, then
+     * the instantaneous loudness is multiplied by two. If you don't want this,
+     * call method setPresentationDiotic(false) (default is true). If the input
+     * SignalBank has two ears, the default the instantaneous loudness is a sum
+     * of the loudness in both left and right ears. If you want to access the
+     * loudness in both left and right ears seperately, call method
+     * setPresentationDiotic(false). When there are two ears, the binaural
+     * inhibition model proposed by Moore and Glasberg (2007) is used. If you
+     * don't want this call method setInhibitSpecificLoudness(false). Note that
+     * because this model does not have a separate `specific loudness' stage,
+     * the excitation pattern is scaled to give units of sones rather than
+     * power. If you don't want this, call method setOutputSpecificLoudness
+     * (false) (default is true). In this case, binaural inhibition will not be
+     * implemented.
+     *
+     * When using filter spacings greater than 0.1 Cams, the sampled excitation
+     * pattern can be interpolated to approximate the high resolution pattern.
+     * If you want this setExcitationPatternInterpolated(true); In mode `faster'
+     * this is true;
+     *
+     * A peak follower can be applied to the short-term loudness using 
+     * setPeakSTLFollowerUsed(true) (default is false).
+     *
+     * OUTPUTS:
+     *  - "SpecificLoudness"
+     *  - "InstantaneousLoudness"
+     *  - "ShortTermLoudness"
+     *  - "LongTermLoudness"
+     *  - "PeakShortTermLoudness" (optional)
+     *
+     * REFERENCES:
+     *
+     * Moore, B. C. J., & Glasberg, B. R. (2007). Modeling Binaural Loudness. The
+     * Journal of the Acoustical Society of America, 121(3), 1604–1612.
+     *
+     * Chen, Z., Hu, G., Glasberg, B. R., & Moore, B. C. J. (2011). A new method
+     * of calculating auditory excitation patterns and loudness for steady
+     * sounds. Hearing Research, 282(1-2), 204–15.
+     *
+     * Chen, Z., & Hu, G. (2012). A revised method of calculating auditory
+     * excitation patterns and loudness for time-varying sounds. In Proceedings
+     * of the IEEE International Conference on Acoustics, Speech, and Signal
+     * Processing (ICASSP ’12) (pp. 157–160).
+     *
+     * Ward, D., Enderby, S., Athwal, C., & Reiss, J. D. (2015). Real-time
+     * Excitation Based Binaural Loudness Meters. In 18th International
+     * International Conference on Digital Audio Effects (DAFx-15). Trondheim,
+     * Norway.
+     *
+     * @sa DoubleRoexBank
+     */
+    class DynamicLoudnessSimple : public Model
+    {
+        public:
+
+            /** Constructs a model with a path to the '.npy' file holding
+             * the pre-cochlear filter coefficients.
+             */
+            DynamicLoudnessSimple();
+
+            virtual ~DynamicLoudnessSimple();
+
+            void configureModelParameters(const string& setName);
+
+            void setPresentationDiotic(bool isPresentationDiotic);
+
+            void setFirstSampleAtWindowCentre(bool isFirstSampleAtWindowCentre);
+
+            void setFilterSpacingInCams(Real filterSpacingInCams);
+
+            void setCompressionCriterionInCams(Real compressionCriterionInCams);
+
+            void setAlpha(Real alpha);
+
+            void setFactor(Real factor);
+
+            void setRoexLevel(Real roexLevel);
+
+            void setAttackTime(Real attackTime);
+
+            void setReleaseTime(Real releaseTime);
+
+            void setFilterFC(Real fc);
+
+            void setFilterGain(Real gain);
+
+            void setFilterSlope(Real slope);
+
+        private:
+            virtual bool initializeInternal(const SignalBank &input);
+
+            Real filterSpacingInCams_, compressionCriterionInCams_;
+            Real attackTime_, releaseTime_;
+            Real alpha_, factor_, roexLevel_, fc_, gain_, slope_;
+            bool isInterpolationCubic_, isPresentationDiotic_;
+            bool isSpecificLoudnessOutput_, isBinauralInhibitionUsed_;
+            bool isFirstSampleAtWindowCentre_, isPeakSTLFollowerUsed_;
+
+    }; 
+}
+
+#endif

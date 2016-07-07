@@ -10,9 +10,9 @@ numFrames = xLen / bufSize
 x = np.random.randn(xLen)
 y = np.convolve(x, np.ones(windowSize) / float(windowSize))[0:xLen]
 
-# Configure an input bank with 2 ears & 2 channels
+# Configure an input bank with 2 sources & 2 ears & 2 channels
 sig = ln.SignalBank()
-sig.initialize(2, 2, bufSize, 1000)
+sig.initialize(2, 2, 2, bufSize, 1000)
 
 # Simple moving average only
 sma = ln.SMA(windowSize, True, False)
@@ -23,12 +23,21 @@ for i in range(numFrames):
     print "Frame", i
     start = i * bufSize
     end = start + bufSize
-    sig.setSignals(
-        np.tile(x[start:end], (sig.getNEars(), sig.getNChannels(), 1)))
+    buf = np.tile(x[start:end], (sig.getNSources(),
+                                 sig.getNEars(),
+                                 sig.getNChannels(),
+                                 1))
+    sig.setSignals(buf)
     sma.process(sig)
-    for ear in range(sig.getNEars()):
-        for chn in range(sig.getNChannels()):
-            print("Equality test for signal at Ear %d Chn %d : %r"
-                  % (ear,
-                     chn,
-                     np.allclose(out.getSignal(ear, chn), y[start:end])))
+    for src in range(sig.getNSources()):
+        for ear in range(sig.getNEars()):
+            for chn in range(sig.getNChannels()):
+                print("Equality test for signal at Src %d Ear %d Chn %d : %r"
+                      % (src,
+                         ear,
+                         chn,
+                         np.allclose(out.getSignal(0, ear, chn),
+                                     y[start:end],
+                                     ),
+                         ),
+                      )

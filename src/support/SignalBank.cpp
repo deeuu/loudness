@@ -22,6 +22,7 @@
 namespace loudness{
 
     SignalBank::SignalBank() :
+        nSources_(0),
         nEars_(0),
         nChannels_(0),
         nSamples_(0),
@@ -35,19 +36,22 @@ namespace loudness{
 
     SignalBank::~SignalBank() {}
 
-    void SignalBank::initialize(int nEars, int nChannels, int nSamples, int fs)
+    void SignalBank::initialize(int nSources, int nEars, int nChannels, int nSamples, int fs)
     {
-        if((nEars*nChannels*nSamples) == 0)
+        if((nEars*nChannels*nSamples*nSources) == 0)
         {
             LOUDNESS_ERROR("SignalBank: Cannot generate signal(s) with this specification.");
             initialized_ = false;
         }
         else
         {
+            nSources_ = nSources;
             nEars_ = nEars;
             nChannels_ = nChannels;
             nSamples_ = nSamples;
-            nTotalSamples_ = nEars_ * nChannels_ * nSamples_;
+            nTotalSamplesPerEar_ = nChannels_ * nSamples_;
+            nTotalSamplesPerSource_ = nEars_ * nTotalSamplesPerEar_;
+            nTotalSamples_ = nTotalSamplesPerSource_ * nSources_;
             fs_ = fs;
             frameRate_ = fs_;
             trig_ = 1;
@@ -66,10 +70,13 @@ namespace loudness{
     {
         if(input.isInitialized())
         {
+            nSources_ = input.getNSources();
             nEars_ = input.getNEars();
             nChannels_ = input.getNChannels();
             nSamples_ = input.getNSamples();
             nTotalSamples_ = input.getNTotalSamples();
+            nTotalSamplesPerEar_ = input.getNTotalSamplesPerEar();
+            nTotalSamplesPerSource_ = input.getNTotalSamplesPerSource();
             fs_ = input.getFs();
             frameRate_ = input.getFrameRate();
             trig_ = input.getTrig();
@@ -96,7 +103,8 @@ namespace loudness{
 
     bool SignalBank::hasSameShape(const SignalBank& input) const
     {
-        if ( (input.getNEars() == nEars_) 
+        if ( (input.getNSources() == nSources_)
+                && (input.getNEars() == nEars_)
                 && (input.getNChannels() == nChannels_)
                 && (input.getNSamples() == nSamples_))
         {
@@ -114,17 +122,25 @@ namespace loudness{
             signals_[i] *= gainFactor;
     }
 
-    void SignalBank::scale(int ear, Real gainFactor)
+    void SignalBank::scale(int source, int ear, Real gainFactor)
     {
-        int start = ear * nChannels_ * nSamples_;
-        int end = start + nChannels_ * nSamples_;
+        int start = source * nTotalSamplesPerSource_ + ear * nTotalSamplesPerEar_;
+        int end = start + nTotalSamplesPerEar_;
         for (int i = start; i < end; ++i)
             signals_[i] *= gainFactor;
     }
 
-    void SignalBank::scale(int ear, int channel, Real gainFactor)
+    void SignalBank::scale(int ear, Real gainFactor)
     {
-        int start = ear * nChannels_ * nSamples_ + channel * nSamples_;
+        int start = ear * nTotalSamplesPerEar_;
+        int end = start + nTotalSamplesPerEar_;
+        for (int i = start; i < end; ++i)
+            signals_[i] *= gainFactor;
+    }
+
+    void SignalBank::scale(int source, int ear, int channel, Real gainFactor)
+    {
+        int start = ear * nTotalSamplesPerEar_ + channel * nSamples_;
         int end = start + nSamples_;
         for (int i = start; i < end; ++i)
             signals_[i] *= gainFactor;
@@ -165,46 +181,75 @@ namespace loudness{
         centreFreqs_ = centreFreqs;
     }
 
-    void SignalBank::copySamples(int ear, int channel, int writeSampleIndex, const Real* source, int nSamples)
+    void SignalBank::copySamples(
+            int source, 
+            int ear,
+            int channel,
+            int writeSampleIndex,
+            const Real* input,
+            int nSamples)
     {
         LOUDNESS_ASSERT(((nSamples+writeSampleIndex) <= nSamples_) &&
+                isPositiveAndLessThanUpper(source, nSources_) &&
                 isPositiveAndLessThanUpper(ear, nEars_) &&
                 isPositiveAndLessThanUpper(channel, nChannels_));
 
-        int startIdx = (ear * nChannels_ * nSamples_ + channel * nSamples_);
-        Real* write = &signals_[startIdx + writeSampleIndex];
-        for(int smp=0; smp<nSamples; smp++)
-            *write++ = *source++;
+        int startIdx = (source * nTotalSamplesPerSource_ +
+                        ear * nTotalSamplesPerEar_ +
+                        channel * nSamples_
+                        + writeSampleIndex);
+        Real* write = &signals_[startIdx];
+        for (int smp = 0; smp < nSamples; ++smp)
+            *write++ = *input++;
     }
 
-    void SignalBank::copySamples(int ear, int channel, int writeSampleIndex, const float* source, int nSamples)
+    void SignalBank::copySamples(
+            int source, 
+            int ear,
+            int channel,
+            int writeSampleIndex,
+            const float* input,
+            int nSamples)
     {
         LOUDNESS_ASSERT(((nSamples+writeSampleIndex) <= nSamples_) &&
+                isPositiveAndLessThanUpper(source, nSources_) &&
                 isPositiveAndLessThanUpper(ear, nEars_) &&
                 isPositiveAndLessThanUpper(channel, nChannels_));
 
-        int startIdx = (ear * nChannels_ * nSamples_ + channel * nSamples_);
-        Real* write = &signals_[startIdx + writeSampleIndex];
-        for(int smp=0; smp<nSamples; smp++)
-            *write++ = *source++;
+        int startIdx = (source * nTotalSamplesPerSource_ +
+                        ear * nTotalSamplesPerEar_ +
+                        channel * nSamples_
+                        + writeSampleIndex);
+        Real* write = &signals_[startIdx];
+        for (int smp = 0; smp < nSamples; ++smp)
+            *write++ = *input++;
     }
 
     void SignalBank::copySamples(const SignalBank& input)
     {
-        LOUDNESS_ASSERT( input.getNEars() == nEars_ && 
-                input.getNChannels() == nChannels_ &&
-                input.getNSamples() == nSamples_,
-                "SignalBank: Dimensions do not match");
+        LOUDNESS_ASSERT(hasSameShape(input), "SignalBank: Dimensions do not match");
         signals_ = input.getSignals();
     }
 
-    void SignalBank::copySamples(int writeSampleIndex, const SignalBank& input, int readSampleIndex, int nSamples)
+    void SignalBank::copySamples(
+            int writeSampleIndex,
+            const SignalBank& input,
+            int readSampleIndex, 
+            int nSamples)
     {
+        LOUDNESS_ASSERT(((nSamples + writeSampleIndex) <= nSamples_)
+                        && ((nSamples + readSampleIndex)
+                             <= input.getNSamples())
+                        && (input.getNSources() == nSources_)
+                        && (input.getNEars() == nEars_)
+                        && (input.getNChannels() == nChannels_));
+
         Real* write = &signals_[writeSampleIndex];
-        const Real *read = input.getSignalReadPointer(0, 0, readSampleIndex);
+        const Real *read = input.getSignalReadPointer(0, 0, 0, readSampleIndex);
         int writeHop = nSamples_ - nSamples;
         int readHop = input.getNSamples() - nSamples;
-        for(int i=0; i<(nEars_*nChannels_); i++)
+
+        for (int i = 0; i < (nSources_ * nEars_ * nChannels_); ++i)
         {
             for(int smp=0; smp<nSamples; smp++)
                 *write++ = *read++;
@@ -225,7 +270,7 @@ namespace loudness{
         {
             RealIter writeIter = signals_.begin();
             int remainingSamples_ = nSamples_ - nSamples;
-            for(int i=0; i<(nEars_*nChannels_); i++)
+            for (int i = 0; i < (nSources_ * nEars_ * nChannels_); ++i)
             {
                 RealIter readIter = writeIter + nSamples;
                 RealIter endIter = readIter + remainingSamples_;

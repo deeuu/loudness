@@ -91,7 +91,9 @@ namespace loudness{
          */
         PowerSpectrum(const RealVec& bandFreqsHz,
                 const vector<int>& windowSizes, 
-                bool sampleSpectrumUniformly);
+                bool sampleSpectrumUniformly,
+                const Normalisation& normalisation = AVERAGE_POWER,
+                Real referenceValue = 2e-5);
 
         virtual ~PowerSpectrum();
 

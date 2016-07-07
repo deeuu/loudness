@@ -96,19 +96,24 @@ namespace loudness{
 
             void setBinauralInhibitionUsed(bool isBinauralInhibitionUsed);
 
+            void setPartialLoudnessUsed(bool isPartialLoudnessUsed);
+
             void setOuterEarFilter(const OME::Filter outerEarFilter);
 
             void setFilterSpacingInCams(Real filterSpacingInCams);
 
             void setSpecificLoudnessANSIS342007(bool isSpecificLoudnessANSIS342007_);
+
+            void setAlpha(const RealVec& alpha);
             
         private:
             virtual bool initializeInternal(const SignalBank &input);
 
             Real filterSpacingInCams_;
-            bool isPresentationDiotic_, isBinauralInhibitionUsed_;
+            bool isPresentationDiotic_, isPartialLoudnessUsed_, isBinauralInhibitionUsed_;
             bool isSpecificLoudnessANSIS342007_;
             OME::Filter outerEarFilter_;
+            RealVec alpha_;
     }; 
 }
 

@@ -126,60 +126,67 @@ namespace loudness{
         LOUDNESS_DEBUG(name_ << ": number of filters <500 Hz: " << nFiltersLT500_);
 
         //output SignalBank
-        output_.initialize(input);
+        output_.initialize (input);
 
         return 1;
     }
 
     void SpecificLoudnessANSIS342007::processInternal(const SignalBank &input)
     {
-        for (int ear = 0; ear < input.getNEars(); ear++)
+        for (int src = 0; src < input.getNSources(); ++src)
         {
-            Real excLin, sl = 0.0;
-            const Real* inputExcitationPattern = input.getSingleSampleReadPointer(ear, 0);
-            Real* outputSpecificLoudness = output_.getSingleSampleWritePointer(ear, 0);
-
-            for (int i = 0; i < input.getNChannels(); i++)
+            for (int ear = 0; ear < input.getNEars(); ++ear)
             {
-                excLin = inputExcitationPattern[i];
+                Real excLin, sl = 0.0;
+                const Real* inputExcitationPattern = input
+                                                     .getSingleSampleReadPointer
+                                                     (src, ear, 0);
+                Real* outputSpecificLoudness = output_
+                                               .getSingleSampleWritePointer
+                                               (src, ear, 0);
 
-                //checked out 2.4.14
-                //high level
-                if (excLin > 1e10)
+                for (int i = 0; i < input.getNChannels(); ++i)
                 {
-                    if (useANSISpecificLoudness_)
-                        sl = pow((excLin/1.0707), 0.2);
-                    else
-                        sl = pow((excLin/1.04e6), 0.5);
-                }
-                else if (i < nFiltersLT500_) //low freqs
-                { 
-                    if (excLin > eThrqParam_[i]) //medium level
+                    excLin = inputExcitationPattern[i];
+
+                    //checked out 2.4.14
+                    //high level
+                    if (excLin > 1e10)
                     {
-                        sl = (pow(parameterG_[i]*excLin+parameterA_[i], parameterAlpha_[i]) -
-                                pow(parameterA_[i], parameterAlpha_[i]));
+                        if (useANSISpecificLoudness_)
+                            sl = pow((excLin/1.0707), 0.2);
+                        else
+                            sl = pow((excLin/1.04e6), 0.5);
                     }
-                    else //low level
-                    {
-                        sl = pow((2*excLin)/(excLin+eThrqParam_[i]), 1.5) *
-                            (pow(parameterG_[i]*excLin+parameterA_[i], parameterAlpha_[i])
-                                - pow(parameterA_[i], parameterAlpha_[i]));
+                    else if (i < nFiltersLT500_) //low freqs
+                    { 
+                        if (excLin > eThrqParam_[i]) //medium level
+                        {
+                            sl = (pow(parameterG_[i]*excLin+parameterA_[i], parameterAlpha_[i]) -
+                                    pow(parameterA_[i], parameterAlpha_[i]));
+                        }
+                        else //low level
+                        {
+                            sl = pow((2*excLin)/(excLin+eThrqParam_[i]), 1.5) *
+                                (pow(parameterG_[i]*excLin+parameterA_[i], parameterAlpha_[i])
+                                    - pow(parameterA_[i], parameterAlpha_[i]));
+                        }
                     }
-                }
-                else //high freqs (variables are constant >= 500 Hz)
-                { 
-                    if (excLin > 2.3604782331805771) //medium level
-                    {
-                        sl = pow(excLin+4.72096, 0.2)-1.3639739128330546;
-                    } 
-                    else //low level
-                    {
-                        sl = pow((2*excLin)/(excLin+2.3604782331805771), 1.5) *
-                            (pow(excLin+4.72096, 0.2)-1.3639739128330546);
+                    else //high freqs (variables are constant >= 500 Hz)
+                    { 
+                        if (excLin > 2.3604782331805771) //medium level
+                        {
+                            sl = pow(excLin+4.72096, 0.2)-1.3639739128330546;
+                        } 
+                        else //low level
+                        {
+                            sl = pow((2*excLin)/(excLin+2.3604782331805771), 1.5) *
+                                (pow(excLin+4.72096, 0.2)-1.3639739128330546);
+                        }
                     }
+                    
+                    outputSpecificLoudness[i] = parameterC_ * sl;
                 }
-                
-                outputSpecificLoudness[i] = parameterC_ * sl;
             }
         }
     }

@@ -56,52 +56,58 @@ namespace loudness{
                 LOUDNESS_DEBUG(name_ <<
                         ": diotic presentation presentation; loudness will be multiplied by 2.");
             }
-            output_.initialize(1, 1, 1, input.getFs());
+            output_.initialize (input.getNSources(), 1, 1, 1, input.getFs());
         }
         else if (dioticPresentation_)
         {
             LOUDNESS_DEBUG(name_ <<
                     ": diotic presentation presentation; loudness will be summed across ears.");
-            output_.initialize(1, 1, 1, input.getFs());
+            output_.initialize (input.getNSources(), 1, 1, 1, input.getFs());
         }
         else
         {
             LOUDNESS_DEBUG(name_ 
                     << ": dichotic presentation presentation;" 
                     << " loudness output in each ear, plus overall loudness (3 ear output).");
-            output_.initialize(input.getNEars() + 1, 1, 1, input.getFs());
+            output_.initialize (input.getNSources(),
+                               input.getNEars() + 1, 1, 1, input.getFs());
         }
-        output_.setFrameRate(input.getFrameRate());
+        output_.setFrameRate (input.getFrameRate());
 
         return 1;
     }
 
     void InstantaneousLoudness::processInternal(const SignalBank &input)
     {       
-        Real earIL = 0.0, overallIL = 0.0;
-        for (int ear = 0; ear < input.getNEars(); ++ear)
+        for (int src = 0; src < input.getNSources(); ++src)
         {
-            const Real* inputSpecificLoudness = input.getSingleSampleReadPointer(ear, 0);
+            Real earIL = 0.0, overallIL = 0.0;
+            for (int ear = 0; ear < input.getNEars(); ++ear)
+            {
+                const Real* inputSpecificLoudness = input
+                                                    .getSingleSampleReadPointer
+                                                    (src, ear, 0);
 
-            // sum loudness over all auditory filters
-            for (int chn = 0; chn < input.getNChannels(); ++chn)
-                earIL += inputSpecificLoudness[chn];
-            
-            earIL *= cParam_;
+                // sum loudness over all auditory filters
+                for (int chn = 0; chn < input.getNChannels(); ++chn)
+                    earIL += inputSpecificLoudness[chn];
+                
+                earIL *= cParam_;
 
-            // if not dioticPresentation then output loudness in each ear
-            if (!dioticPresentation_)
-                output_.setSample (ear, 0, 0, earIL);
+                // if not dioticPresentation then output loudness in each ear
+                if (!dioticPresentation_)
+                    output_.setSample (src, ear, 0, 0, earIL);
 
-            //sum and reset
-            overallIL += earIL;
-            earIL = 0.0;
+                //sum and reset
+                overallIL += earIL;
+                earIL = 0.0;
+            }
+
+            if (dioticPresentation_)
+                output_.setSample (src, 0, 0, 0, overallIL);
+            else if (output_.getNEars() == 3)
+                output_.setSample (src, 2, 0, 0, overallIL);
         }
-
-        if (dioticPresentation_)
-            output_.setSample (0, 0, 0, overallIL);
-        else if (output_.getNEars() == 3)
-            output_.setSample (2, 0, 0, overallIL);
     }
 
     //output SignalBanks are cleared so not to worry about filter state

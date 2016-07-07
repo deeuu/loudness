@@ -158,7 +158,7 @@ namespace loudness{
 
         /** Sets each modules in the chain to be the target of it's
          * predecessor. */
-        void configureLinearTargetModuleChain();
+        void configureLinearTargetModuleChain(int = 0);
 
         /** Informs modules to aggregate the output SignalBank. */
         void configureSignalBankAggregation();

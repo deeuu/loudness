@@ -210,6 +210,7 @@ namespace loudness{
                 CHGM2011_MIDDLE_EAR,
                 ANSIS342007_MIDDLE_EAR,
                 ANSIS342007_MIDDLE_EAR_HPF,
+                WARD_MIDDLE_EAR,
                 ANSIS342007_FREEFIELD,
                 ANSIS342007_DIFFUSEFIELD,
                 BD_DT990

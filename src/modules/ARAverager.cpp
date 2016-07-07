@@ -60,21 +60,26 @@ namespace loudness{
     {       
         int lastSampleIdx = input.getNSamples() - 1;
 
-        for (int ear = 0; ear < input.getNEars(); ++ear)
+        for (int src = 0; src < input.getNSources(); src++)
         {
-            for (int chn = 0; chn < input.getNChannels(); ++chn)
+            for (int ear = 0; ear < input.getNEars(); ++ear)
             {
-                const Real* x = input.getSignalReadPointer(ear, chn, 0);
-                Real* y = output_.getSignalWritePointer(ear, chn, 0);
-                Real yPrev = y[lastSampleIdx];
-
-                for (int smp = 0; smp < input.getNSamples(); ++smp)
+                for (int chn = 0; chn < input.getNChannels(); ++chn)
                 {
-                    if (x[smp] > yPrev)
-                        y[smp] = attackCoef_ * (x[smp] - yPrev) + yPrev;
-                    else
-                        y[smp] = releaseCoef_ * (x[smp] - yPrev) + yPrev;
-                    yPrev = y[smp];
+                    const Real* x = input.getSignalReadPointer(src,
+                            ear, chn, 0);
+                    Real* y = output_.getSignalWritePointer(src,
+                            ear, chn, 0);
+                    Real yPrev = y[lastSampleIdx];
+
+                    for (int smp = 0; smp < input.getNSamples(); ++smp)
+                    {
+                        if (x[smp] > yPrev)
+                            y[smp] = attackCoef_ * (x[smp] - yPrev) + yPrev;
+                        else
+                            y[smp] = releaseCoef_ * (x[smp] - yPrev) + yPrev;
+                        yPrev = y[smp];
+                    }
                 }
             }
         }

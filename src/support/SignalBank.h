@@ -50,6 +50,7 @@ namespace loudness{
         SignalBank();
         ~SignalBank();
 
+
         /** Initialises the SignalBank with input arguments.
          *
          * @param nEars Number of ears.
@@ -57,7 +58,7 @@ namespace loudness{
          * @param nSamples Number of samples per channel.
          * @param fs Sampling frequency.
          */
-        void initialize(int nEars, int nChannels, int nSamples, int fs);
+        void initialize(int nSources, int nEars, int nChannels, int nSamples, int fs);
 
         /** Initialises the SignalBank with the same parameters as the 
          * input SignalBank. The signals are initialised with zeros - the data
@@ -76,14 +77,16 @@ namespace loudness{
         /** Sets every sample in the SignalBank to zero. */
         void zeroSignals();
 
-        /** Multiplies all signals in the SignalBank by gainFactor. */
-        void scale(Real gainFactor);
+        /** Multiplies the signal in the specified ear and channel by gainFactor. */
+        void scale(int source, int ear, int channel, Real gainFactor);
+
+        void scale(int source, int ear, Real gainFactor);
 
         /** Multiplies all signals in the specified ear by gainFactor. */
         void scale(int ear, Real gainFactor);
 
-        /** Multiplies the signal in the specified ear and channel by gainFactor. */
-        void scale(int ear, int channel, Real gainFactor);
+        /** Multiplies all signals in the SignalBank by gainFactor. */
+        void scale(Real gainFactor);
 
         /** Removes all elements from the vector holding the aggregated signals.
          * */
@@ -111,6 +114,7 @@ namespace loudness{
          */
         void setCentreFreqs(const RealVec &centreFreqs);
 
+
         /** Sets the centre frequency of a single channel.
          *
          * @param channel Channel index.
@@ -124,31 +128,36 @@ namespace loudness{
        /** Sets the value of an individual sample in a specified ear and
         * channel.
          *
+         * @param sourc Source index.
          * @param ear Ear index.
          * @param channel Channel index.
          * @param sample Sample index.
          * @param value Value of the sample.
          */
 
-        inline void setSample(int ear, int channel, int sample, Real value) 
+        inline void setSample(int source, int ear, int channel, int sample, Real value) 
         {
-            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
+            LOUDNESS_ASSERT(
+                    isPositiveAndLessThanUpper(source, nSources_) &&
+                    isPositiveAndLessThanUpper(ear, nEars_) &&
                     isPositiveAndLessThanUpper(channel, nChannels_) &&
                     isPositiveAndLessThanUpper(sample, nSamples_));
-            signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + sample] = value;
+            signals_[source * nTotalSamplesPerSource_
+                     + ear * nTotalSamplesPerEar_ 
+                     + channel * nSamples_ + sample] = value;
         }
 
         /** Copies nSamples from an array pointed to by source into a specified
          * signal. The ear, channel and sample index to write to must be specified,
          * along with the number of samples to copy. Watch your bounds.
          */
-        void copySamples(int ear, int channel, int writeSampleIndex, const Real* source, int nSamples);
+        void copySamples(int source, int ear, int channel, int writeSampleIndex, const Real* input, int nSamples);
 
         /** Copies nSamples from an array pointed to by source into a specified
          * signal. The ear, channel and sample index to write to must be specified,
          * along with the number of samples to copy. Watch your bounds.
          */
-        void copySamples(int ear, int channel, int writeSampleIndex, const float* source, int nSamples);
+        void copySamples(int source, int ear, int channel, int writeSampleIndex, const float* input, int nSamples);
 
         /** Copies nSamples from all signals of the input SignalBank into the
          * current SignalBank. Both the destination sample index and source
@@ -189,6 +198,12 @@ namespace loudness{
             return trig_;
         }
 
+        /** Returns the number of sources in the SignalBank. */
+        inline int getNSources() const
+        {
+            return nSources_;
+        }
+
         /** Returns the number of ears in the SignalBank. */
         inline int getNEars() const
         {
@@ -207,6 +222,16 @@ namespace loudness{
             return nSamples_;
         }
 
+        inline int getNTotalSamplesPerEar() const
+        {
+            return nTotalSamplesPerEar_;
+        }
+
+        inline int getNTotalSamplesPerSource() const
+        {
+            return nTotalSamplesPerSource_;
+        }
+
         /** Returns the total number of samples held by the SignalBank.
          * This value is equal to nEars * nChannels_ * nSamples_. 
          */
@@ -218,24 +243,16 @@ namespace loudness{
         /** Get the value of a single sample in a given ear and channel. 
          * watch your bounds.
          */
-        inline Real getSample(int ear, int channel, int sample) const
+        inline Real getSample(int source, int ear, int channel, int sample) const
         {
-            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
+            LOUDNESS_ASSERT(
+                    isPositiveAndLessThanUpper(source, nSources_) &&
+                    isPositiveAndLessThanUpper(ear, nEars_) &&
                     isPositiveAndLessThanUpper(channel, nChannels_) &&
                     isPositiveAndLessThanUpper(sample, nSamples_));
-            return signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + sample];
-        }
-
-        /** Get a pointer to the first sample in the signal indexed by ear and
-         * channel. Use this for writing to the SignalBank. If the the number of
-         * samples is one and your iterating through channels, then use
-         * getSingleSampleWritePointer. Watch your bounds.
-         */
-        Real* getSignalWritePointer(int ear, int channel)
-        {
-            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
-                    isPositiveAndLessThanUpper(channel, nChannels_));
-            return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_];
+            return signals_[source * nTotalSamplesPerSource_
+                            + ear * nTotalSamplesPerEar_
+                            + channel * nSamples_ + sample];
         }
 
         /** Get a pointer to the signal indexed by ear, channel and sample. Use
@@ -243,25 +260,27 @@ namespace loudness{
          * index. If the the number of samples is one and your iterating through
          * channels, then use getSingleSampleWritePointer. Watch your bounds.
          */
-        Real* getSignalWritePointer(int ear, int channel, int sample)
+        Real* getSignalWritePointer(int source, int ear, int channel, int sample)
         {
-             LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
+             LOUDNESS_ASSERT(
+                     isPositiveAndLessThanUpper(source, nSources_) &&
+                     isPositiveAndLessThanUpper(ear, nEars_) &&
                      isPositiveAndLessThanUpper(channel, nChannels_) &&
                      isPositiveAndLessThanUpper(sample, nSamples_));
-            return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + sample];
+            return &signals_[source * nTotalSamplesPerSource_ +
+                            ear * nTotalSamplesPerEar_ +
+                            channel * nSamples_ + sample];
         }
 
-        /** Get a pointer to the first sample in the read-only signal indexed by
-         * ear and channel. Use this for reading SignalBank's with more than one
-         * sample only. If the the number of samples is one and your iterating
-         * through channels, then use getSingleSampleReadPointer. Watch your
-         * bounds.
-         */
-        const Real* getSignalReadPointer(int ear, int channel) const
+        Real* getSignalWritePointer(int source, int ear, int channel)
         {
-            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
-                    isPositiveAndLessThanUpper(channel, nChannels_));
-            return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_];
+             LOUDNESS_ASSERT(
+                     isPositiveAndLessThanUpper(source, nSources_) &&
+                     isPositiveAndLessThanUpper(ear, nEars_) &&
+                     isPositiveAndLessThanUpper(channel, nChannels_));
+            return &signals_[source * nTotalSamplesPerSource_ +
+                            ear * nTotalSamplesPerEar_ +
+                            channel * nSamples_];
         }
 
         /** Get a pointer to the read-only signal indexed by ear,
@@ -270,12 +289,29 @@ namespace loudness{
          * iterating through channels, then use getSingleSampleReadPointer.
          * Watch your bounds.
          */
-        const Real* getSignalReadPointer(int ear, int channel, int sample) const
+        const Real* getSignalReadPointer(int source, int ear, int channel, int sample) const
         {
-            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
-                    isPositiveAndLessThanUpper(channel, nChannels_) &&
-                    isPositiveAndLessThanUpper(sample, nSamples_));
-            return &signals_[ear * nChannels_ * nSamples_ + channel * nSamples_ + sample];
+             LOUDNESS_ASSERT(
+                     isPositiveAndLessThanUpper(source, nSources_) &&
+                     isPositiveAndLessThanUpper(ear, nEars_) &&
+                     isPositiveAndLessThanUpper(channel, nChannels_) &&
+                     isPositiveAndLessThanUpper(sample, nSamples_));
+
+            return &signals_[source * nTotalSamplesPerSource_ +
+                            ear * nTotalSamplesPerEar_ +
+                            channel * nSamples_ + sample];
+        }
+
+        const Real* getSignalReadPointer(int source, int ear, int channel) const
+        {
+             LOUDNESS_ASSERT(
+                     isPositiveAndLessThanUpper(source, nSources_) &&
+                     isPositiveAndLessThanUpper(ear, nEars_) &&
+                     isPositiveAndLessThanUpper(channel, nChannels_));
+
+            return &signals_[source * nTotalSamplesPerSource_ +
+                            ear * nTotalSamplesPerEar_ +
+                            channel * nSamples_];
         }
 
         /** Get a pointer to the first sample of a one sample signal indexed
@@ -284,12 +320,16 @@ namespace loudness{
          * modules that process single frames of spectral data e.g. the
          * SignalBank's output by PowerSpectrum. Watch your bounds.
          */
-        Real* getSingleSampleWritePointer(int ear, int channel)
+        Real* getSingleSampleWritePointer(int source, int ear, int channel)
         {
-            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
-                     isPositiveAndLessThanUpper(channel, nChannels_) && 
+            LOUDNESS_ASSERT(
+                     isPositiveAndLessThanUpper(source, nSources_) &&
+                     isPositiveAndLessThanUpper(ear, nEars_) &&
+                     isPositiveAndLessThanUpper(channel, nChannels_) &&
                      (nSamples_ == 1));
-            return &signals_[ear * nChannels_ * nSamples_ + channel];
+
+            return &signals_[source * nTotalSamplesPerSource_ +
+                            ear * nTotalSamplesPerEar_ + channel];
         }
 
         /** Get a pointer to the first sample of a one sample read-only signal indexed
@@ -298,12 +338,16 @@ namespace loudness{
          * modules that process single frames of spectral data e.g. the
          * SignalBank's output by PowerSpectrum. Watch your bounds.
          */
-        const Real* getSingleSampleReadPointer(int ear, int channel) const
+        const Real* getSingleSampleReadPointer(int source, int ear, int channel) const
         {
-            LOUDNESS_ASSERT(isPositiveAndLessThanUpper(ear, nEars_) &&
-                     isPositiveAndLessThanUpper(channel, nChannels_) && 
+            LOUDNESS_ASSERT(
+                     isPositiveAndLessThanUpper(source, nSources_) &&
+                     isPositiveAndLessThanUpper(ear, nEars_) &&
+                     isPositiveAndLessThanUpper(channel, nChannels_) &&
                      (nSamples_ == 1));
-            return &signals_[ear * nChannels_ * nSamples_ + channel];
+
+            return &signals_[source * nTotalSamplesPerSource_ +
+                            ear * nTotalSamplesPerEar_ + channel];
         }
 
         /** Returns a reference to all signals (as a flattened vector). */
@@ -361,7 +405,8 @@ namespace loudness{
 
     private:
 
-        int nEars_, nChannels_, nSamples_, nTotalSamples_;
+        int nSources_, nEars_, nChannels_, nSamples_;
+        int nTotalSamples_, nTotalSamplesPerSource_, nTotalSamplesPerEar_;
         bool trig_, initialized_;
         int fs_;
         Real frameRate_, channelSpacingInCams_;

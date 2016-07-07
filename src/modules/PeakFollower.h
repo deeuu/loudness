@@ -30,7 +30,7 @@ namespace loudness{
      * @brief Implements a peak follower by outputting the absolute value of the input
      * sample if it is greater than the previous output sample. If this
      * evaluates to false, an exponential decay with time-constant defined by
-     * releaseTime is applied to the peak. This essentially involves
+     * timeConstant is applied to the peak. This essentially involves
      * subtracting a proportion of the previous output sample from itself.  
      * This module will filter all signals in the input SignalBank independently
      * and therefore gives an output SignalBank of the same shape.
@@ -44,8 +44,8 @@ namespace loudness{
     public:
  
         /** Constructs an PeakFollower an exponential decay defined by the
-         * time-constant releaseTime in seconds */
-        PeakFollower(Real releaseTime);
+         * time-constant timeConstant in seconds */
+        PeakFollower(Real timeConstant);
 
         virtual ~PeakFollower();
 
@@ -56,7 +56,7 @@ namespace loudness{
         virtual void processInternal(){};
         virtual void resetInternal();
 
-        Real releaseTime_, releaseCoef_;
+        Real timeConstant_, coef_;
     };
 }
 

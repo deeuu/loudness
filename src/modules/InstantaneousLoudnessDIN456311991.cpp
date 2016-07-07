@@ -71,7 +71,7 @@ namespace loudness{
         }
 
         // Output SignalBank
-        output_.initialize (1, 1, 1, input.getFs());
+        output_.initialize (input.getNSources(), 1, 1, 1, input.getFs());
         output_.setFrameRate (input.getFrameRate());
 
         return 1;
@@ -79,120 +79,125 @@ namespace loudness{
 
     void InstantaneousLoudnessDIN456311991::processInternal(const SignalBank &input)
     {
-        Real nTot = 0.0;
-        for (int ear = 0; ear < input.getNEars(); ++ear)
+        for (int src = 0; src < input.getNSources(); ++src)
         {
-            const Real* mainLoudness = input.getSingleSampleReadPointer (ear, 0);
-
-            Real n = 0.0;
-            Real z1 = 0.0;
-            Real z2 = 0.0;
-            Real n1 = 0.0;
-            Real n2 = 0.0;
-            int iZ = 0;
-            int j = 0;
-            Real z = 0.1;
-            Real barkStep = 0.1;
-
-            for (int i = 0; i < input.getNChannels(); ++i)
+            Real nTot = 0.0;
+            for (int ear = 0; ear < input.getNEars(); ++ear)
             {
-                Real zUP = zUP_[i] + 0.0001;
-                int iG = i - 1;
+                const Real* mainLoudness = input
+                                           .getSingleSampleReadPointer
+                                           (src, ear, 0);
 
-                // Steepness of upper slope (USL) for bands above 8th one are identical
-                if (iG > 7)
-                    iG = 7;
+                Real n = 0.0;
+                Real z1 = 0.0;
+                Real z2 = 0.0;
+                Real n1 = 0.0;
+                Real n2 = 0.0;
+                int iZ = 0;
+                int j = 0;
+                Real z = 0.1;
+                Real barkStep = 0.1;
 
-                while (z1 < zUP)
+                for (int i = 0; i < input.getNChannels(); ++i)
                 {
-                    if (n1 <= mainLoudness[i])
+                    Real zUP = zUP_[i] + 0.0001;
+                    int iG = i - 1;
+
+                    // Steepness of upper slope (USL) for bands above 8th one are identical
+                    if (iG > 7)
+                        iG = 7;
+
+                    while (z1 < zUP)
                     {
-                        /* Contribution of unmasked main loudness to total
-                         * loudness and calculation of values */
-                        if (n1 < mainLoudness[i])
+                        if (n1 <= mainLoudness[i])
                         {
-                            j = 0;
-                            /* Determination of the number j corr to the range
-                             * of specific loudness */
-                            while ((rNS_[j] > mainLoudness[i]) && (j < 17))
-                                j += 1;
-                        }
+                            /* Contribution of unmasked main loudness to total
+                             * loudness and calculation of values */
+                            if (n1 < mainLoudness[i])
+                            {
+                                j = 0;
+                                /* Determination of the number j corr to the range
+                                 * of specific loudness */
+                                while ((rNS_[j] > mainLoudness[i]) && (j < 17))
+                                    j += 1;
+                            }
 
-                        z2 = zUP;
-                        n2 = mainLoudness[i];
-                        n += n2 * (z2 - z1);
-                        Real k = z;
-
-                        while (k <= z2)
-                        {
-                            //NS[IZ] = N2
-                            iZ += 1;
-                            k += barkStep;
-                        }
-                        z = k;
-                    }
-                    else
-                    {
-                        /* If N1 > NM(i) decision whether the critical band in
-                         * question is completely or partly masked by accessory
-                         * loudness */
-                        n2 = rNS_[j];
-                        if (n2 < mainLoudness[i])
-                            n2 = mainLoudness[i];
-
-                        Real dZ = (n1 - n2) / uSL_[j][iG];
-                        z2 = z1 + dZ;
-
-                        if (z2 > zUP)
-                        {
                             z2 = zUP;
-                            dZ = z2 - z1;
-                            n2 = n1 - dZ * uSL_[j][iG];
+                            n2 = mainLoudness[i];
+                            n += n2 * (z2 - z1);
+                            Real k = z;
+
+                            while (k <= z2)
+                            {
+                                //NS[IZ] = N2
+                                iZ += 1;
+                                k += barkStep;
+                            }
+                            z = k;
                         }
-
-                        n += dZ * (n1 + n2) / 2.0;
-                        Real k = z;
-
-                        while (k <= z2)
+                        else
                         {
-                            //NS[IZ] = N1 - (k - Z1) * USL[j,IG]
-                            iZ += 1;
-                            k += barkStep;
+                            /* If N1 > NM(i) decision whether the critical band in
+                             * question is completely or partly masked by accessory
+                             * loudness */
+                            n2 = rNS_[j];
+                            if (n2 < mainLoudness[i])
+                                n2 = mainLoudness[i];
+
+                            Real dZ = (n1 - n2) / uSL_[j][iG];
+                            z2 = z1 + dZ;
+
+                            if (z2 > zUP)
+                            {
+                                z2 = zUP;
+                                dZ = z2 - z1;
+                                n2 = n1 - dZ * uSL_[j][iG];
+                            }
+
+                            n += dZ * (n1 + n2) / 2.0;
+                            Real k = z;
+
+                            while (k <= z2)
+                            {
+                                //NS[IZ] = N1 - (k - Z1) * USL[j,IG]
+                                iZ += 1;
+                                k += barkStep;
+                            }
+                            z = k;
                         }
-                        z = k;
-                    }
 
-                    while ((n2 <= rNS_[j]) && (j < 17))
-                        j += 1;
+                        while ((n2 <= rNS_[j]) && (j < 17))
+                            j += 1;
 
-                    if ((n2 <= rNS_[j]) && (j >= 17))
-                        j = 17;
+                        if ((n2 <= rNS_[j]) && (j >= 17))
+                            j = 17;
 
-                    z1 = z2;
-                    n1 = n2;
-                } // while
-            } // main loop 
+                        z1 = z2;
+                        n1 = n2;
+                    } // while
+                } // main loop 
 
-            nTot += n;
-            
-        } // ear loop
+                nTot += n;
+                
+            } // ear loop
 
-        if (input.getNEars() > 1)
-            nTot /= input.getNEars();
+            if (input.getNEars() > 1)
+                nTot /= input.getNEars();
 
-        // Post-processing
-        if (nTot < 0.0)
-            nTot = 0.0;
+            // Post-processing
+            if (nTot < 0.0)
+                nTot = 0.0;
 
-        if (isOutputRounded_)
-        {
-            if (nTot <= 16.0) // round to three dp
-                nTot = round (nTot, 3);
-            else // round to two dp
-                nTot = round (nTot, 2);
+            if (isOutputRounded_)
+            {
+                if (nTot <= 16.0) // round to three dp
+                    nTot = round (nTot, 3);
+                else // round to two dp
+                    nTot = round (nTot, 2);
+            }
+
+            output_.setSample (src, 0, 0, 0, nTot);
         }
-
-        output_.setSample (0, 0, 0, nTot);
     }
 
    void InstantaneousLoudnessDIN456311991::resetInternal(){};

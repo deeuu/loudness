@@ -188,6 +188,8 @@ namespace loudness{
 
             void setPathToFilterCoefs(string pathToFilterCoefs);
 
+            void setPartialLoudnessUsed(bool isPartialLoudnessUsed);
+
             void configureSmoothingTimes(const string& author);
 
         private:
@@ -196,12 +198,12 @@ namespace loudness{
             Real filterSpacingInCams_, compressionCriterionInCams_;
             Real attackTimeSTL_, releaseTimeSTL_;
             Real attackTimeLTL_, releaseTimeLTL_;
+            Real isPresentationDiotic_;
             bool isRoexBankFast_, isExcitationPatternInterpolated_, isInterpolationCubic_;
             bool isSpectrumSampledUniformly_, isHoppingGoertzelDFTUsed_;
-            bool isSpectralResolutionDoubled_, isPresentationDiotic_;
-            bool  isBinauralInhibitionUsed_;
+            bool isSpectralResolutionDoubled_, isBinauralInhibitionUsed_;
             bool isSpecificLoudnessANSIS342007_, isFirstSampleAtWindowCentre_;
-            bool isPeakSTLFollowerUsed_;
+            bool isPeakSTLFollowerUsed_, isPartialLoudnessUsed_;
             string pathToFilterCoefs_;
             OME::Filter outerEarFilter_, middleEarFilter_;
     }; 

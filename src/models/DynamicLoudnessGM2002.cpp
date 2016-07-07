@@ -30,6 +30,8 @@
 #include "../modules/WeightSpectrum.h"
 #include "../modules/FastRoexBank.h"
 #include "../modules/RoexBankANSIS342007.h"
+#include "../modules/MultiSourceRoexBank.h"
+#include "../modules/SpecificPartialLoudnessMGB1997.h"
 #include "../modules/SpecificLoudnessANSIS342007.h"
 #include "../modules/BinauralInhibitionMG2007.h"
 #include "../modules/InstantaneousLoudness.h"
@@ -55,6 +57,11 @@ namespace loudness{
     
     DynamicLoudnessGM2002::~DynamicLoudnessGM2002()
     {
+    }
+
+    void DynamicLoudnessGM2002::setPartialLoudnessUsed(bool isPartialLoudnessUsed)
+    {
+        isPartialLoudnessUsed_ = isPartialLoudnessUsed;
     }
 
     void DynamicLoudnessGM2002::setFirstSampleAtWindowCentre(bool isFirstSampleAtWindowCentre)
@@ -199,6 +206,7 @@ namespace loudness{
         setFirstSampleAtWindowCentre(true);
         setPresentationDiotic(true);
         setBinauralInhibitionUsed(true);
+        setPartialLoudnessUsed(true);
         configureSmoothingTimes("GM2002");
                 
         if (setName != "GM2002")
@@ -293,13 +301,9 @@ namespace loudness{
             
             //create module
             if(iir)
-            {
                 modules_.push_back(unique_ptr<Module> (new IIR(bCoefs, aCoefs)));
-            }
             else
-            {
                 modules_.push_back(unique_ptr<Module> (new FIR(bCoefs)));
-            }
 
             //clean up
             delete [] data;
@@ -339,6 +343,7 @@ namespace loudness{
                                             hopSize,
                                             true,
                                             true)));
+            //outputModules_["PowerSpectrum"] = modules_.back().get();
         }
         else
         {
@@ -377,6 +382,7 @@ namespace loudness{
                         (new WeightSpectrum(middleEarFilter_, outerEarFilter_)));
             }
         }
+        int lastSpectrumIdx = modules_.size()-1;
 
         /*
          * Roex filters
@@ -443,6 +449,57 @@ namespace loudness{
             outputModules_["PeakShortTermLoudness"] = modules_.back().get();
             outputModules_["ShortTermLoudness"] -> 
                 addTargetModule (*outputModules_["PeakShortTermLoudness"]);
+        }
+
+        // Masking conditions
+        if ((input.getNSources() > 1) && (isPartialLoudnessUsed_))
+        {
+            LOUDNESS_DEBUG(name_ 
+                           << ": Setting up modules for partial loudness...");
+            // Excitation transformation based on all sources
+            modules_.push_back(unique_ptr<Module>
+                    (new MultiSourceRoexBank(filterSpacingInCams_)));
+            outputModules_["MultiSourceExcitation"] = modules_.back().get();
+            int moduleIdx = modules_.size() - 1;
+
+            // Push spectrum to second excitation transformation stage
+            Module* ptrToWeightedSpectrum = modules_[lastSpectrumIdx].get();
+            ptrToWeightedSpectrum -> addTargetModule
+                                     (*outputModules_["MultiSourceExcitation"]);
+
+            // Partial loudness
+            modules_.push_back(unique_ptr<Module>
+                    (new SpecificPartialLoudnessMGB1997(
+                        isSpecificLoudnessANSIS342007_,
+                        isBinauralInhibitionUsed_)));
+
+            if (isBinauralInhibitionUsed_)
+                modules_.push_back(unique_ptr<Module> (new BinauralInhibitionMG2007));
+            outputModules_["SpecificPartialLoudness"] = modules_.back().get();
+
+            /*
+             * Instantaneous partial loudness
+             */
+            modules_.push_back(unique_ptr<Module> 
+                    (new InstantaneousLoudness(1.0, isPresentationDiotic_)));
+            outputModules_["InstantaneousPartialLoudness"] = modules_.back().get();
+
+            /*
+             * Short-term partial loudness
+             */
+            modules_.push_back(unique_ptr<Module>
+                    (new ARAverager(attackTimeSTL_, releaseTimeSTL_)));
+            outputModules_["ShortTermPartialLoudness"] = modules_.back().get();
+
+            /*
+             * Long-term partial loudness
+             */
+            modules_.push_back(unique_ptr<Module>
+                    (new ARAverager(attackTimeLTL_, releaseTimeLTL_)));
+            outputModules_["LongTermPartialLoudness"] = modules_.back().get();
+
+            // configure targets for second (parallel) chain
+            configureLinearTargetModuleChain(moduleIdx);
         }
 
         return 1;

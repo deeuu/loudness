@@ -36,49 +36,60 @@ namespace loudness{
         LOUDNESS_ASSERT(bCoefs_.size() > 0, name_ << ": No filter coefficients");
 
         //constants, order currently fixed for all ears/channels
-        order_ = (int)bCoefs_.size()-1;
-        orderMinus1_ = order_-1;
+        order_ = (int)bCoefs_.size() - 1;
+        orderMinus1_ = order_ - 1;
         LOUDNESS_DEBUG("FIR: Filter order is: " << order_);
 
         //internal delay line - single vector for all ears
-        z_.assign(input.getNEars() * order_, 0.0);
+        delayLine_.initialize (input.getNSources(),
+                   input.getNEars(),
+                   input.getNChannels(),
+                   order_,
+                   input.getFs());
 
         //output SignalBank
-        output_.initialize(input);
+        output_.initialize (input);
 
         return 1;
     }
 
     void FIR::processInternal(const SignalBank &input)
     {
-        for(int ear=0; ear<input.getNEars(); ear++)
+        for (int src = 0; src < input.getNSources(); ++src)
         {
-            int smp, j;
-            const Real* inputSignal = input.getSignalReadPointer(ear, 0);
-            Real* outputSignal = output_.getSignalWritePointer(ear, 0);
-            Real* z = &z_[ear * order_];
-            Real x;
-
-            for(smp=0; smp<input.getNSamples(); smp++)
+            for(int ear = 0; ear < input.getNEars(); ++ear)
             {
-                //input sample
-                x = inputSignal[smp] * gain_;
+                for (int chn = 0; chn < input.getNChannels(); ++chn)
+                {
+                    const Real* inputSignal = input.getSignalReadPointer
+                                                    (src, ear, chn);
+                    Real* outputSignal = output_.getSignalWritePointer
+                                                 (src, ear, chn);
+                    Real* z = delayLine_.getSignalWritePointer
+                                         (src, ear, chn);
 
-                //output sample
-                outputSignal[smp] = bCoefs_[0] * x + z[0];
+                    for (int smp = 0; smp < input.getNSamples(); ++smp)
+                    {
+                        //input sample
+                        Real x = inputSignal[smp] * gain_;
 
-                //fill delay
-                for (j=1; j<order_; j++)
-                    z[j-1] = bCoefs_[j] * x + z[j];
+                        //output sample
+                        outputSignal[smp] = bCoefs_[0] * x + z[0];
 
-                //final sample
-                z[orderMinus1_] = bCoefs_[order_] * x;
+                        //fill delay
+                        for (int j = 1; j < order_; ++j)
+                            z[j-1] = bCoefs_[j] * x + z[j];
+
+                        //final sample
+                        z[orderMinus1_] = bCoefs_[order_] * x;
+                    }
+                }
             }
         }
     }
 
     void FIR::resetInternal()
     {
-        resetDelayLine();
+        delayLine_.zeroSignals();
     }
 }
