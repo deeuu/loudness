@@ -32,6 +32,7 @@
 #include "../src/support/FFT.h"
 #include "../src/support/Filter.h"
 #include "../src/support/AudioFileProcessor.h"
+#include "../src/modules/UnaryOperator.h"
 #include "../src/modules/FIR.h"
 #include "../src/modules/IIR.h"
 #include "../src/modules/Butter.h"
@@ -43,15 +44,22 @@
 #include "../src/modules/PowerSpectrum.h"
 #include "../src/modules/HoppingGoertzelDFT.h"
 #include "../src/modules/WeightSpectrum.h"
+#include "../src/modules/HighpassSpectrum.h"
 #include "../src/modules/CompressSpectrum.h"
 #include "../src/modules/RoexBankANSIS342007.h"
 #include "../src/modules/FastRoexBank.h"
+#include "../src/modules/MultiSourceRoexBank.h"
 #include "../src/modules/DoubleRoexBank.h"
+#include "../src/modules/FixedRoexBank.h"
 #include "../src/modules/OctaveBank.h"
+#include "../src/modules/ComplexGammatoneBank.h"
 #include "../src/modules/SpecificLoudnessANSIS342007.h"
+#include "../src/modules/SpecificLoudnessModANSIS342007.h"
+#include "../src/modules/SpecificPartialLoudnessMGB1997.h"
 #include "../src/modules/MainLoudnessDIN456311991.h"
 #include "../src/modules/BinauralInhibitionMG2007.h"
 #include "../src/modules/InstantaneousLoudness.h"
+#include "../src/modules/SimpleLoudness.h"
 #include "../src/modules/InstantaneousLoudnessDIN456311991.h"
 #include "../src/modules/ARAverager.h"
 #include "../src/modules/PeakFollower.h"
@@ -60,6 +68,7 @@
 #include "../src/models/StationaryLoudnessCHGM2011.h"
 #include "../src/models/DynamicLoudnessGM2002.h"
 #include "../src/models/DynamicLoudnessCH2012.h"
+#include "../src/models/DynamicLoudnessSimple.h"
 
 typedef loudness::Real Real;
 typedef loudness::uint unint;
@@ -94,7 +103,8 @@ namespace std {
 
 %apply (double* IN_ARRAY1, int DIM1) {(Real* data, int nSamples)};
 %apply (double* IN_ARRAY1, int DIM1) {(Real* data, int nChannels)};
-%apply (double* IN_ARRAY3, int DIM1, int DIM2, int DIM3) {(Real* data, int nEars, int nChannels, int nSamples)};
+%apply (double* IN_ARRAY4, int DIM1, int DIM2, int DIM3, int DIM4) {
+    (Real* data, int nSources, int nEars, int nChannels, int nSamples)};
 
 using namespace std;
 namespace loudness{
@@ -114,6 +124,7 @@ using std::vector;
 %include "../src/support/FFT.h"
 %include "../src/support/Filter.h"
 %include "../src/support/AudioFileProcessor.h"
+%include "../src/modules/UnaryOperator.h"
 %include "../src/modules/FIR.h"
 %include "../src/modules/IIR.h"
 %include "../src/modules/Butter.h"
@@ -125,15 +136,22 @@ using std::vector;
 %include "../src/modules/PowerSpectrum.h"
 %include "../src/modules/HoppingGoertzelDFT.h"
 %include "../src/modules/WeightSpectrum.h"
+%include "../src/modules/HighpassSpectrum.h"
 %include "../src/modules/CompressSpectrum.h"
 %include "../src/modules/RoexBankANSIS342007.h"
 %include "../src/modules/FastRoexBank.h"
+%include "../src/modules/MultiSourceRoexBank.h"
+%include "../src/modules/FixedRoexBank.h"
 %include "../src/modules/DoubleRoexBank.h"
 %include "../src/modules/OctaveBank.h"
+%include "../src/modules/ComplexGammatoneBank.h"
 %include "../src/modules/SpecificLoudnessANSIS342007.h"
+%include "../src/modules/SpecificLoudnessModANSIS342007.h"
+%include "../src/modules/SpecificPartialLoudnessMGB1997.h"
 %include "../src/modules/MainLoudnessDIN456311991.h"
 %include "../src/modules/BinauralInhibitionMG2007.h"
 %include "../src/modules/InstantaneousLoudness.h"
+%include "../src/modules/SimpleLoudness.h"
 %include "../src/modules/InstantaneousLoudnessDIN456311991.h"
 %include "../src/modules/ARAverager.h"
 %include "../src/modules/PeakFollower.h"
@@ -142,3 +160,4 @@ using std::vector;
 %include "../src/models/StationaryLoudnessCHGM2011.h"
 %include "../src/models/DynamicLoudnessGM2002.h"
 %include "../src/models/DynamicLoudnessCH2012.h"
+%include "../src/models/DynamicLoudnessSimple.h"

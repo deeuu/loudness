@@ -17,46 +17,37 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#ifndef PeakFollower_H
-#define PeakFollower_H
+#ifndef UNARYOPERATOR_H
+#define UNARYOPERATOR_H
 
 #include "../support/Module.h"
 
 namespace loudness{
 
-    /**
-     * @class PeakFollower
-     *
-     * @brief Implements a peak follower by outputting the absolute value of the input
-     * sample if it is greater than the previous output sample. If this
-     * evaluates to false, an exponential decay with time-constant defined by
-     * timeConstant is applied to the peak. This essentially involves
-     * subtracting a proportion of the previous output sample from itself.  
-     * This module will filter all signals in the input SignalBank independently
-     * and therefore gives an output SignalBank of the same shape.
-     *
-     * The time-step used in the calculation of filter coefficients is derived
-     * from the input SignalBank's frame rate, which by default is equal to the
-     * sampling frequency.
-     */
-    class PeakFollower : public Module
+    class UnaryOperator : public Module
     {
-    public:
- 
-        /** Constructs an PeakFollower an exponential decay defined by the
-         * time-constant timeConstant in seconds */
-        PeakFollower(Real timeConstant);
 
-        virtual ~PeakFollower();
+    public:
+
+        enum OP{
+            LOG,
+            LOG10
+            };
+
+        UnaryOperator (const OP &op, Real scale=1.0, Real offset=0.0);
+
+        virtual ~UnaryOperator();
 
     private:
+
         virtual bool initializeInternal(const SignalBank &input);
         virtual bool initializeInternal(){return 0;};
         virtual void processInternal(const SignalBank &input);
         virtual void processInternal(){};
         virtual void resetInternal();
 
-        Real timeConstant_, coef_;
+        OP op_;
+        Real scale_, offset_;
     };
 }
 

@@ -23,13 +23,15 @@ namespace loudness{
 
     PowerSpectrum::PowerSpectrum(const RealVec& bandFreqsHz,
                                  const vector<int>& windowSizes, 
-                                 bool sampleSpectrumUniformly)
+                                 bool sampleSpectrumUniformly,
+                                 const Normalisation& normalisation,
+                                 Real referenceValue)
         :   Module("PowerSpectrum"),
             bandFreqsHz_(bandFreqsHz),
             windowSizes_(windowSizes),
             sampleSpectrumUniformly_(sampleSpectrumUniformly),
-            normalisation_(AVERAGE_POWER),
-            referenceValue_(2e-5)
+            normalisation_ (normalisation),
+            referenceValue_ (referenceValue)
     {}
 
     PowerSpectrum::~PowerSpectrum()
@@ -124,7 +126,11 @@ namespace loudness{
                 << ": Total number of bins comprising the output spectrum: " << nBins);
 
         //initialize the output SignalBank
-        output_.initialize(input.getNEars(), nBins, 1, fs);
+        output_.initialize (input.getNSources(),
+                            input.getNEars(),
+                            nBins,
+                            1,
+                            fs);
         output_.setFrameRate(input.getFrameRate());
 
         //output frequencies in Hz
@@ -149,27 +155,33 @@ namespace loudness{
     {
         int fftIdx = 0;
         int nWindows = windowSizes_.size();
-        for (int ear = 0; ear < input.getNEars(); ear++)
+        for (int src = 0; src < input.getNSources(); ++src)
         {
-            //get a single sample pointer for moving through channels
-            Real* outputSignal = output_.getSingleSampleWritePointer(ear,0);
-
-            for(int chn=0; chn<nWindows; chn++)
+            for (int ear = 0; ear < input.getNEars(); ++ear)
             {
-                if(!sampleSpectrumUniformly_)
-                    fftIdx = chn;
+                //get a single sample pointer for moving through channels
+                Real* outputSignal = output_.getSingleSampleWritePointer
+                                     (src, ear, 0);
 
-                //Do the FFT
-                ffts_[fftIdx] -> process(input.getSignalReadPointer(ear, chn, 0), windowSizes_[chn]);
-
-                //Extract components from band and compute powers
-                Real re, im;
-                int bin = bandBinIndices_[chn][0];
-                while(bin < bandBinIndices_[chn][1])
+                for (int chn = 0; chn < nWindows; ++chn)
                 {
-                    re = ffts_[fftIdx] -> getReal(bin);
-                    im = ffts_[fftIdx] -> getImag(bin++);
-                    *outputSignal++ = normFactor_[chn] * (re*re + im*im);
+                    if(!sampleSpectrumUniformly_)
+                        fftIdx = chn;
+
+                    //Do the FFT
+                    ffts_[fftIdx] -> process(input.getSignalReadPointer
+                                             (src, ear, chn),
+                                             windowSizes_[chn]);
+
+                    //Extract components from band and compute powers
+                    Real re, im;
+                    int bin = bandBinIndices_[chn][0];
+                    while(bin < bandBinIndices_[chn][1])
+                    {
+                        re = ffts_[fftIdx] -> getReal(bin);
+                        im = ffts_[fftIdx] -> getImag(bin++);
+                        *outputSignal++ = normFactor_[chn] * (re*re + im*im);
+                    }
                 }
             }
         }

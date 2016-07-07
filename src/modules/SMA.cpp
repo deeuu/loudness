@@ -40,10 +40,20 @@ namespace loudness{
         //`the window is full'. At that point `runningSum_' takes over and
         //`safeRunningSum_' resets. This helps to reduce the accumulation of
         //rounding errors over the course of the objects lifetime.
-        int bufSize = input.getNEars() * input.getNChannels();
-        runningSumBuf_.assign(bufSize, 0);
-        safeRunningSumBuf_.assign(bufSize, 0);
-        audioBuffer_.assign(bufSize * windowSize_, 0);
+        runningSumBuf_.initialize(
+                       input.getNSources(),
+                       input.getNEars(),
+                       input.getNChannels(),
+                       2, // one sample for safe sum and another for main sum
+                       input.getFs());
+
+        audioBuffer_.initialize(
+                     input.getNSources(),
+                     input.getNEars(),
+                     input.getNChannels(),
+                     windowSize_,
+                     input.getFs());
+
         bufferIdx_ = 0;
 
         //initialise the output signal
@@ -54,68 +64,73 @@ namespace loudness{
     void SMA::processInternal(const SignalBank &input)
     {
         int bufferIdx = bufferIdx_;
-        for (int ear = 0; ear < input.getNEars(); ear++)
+        for (int src = 0; src < input.getNSources(); ++src)
         {
-            for (int chn = 0; chn < input.getNChannels(); chn++)
+            for (int ear = 0; ear < input.getNEars(); ++ear)
             {
-                //input output pointers
-                const Real* inputSignal = input.getSignalReadPointer(ear, chn);
-                Real* outputSignal = output_.getSignalWritePointer(ear, chn);
-
-                //pointers to summers
-                int earChnIdx = ear * input.getNChannels() + chn;
-                Real* safeRunningSum = &safeRunningSumBuf_[earChnIdx];
-                Real* runningSum = &runningSumBuf_[earChnIdx];
-
-                //pointer to storage
-                earChnIdx = ear * input.getNChannels() * windowSize_ + chn * windowSize_;
-                Real* audioBuf = &audioBuffer_[earChnIdx + bufferIdx_];
-
-                int i = 0;
-                int nSamples = input.getNSamples();
-                int remainingInputSamples = nSamples;
-                bufferIdx = bufferIdx_;
-
-                //could be done in one loop using mod indexing
-                //but save a bunch of ifs per sample
-                while (i < nSamples)
+                for (int chn = 0; chn < input.getNChannels(); ++chn)
                 {
-                    //check if we have more input samples than needed for running sum
-                    int loopSamples = min(windowSize_ - bufferIdx, remainingInputSamples);
+                    //input output pointers
+                    const Real* inputSignal = input.getSignalReadPointer
+                                              (src, ear, chn);
+                    Real* outputSignal = output_.getSignalWritePointer
+                                         (src, ear, chn);
 
-                    //Compute running sum
-                    double x = 0.0;
-                    for (int j = 0; j < loopSamples; j++)
+                    Real* runningSum = runningSumBuf_
+                                       .getSignalWritePointer
+                                       (src, ear, chn);
+
+                    //pointer to storage
+                    Real* audioBuf = audioBuffer_.getSignalWritePointer
+                                     (src, ear, chn, bufferIdx_);
+
+                    int i = 0;
+                    int nSamples = input.getNSamples();
+                    int remainingInputSamples = nSamples;
+                    bufferIdx = bufferIdx_;
+
+                    //could be done in one loop using mod indexing
+                    //but save a bunch of ifs per sample
+                    while (i < nSamples)
                     {
-                        x = *inputSignal++;
-                        if(squareInput_)
-                            x *= x;
+                        //check if we have more input samples than needed for running sum
+                        int loopSamples = min(windowSize_ - bufferIdx,
+                                              remainingInputSamples);
 
-                        *safeRunningSum += x;
-                        *runningSum += x - (*audioBuf); //y[n] = y[n-1] + x[n] - x[n-M]
-                        *audioBuf++ = x;
+                        //Compute running sum
+                        for (int smp = 0; smp < loopSamples; ++smp)
+                        {
+                            Real x = inputSignal[smp];
+                            if(squareInput_)
+                                x *= x;
 
-                        if(average_)
-                            *outputSignal++ = *runningSum / windowSize_;
-                        else
-                            *outputSignal++ = *runningSum;
-                    }
+                            runningSum[0] += x; //safe
+                            runningSum[1] += x - audioBuf[smp]; //y[n] = y[n-1] + x[n] - x[n-M]
+                            audioBuf[smp] = x;
 
-                    i += loopSamples;
-                    bufferIdx += loopSamples;
+                            if(average_)
+                                outputSignal[smp] = runningSum[1] / windowSize_;
+                            else
+                                outputSignal[smp] = runningSum[1];
+                        }
 
-                    //wrap buffer index
-                    if(bufferIdx == windowSize_)
-                    {
-                        bufferIdx = 0;
-                        *runningSum = *safeRunningSum;
-                        *safeRunningSum = 0.0;
-                        audioBuf = &audioBuffer_[earChnIdx];
-                    }
+                        i += loopSamples;
+                        bufferIdx += loopSamples;
 
-                }//while
-            }//chn
-        }//ear
+                        //wrap buffer index
+                        if(bufferIdx == windowSize_)
+                        {
+                            bufferIdx = 0;
+                            runningSum[1] = runningSum[0];
+                            runningSum[0] = 0.0;
+                            audioBuf = audioBuffer_.getSignalWritePointer
+                                       (src, ear, chn);
+
+                        }
+                    }//while
+                }//chn
+            }//ear
+        }//src
 
        //update buffer idx for next call 
        bufferIdx_ = bufferIdx;
@@ -123,8 +138,8 @@ namespace loudness{
 
     void SMA::resetInternal()
     {
-        runningSumBuf_.assign(runningSumBuf_.size(), 0);
-        safeRunningSumBuf_.assign(safeRunningSumBuf_.size(), 0);
+        runningSumBuf_.zeroSignals();
+        audioBuffer_.zeroSignals();
         bufferIdx_ = 0;
     }
  

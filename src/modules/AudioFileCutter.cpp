@@ -110,7 +110,7 @@ namespace loudness{
         LOUDNESS_DEBUG(name_ << ": gain (dB): " << gainInDecibels_);
         linearGain_ = decibelsToAmplitude(gainInDecibels_);
 
-        output_.initialize(fileInfo.channels, 1,
+        output_.initialize(1, fileInfo.channels, 1,
                 frameSize_, fileInfo.samplerate);
 
         return 1;
@@ -152,7 +152,7 @@ namespace loudness{
             for (int ear = 0; ear < nEars; ear ++)
             {
                 float* inputSignal = &audioBuffer_[bufferIdx_ + ear];
-                Real* outputSignal = output_.getSignalWritePointer(ear, 0, 0);
+                Real* outputSignal = output_.getSignalWritePointer(0, ear, 0, 0);
                 int smp = output_.getNSamples();
                 while(smp-- > 0)
                 {

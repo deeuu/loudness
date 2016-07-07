@@ -105,7 +105,7 @@ namespace loudness{
     void Filter::resetDelayLine()
     {
         //zero delay line
-        z_.assign(z_.size(), 0.0);
+        delayLine_.zeroSignals();
     }
     
     const RealVec &Filter::getBCoefs() const

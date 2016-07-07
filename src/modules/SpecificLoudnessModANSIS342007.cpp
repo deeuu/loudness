@@ -17,21 +17,21 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#include "SpecificLoudnessANSIS342007.h"
+#include "SpecificLoudnessModANSIS342007.h"
 
 namespace loudness{
 
-    SpecificLoudnessANSIS342007::SpecificLoudnessANSIS342007(
-            bool useANSISpecificLoudness,
+    SpecificLoudnessModANSIS342007::SpecificLoudnessModANSIS342007(
+            const RealVec& alpha,
             bool updateParameterCForBinauralInhibition) :
-        Module("SpecificLoudnessANSIS342007"),
-        useANSISpecificLoudness_(useANSISpecificLoudness),
+        Module("SpecificLoudnessModANSIS342007"),
+        parameterAlpha_ (alpha),
         updateParameterCForBinauralInhibition_(updateParameterCForBinauralInhibition)
     {}
 
-    SpecificLoudnessANSIS342007::~SpecificLoudnessANSIS342007() {}
+    SpecificLoudnessModANSIS342007::~SpecificLoudnessModANSIS342007() {}
 
-    Real SpecificLoudnessANSIS342007::internalExcitation(Real freq)
+    Real SpecificLoudnessModANSIS342007::internalExcitation(Real freq)
     {
         if (freq>=500)
         {
@@ -52,7 +52,7 @@ namespace loudness{
         }
     };
 
-    Real SpecificLoudnessANSIS342007::gdBToA(Real gdB)
+    Real SpecificLoudnessModANSIS342007::gdBToA(Real gdB)
     {
         if(gdB>=0)
         {
@@ -69,7 +69,7 @@ namespace loudness{
         }
     }
 
-    Real SpecificLoudnessANSIS342007::gdBToAlpha(Real gdB)
+    Real SpecificLoudnessModANSIS342007::gdBToAlpha(Real gdB)
     {
         if(gdB>=0)
         {
@@ -82,12 +82,12 @@ namespace loudness{
         }
     }
 
-    void SpecificLoudnessANSIS342007::setParameterC(Real parameterC)
+    void SpecificLoudnessModANSIS342007::setParameterC(Real parameterC)
     {
         parameterC_ = parameterC;
     }
 
-    bool SpecificLoudnessANSIS342007::initializeInternal(const SignalBank &input)
+    bool SpecificLoudnessModANSIS342007::initializeInternal(const SignalBank &input)
     {
         LOUDNESS_ASSERT(input.getNChannels() > 1,
                 name_ << ": Insufficient number of input channels.");
@@ -118,7 +118,6 @@ namespace loudness{
                 Real gdB = eThrqdB500Hz - eThrqdB;
                 parameterG_.push_back(pow(10, gdB/10.0));
                 parameterA_.push_back(gdBToA(gdB));
-                parameterAlpha_.push_back(gdBToAlpha(gdB));
                 nFiltersLT500_++;
             }
         }
@@ -131,7 +130,7 @@ namespace loudness{
         return 1;
     }
 
-    void SpecificLoudnessANSIS342007::processInternal(const SignalBank &input)
+    void SpecificLoudnessModANSIS342007::processInternal(const SignalBank &input)
     {
         for (int src = 0; src < input.getNSources(); ++src)
         {
@@ -151,37 +150,35 @@ namespace loudness{
 
                     //checked out 2.4.14
                     //high level
-                    if (excLin > 1e10)
-                    {
-                        if (useANSISpecificLoudness_)
-                            sl = pow((excLin/1.0707), 0.2);
-                        else
-                            sl = pow((excLin/1.04e6), 0.5);
-                    }
-                    else if (i < nFiltersLT500_) //low freqs
+                    if (i < nFiltersLT500_) //low freqs
                     { 
                         if (excLin > eThrqParam_[i]) //medium level
                         {
-                            sl = (pow(parameterG_[i]*excLin+parameterA_[i], parameterAlpha_[i]) -
-                                    pow(parameterA_[i], parameterAlpha_[i]));
+                            sl = (std::pow (parameterG_[i]*excLin+parameterA_[i],
+                                        parameterAlpha_[i]) -
+                                    std::pow (parameterA_[i], parameterAlpha_[i]));
                         }
                         else //low level
                         {
-                            sl = pow((2*excLin)/(excLin+eThrqParam_[i]), 1.5) *
-                                (pow(parameterG_[i]*excLin+parameterA_[i], parameterAlpha_[i])
-                                    - pow(parameterA_[i], parameterAlpha_[i]));
+                            sl = std::pow ((2*excLin)/
+                                    (excLin+eThrqParam_[i]), 1.5) *
+                                (std::pow (parameterG_[i] * excLin+parameterA_[i],
+                                     parameterAlpha_[i]) -
+                                 std::pow (parameterA_[i], parameterAlpha_[i]));
                         }
                     }
-                    else //high freqs (variables are constant >= 500 Hz)
+                    else //high freqs
                     { 
                         if (excLin > 2.3604782331805771) //medium level
                         {
-                            sl = pow(excLin+4.72096, 0.2)-1.3639739128330546;
+                            sl = (std::pow (excLin + 4.72096, parameterAlpha_[i]) -
+                                    std::pow (4.72096, parameterAlpha_[i]));
                         } 
                         else //low level
                         {
-                            sl = pow((2*excLin)/(excLin+2.3604782331805771), 1.5) *
-                                (pow(excLin+4.72096, 0.2)-1.3639739128330546);
+                            sl = std::pow ((2*excLin)/(excLin+2.3604782331805771), 1.5) *
+                                (std::pow (excLin+4.72096, parameterAlpha_[i]) - 
+                                 std::pow (4.72096, parameterAlpha_[i]));
                         }
                     }
                     
@@ -191,5 +188,5 @@ namespace loudness{
         }
     }
 
-    void SpecificLoudnessANSIS342007::resetInternal(){};
+    void SpecificLoudnessModANSIS342007::resetInternal(){};
 }

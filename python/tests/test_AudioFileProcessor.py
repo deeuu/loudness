@@ -3,7 +3,7 @@ import loudness as ln
 
 model = ln.DynamicLoudnessGM2002()
 model.setRate(250)
-outputs = ['InstantaneousLoudness', 'ShortTermLoudness', 'LongTermLoudness']
+outputs = ['ShortTermLoudness', 'LongTermLoudness']
 model.setOutputsToAggregate(outputs)
 
 processor = ln.AudioFileProcessor(

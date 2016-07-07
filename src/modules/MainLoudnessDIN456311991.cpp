@@ -95,7 +95,11 @@ namespace loudness{
         }
 
         // Output SignalBank
-        output_.initialize (input.getNEars(), 21, 1, input.getFs());
+        output_.initialize (input.getNSources(),
+                            input.getNEars(),
+                            21,
+                            1,
+                            input.getFs());
         output_.setFrameRate (input.getFrameRate());
         /* Centre frequencies not given but upper limits of bark bands are
          * given, so apply -0.5 bark? This isn't needed for subsequent
@@ -113,81 +117,88 @@ namespace loudness{
 
     void MainLoudnessDIN456311991::processInternal(const SignalBank &input)
     {
-        for (int ear = 0; ear < input.getNEars(); ++ear)
+        for (int src = 0; src < input.getNSources(); ++src)
         {
-            const Real* inputLevels = input.getSingleSampleReadPointer (ear, 0);
-            Real* mainLoudness = output_.getSingleSampleWritePointer (ear, 0);
-            
-            // Levels only acceptable between -60 and 120 dB SPL
-            RealVec thirdOctaveLevels(input.getNChannels(), -60.0);
-            for (int i = 0; i < input.getNChannels(); ++i)
+            for (int ear = 0; ear < input.getNEars(); ++ear)
             {
-                if (inputLevels[i] > 120)
-                    thirdOctaveLevels[i] = 120;
-                else if (inputLevels[i] > -60)
-                    thirdOctaveLevels[i] = inputLevels[i];
+                const Real* inputLevels = input
+                                          .getSingleSampleReadPointer
+                                          (src, ear, 0);
+                Real* mainLoudness = output_
+                                     .getSingleSampleWritePointer
+                                     (src, ear, 0);
+                
+                // Levels only acceptable between -60 and 120 dB SPL
+                RealVec thirdOctaveLevels(input.getNChannels(), -60.0);
+                for (int i = 0; i < input.getNChannels(); ++i)
+                {
+                    if (inputLevels[i] > 120)
+                        thirdOctaveLevels[i] = 120;
+                    else if (inputLevels[i] > -60)
+                        thirdOctaveLevels[i] = inputLevels[i];
+                }
+
+                // Determination of levels (LCB) within the first three critical bands
+                int nCriticalBands = 20;
+                RealVec lE(nCriticalBands, 0.0);
+                Real tI = 0.0;
+                for (uint i = 0; i < dLL_.size(); ++i) // size = 11
+                {
+                    int j = 0;
+                    while ((thirdOctaveLevels[i] > (rAP_[j] - dLL_[i][j])) && (j < 7))
+                        j++;
+                    Real xP = thirdOctaveLevels[i] + dLL_[i][j];
+                    tI += decibelsToPower (xP);
+
+                    if (i == 5) // Sum of 6 third octave bands from 25 Hz to 80 Hz
+                    {
+                        lE[0] = powerToDecibels (tI);
+                        tI = 0.0;
+                    }
+                    else if (i == 8) // Sum of 3 third octave bands from 100 Hz to 160 Hz
+                    {
+                        lE[1] = powerToDecibels (tI);
+                        tI = 0.0;
+                    }
+                    else if (i == 10) // Sum of 2 third octave bands from 200 Hz to 250 Hz
+                    {
+                        lE[2] = powerToDecibels (tI);
+                    }
+                }
+
+                // Calculation of main loudness
+                for (int i = 0; i < nCriticalBands; ++i)
+                {
+                    // First three bands derived from summed third octave bands
+                    if (i > 2)
+                        lE[i] = thirdOctaveLevels[i + 8];
+
+                    if (outerEarType_ == OuterEarFilter::FREEFIELD)
+                        lE[i] = lE[i] - a0_[i];
+                    else if (outerEarType_ == OuterEarFilter::DIFFUSEFIELD)
+                        lE[i] = lE[i] - a0_[i] + dDF_[i];
+
+                    mainLoudness[i] = 0.0;
+
+                    if (lE[i] > lTQ_[i])
+                    {
+                        lE[i] = lE[i] - dCB_[i];
+                        Real mP1 = 0.0635 * std::pow (10, 0.025 * lTQ_[i]);
+                        Real powerRatio = decibelsToPower (lE[i] - lTQ_[i]);
+                        Real s = 0.25;
+                        Real mP2 = std::pow (1 - s + s * powerRatio, 0.25) - 1;
+                        mainLoudness[i] = mP1 * mP2;
+                        mainLoudness[i] = (mainLoudness[i] < 0.0) ? 0.0 : mainLoudness[i];
+                    }
+                }
+                mainLoudness[nCriticalBands] = 0.0;
+
+                /* correction of specific loudness within the first critical band
+                 * taking into account the dependence of absolute threshold within
+                 * the band */
+                Real kORRY = 0.4 + 0.32 * std::pow(mainLoudness[0], 0.2);
+                mainLoudness[0] = kORRY > 1 ? mainLoudness[0] : mainLoudness[0] * kORRY;
             }
-
-            // Determination of levels (LCB) within the first three critical bands
-            int nCriticalBands = 20;
-            RealVec lE(nCriticalBands, 0.0);
-            Real tI = 0.0;
-            for (uint i = 0; i < dLL_.size(); ++i) // size = 11
-            {
-                int j = 0;
-                while ((thirdOctaveLevels[i] > (rAP_[j] - dLL_[i][j])) && (j < 7))
-                    j++;
-                Real xP = thirdOctaveLevels[i] + dLL_[i][j];
-                tI += decibelsToPower (xP);
-
-                if (i == 5) // Sum of 6 third octave bands from 25 Hz to 80 Hz
-                {
-                    lE[0] = powerToDecibels (tI);
-                    tI = 0.0;
-                }
-                else if (i == 8) // Sum of 3 third octave bands from 100 Hz to 160 Hz
-                {
-                    lE[1] = powerToDecibels (tI);
-                    tI = 0.0;
-                }
-                else if (i == 10) // Sum of 2 third octave bands from 200 Hz to 250 Hz
-                {
-                    lE[2] = powerToDecibels (tI);
-                }
-            }
-
-            // Calculation of main loudness
-            for (int i = 0; i < nCriticalBands; ++i)
-            {
-                // First three bands derived from summed third octave bands
-                if (i > 2)
-                    lE[i] = thirdOctaveLevels[i + 8];
-
-                if (outerEarType_ == OuterEarFilter::FREEFIELD)
-                    lE[i] = lE[i] - a0_[i];
-                else if (outerEarType_ == OuterEarFilter::DIFFUSEFIELD)
-                    lE[i] = lE[i] - a0_[i] + dDF_[i];
-
-                mainLoudness[i] = 0.0;
-
-                if (lE[i] > lTQ_[i])
-                {
-                    lE[i] = lE[i] - dCB_[i];
-                    Real mP1 = 0.0635 * std::pow (10, 0.025 * lTQ_[i]);
-                    Real powerRatio = decibelsToPower (lE[i] - lTQ_[i]);
-                    Real s = 0.25;
-                    Real mP2 = std::pow (1 - s + s * powerRatio, 0.25) - 1;
-                    mainLoudness[i] = mP1 * mP2;
-                    mainLoudness[i] = (mainLoudness[i] < 0.0) ? 0.0 : mainLoudness[i];
-                }
-            }
-            mainLoudness[nCriticalBands] = 0.0;
-
-            /* correction of specific loudness within the first critical band
-             * taking into account the dependence of absolute threshold within
-             * the band */
-            Real kORRY = 0.4 + 0.32 * std::pow(mainLoudness[0], 0.2);
-            mainLoudness[0] = kORRY > 1 ? mainLoudness[0] : mainLoudness[0] * kORRY;
         }
     }
 

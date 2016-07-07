@@ -46,7 +46,11 @@ namespace loudness{
                 << " Total number of filters: " << nFilters_);
 
         //initialize output SignalBank
-        output_.initialize (input.getNEars(), nFilters_, 1, input.getFs());
+        output_.initialize (input.getNSources(),
+                            input.getNEars(),
+                            nFilters_,
+                            1,
+                            input.getFs());
         output_.setFrameRate (input.getFrameRate());
         output_.setChannelSpacingInCams (camStep_);
 
@@ -93,72 +97,78 @@ namespace loudness{
 
     void RoexBankANSIS342007::processInternal(const SignalBank &input)
     {
-
-        for (int ear = 0; ear < input.getNEars(); ++ear)
+        for (int src = 0; src < input.getNSources(); ++src)
         {
-            Real excitationLin = 0.0, fc = 0.0, g = 0.0, p = 0.0, pg = 0.0;
-            int nChannels = input.getNChannels();
-            const Real* inputPowerSpectrum = input.getSingleSampleReadPointer (ear, 0);
-            Real* outputExcitationPattern = output_.getSingleSampleWritePointer (ear, 0);
-
-            //ANSI 2007 style: calculate level per ERB
-            //using level independent roex filters centred on every component
-            int j = 0;
-            for (int i = 0; i < nChannels; ++i)
+            for (int ear = 0; ear < input.getNEars(); ++ear)
             {
-                excitationLin = 0.0;
-                j = 0;
-                fc = input.getCentreFreq(i);
+                Real excitationLin = 0.0, fc = 0.0, g = 0.0, p = 0.0, pg = 0.0;
+                int nChannels = input.getNChannels();
+                const Real* inputPowerSpectrum = input
+                                                 .getSingleSampleReadPointer
+                                                 (src, ear, 0);
+                Real* outputExcitationPattern = output_.
+                                                getSingleSampleWritePointer
+                                                (src, ear, 0);
 
-                while (j < nChannels)
+                //ANSI 2007 style: calculate level per ERB
+                //using level independent roex filters centred on every component
+                int j = 0;
+                for (int i = 0; i < nChannels; ++i)
                 {
-                    //normalised deviation
-                    g = (input.getCentreFreq(j) - fc) / fc;
+                    excitationLin = 0.0;
+                    j = 0;
+                    fc = input.getCentreFreq(i);
 
-                    if (g > 2)
-                        break;
-                    if (g < 0) //lower value 
-                        pg = -pcomp_[i] * g; //p*abs(g)
-                    else //upper value
-                        pg = pcomp_[i] * g;
-                    //excitation per erb
-                    excitationLin += (1 + pg) * exp (-pg) * inputPowerSpectrum[j++];
-                }
-
-                //convert to dB, subtract 51 here to save operations later
-                compLevel_[i] = powerToDecibels (excitationLin, 1e-10, -100.0) - 51;
-            }
-            
-            //now the excitation pattern
-            for (int i = 0; i < nFilters_; ++i)
-            {
-                excitationLin = 0.0;
-                j = 0;
-                fc = output_.getCentreFreq(i);
-
-                while (j < nChannels)
-                {
-                    //normalised deviation
-                    g = (input.getCentreFreq(j) - fc) / fc;
-
-                    if (g > 2)
-                        break;
-                    if (g < 0) //lower value 
+                    while (j < nChannels)
                     {
-                        //checked out 2.4.14
-                        p = pu_[i] - (pl_[i] * compLevel_[j]); //51dB subtracted above
-                        p = max(0.1, p); //p can go negative for very high levels
-                        pg = -p * g; //p*abs(g)
-                    }
-                    else //upper value
-                    {
-                        pg = pu_[i] * g;
+                        //normalised deviation
+                        g = (input.getCentreFreq(j) - fc) / fc;
+
+                        if (g > 2)
+                            break;
+                        if (g < 0) //lower value 
+                            pg = -pcomp_[i] * g; //p*abs(g)
+                        else //upper value
+                            pg = pcomp_[i] * g;
+                        //excitation per erb
+                        excitationLin += (1 + pg) * exp (-pg) * inputPowerSpectrum[j++];
                     }
 
-                    excitationLin += (1 + pg) * exp(-pg) * inputPowerSpectrum[j++];
+                    //convert to dB, subtract 51 here to save operations later
+                    compLevel_[i] = powerToDecibels (excitationLin, 1e-10, -100.0) - 51;
                 }
+                
+                //now the excitation pattern
+                for (int i = 0; i < nFilters_; ++i)
+                {
+                    excitationLin = 0.0;
+                    j = 0;
+                    fc = output_.getCentreFreq(i);
 
-                outputExcitationPattern[i] = excitationLin;
+                    while (j < nChannels)
+                    {
+                        //normalised deviation
+                        g = (input.getCentreFreq(j) - fc) / fc;
+
+                        if (g > 2)
+                            break;
+                        if (g < 0) //lower value 
+                        {
+                            //checked out 2.4.14
+                            p = pu_[i] - (pl_[i] * compLevel_[j]); //51dB subtracted above
+                            p = max(0.1, p); //p can go negative for very high levels
+                            pg = -p * g; //p*abs(g)
+                        }
+                        else //upper value
+                        {
+                            pg = pu_[i] * g;
+                        }
+
+                        excitationLin += (1 + pg) * exp(-pg) * inputPowerSpectrum[j++];
+                    }
+
+                    outputExcitationPattern[i] = excitationLin;
+                }
             }
         }
     }

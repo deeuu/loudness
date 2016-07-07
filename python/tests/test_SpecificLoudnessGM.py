@@ -8,7 +8,7 @@ fc = np.array([52.0, 74, 108, 253, 500])
 # input signal bank
 inputBank = ln.SignalBank()
 nEars = 2
-inputBank.initialize(nEars, fc.size, 1, 1)
+inputBank.initialize(1, nEars, fc.size, 1, 1)
 inputBank.setCentreFreqs(fc)
 
 # Module for computing specific loudness
@@ -28,13 +28,13 @@ for i, lin in enumerate(excLin):
     for chn in range(fc.size):
         for ear in range(nEars):
             # Set the excitation in each channel
-            inputBank.setSample(ear, chn, 0, lin)
+            inputBank.setSample(0, ear, chn, 0, lin)
 
     # process the excitations
     specLoudModule.process(inputBank)
 
     # Output
-    specLoud[:, :, i] = specLoudBank.getSignals()[:, :, 0]
+    specLoud[:, :, i] = specLoudBank.getSignals()[0, :, :, 0]
 
 
 plt.figure(1)

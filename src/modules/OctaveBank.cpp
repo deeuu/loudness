@@ -51,7 +51,9 @@ namespace loudness{
     {
         if (centreFreqs_.size() < 1)
         {
-            LOUDNESS_ERROR (name_ << ": Must have at least 1 centre frequency to generate the filter response(s).");
+            LOUDNESS_ERROR (name_
+                            << ": Must have at least 1 centre frequency"
+                            << " to generate the filter response(s).");
             return 0;
         }
 
@@ -75,7 +77,11 @@ namespace loudness{
                 ": " << qDes);
 
         // Output SignalBank
-        output_.initialize (input.getNEars(), centreFreqs_.size(), 1, input.getFs());
+        output_.initialize (input.getNSources(),
+                            input.getNEars(),
+                            centreFreqs_.size(),
+                            1,
+                            input.getFs());
         output_.setCentreFreqs (centreFreqs_);
         output_.setFrameRate (input.getFrameRate());
 
@@ -84,31 +90,38 @@ namespace loudness{
 
     void OctaveBank::processInternal(const SignalBank &input)
     {
-        for (int ear = 0; ear < input.getNEars(); ++ear)
+        for (int src = 0; src < input.getNSources(); ++src)
         {
-            const Real* inputSpectrum = input.getSingleSampleReadPointer (ear, 0);
-            Real* output = output_.getSingleSampleWritePointer (ear, 0);
-
-            for (uint i = 0; i < centreFreqs_.size(); ++i)
+            for (int ear = 0; ear < input.getNEars(); ++ear)
             {
-                Real filterOutput = 0.0;
-                Real fm = centreFreqs_[i];
+                const Real* inputSpectrum = input
+                                            .getSingleSampleReadPointer
+                                            (src, ear, 0);
+                Real* output = output_
+                               .getSingleSampleWritePointer
+                               (src, ear, 0);
 
-                for (int j = 0; j < input.getNChannels(); ++j)
+                for (uint i = 0; i < centreFreqs_.size(); ++i)
                 {
-                    if (inputSpectrum[j] > 1e-15)
+                    Real filterOutput = 0.0;
+                    Real fm = centreFreqs_[i];
+
+                    for (int j = 0; j < input.getNChannels(); ++j)
                     {
-                        Real f = input.getCentreFreq (j);
-                        Real g = f / fm - fm / f;
-                        Real aDes = 1 + qDesExponentiated_ * pow (g, exponent_);
-                        filterOutput += inputSpectrum[j] / aDes;
+                        if (inputSpectrum[j] > 1e-15)
+                        {
+                            Real f = input.getCentreFreq (j);
+                            Real g = f / fm - fm / f;
+                            Real aDes = 1 + qDesExponentiated_ * pow (g, exponent_);
+                            filterOutput += inputSpectrum[j] / aDes;
+                        }
                     }
+
+                    if (isOutputInDecibels_)
+                         filterOutput = powerToDecibels (filterOutput);
+
+                    output[i] = filterOutput;
                 }
-
-                if (isOutputInDecibels_)
-                     filterOutput = powerToDecibels (filterOutput);
-
-                output[i] = filterOutput;
             }
         }
     }

@@ -7,10 +7,11 @@ x = np.arange(0, N)
 
 # Input SignalBank
 bufSize = 32
+nSources = 1
 nEars = 2
 nChannels = 1
 inputBank = ln.SignalBank()
-inputBank.initialize(nEars, nChannels, bufSize, int(fs))
+inputBank.initialize(nSources, nEars, nChannels, bufSize, int(fs))
 
 # Frame generator
 frameSize = 2048
@@ -31,15 +32,16 @@ frameIndex = 0
 for block in range(nBlocks):
     # Update input bank
     idx = block * bufSize
-    inputBank.setSignal(0, 0, x[idx:idx + bufSize])
-    inputBank.setSignal(1, 0, x[idx:idx + bufSize])
+    inputBank.setSignal(0, 0, 0, x[idx:idx + bufSize])
+    inputBank.setSignal(0, 1, 0, x[idx:idx + bufSize])
 
     # process it
     frameGen.process(inputBank)
 
     # get output
     if(outputBank.getTrig()):
-        frames[:, frameIndex, :] = outputBank.getSignals().reshape((2, frameSize))
+        sig = np.squeeze(outputBank.getSignals())
+        frames[:, frameIndex, :] = sig.reshape(2, frameSize)
         frameIndex += 1
 
 # Check frames are correct
@@ -47,7 +49,7 @@ if startAtWindowCentre:
     x = np.hstack((np.zeros(np.ceil((frameSize - 1) / 2.0)), x))
 
 for ear in range(nEars):
-    for i, frame in enumerate(frames[ear]):
+    for i, frame in enumerate(frames[0, ear]):
         start = i * hopSize
         if all(frame == x[start:start + frameSize]):
             print("Frame number %d correct" % i)

@@ -68,14 +68,23 @@ namespace loudness{
             logExcitation_.assign (nFilters_, 0.0);
 
             //388 filters to cover [1.5, 40.2] see p. 3
-            output_.initialize (input.getNEars(), 388, 1, input.getFs());
+            output_.initialize (input.getNSources(),
+                                input.getNEars(),
+                                388,
+                                1,
+                                input.getFs());
             output_.setChannelSpacingInCams (0.1);
             for (int i = 0; i < 388; ++i)
                 output_.setCentreFreq (i, camToHertz (camLo_ + (i * 0.1)));
         }
         else
         {
-            output_.initialize (input.getNEars(), nFilters_, 1, input.getFs());
+            output_.initialize (
+                    input.getNSources(),
+                    input.getNEars(),
+                    nFilters_,
+                    1,
+                    input.getFs());
             output_.setChannelSpacingInCams (camStep_);
         }
 
@@ -156,64 +165,69 @@ namespace loudness{
         /*
          * Perform the excitation transformation
          */
-        Real excitationLinP = 0.0, excitationLinA = 0.0;
-        Real excitationLog = 0.0, gain = 0.0, excitationLogMinus30 = 0.0;
-        for (int ear = 0; ear < input.getNEars(); ++ear)
+        for (int src = 0; src < input.getNSources(); ++src)
         {
-            const Real* inputSpectrum = input.getSingleSampleReadPointer (ear, 0);
-            Real* outputExcitationPattern = output_.getSingleSampleWritePointer (ear, 0);
-
-            for (int i = 0; i < nFilters_; ++i)
+            for (int ear = 0; ear < input.getNEars(); ++ear)
             {
-                excitationLinP = 0.0;
-                excitationLinA = 0.0;
+                const Real* inputSpectrum = input
+                                            .getSingleSampleReadPointer
+                                            (src, ear, 0);
+                Real* outputExcitationPattern = output_
+                                                .getSingleSampleWritePointer
+                                                (src, ear, 0);
 
-                //passive filter output
-                for (uint j = 0; j < wPassive_[i].size(); ++j)
-                    excitationLinP += wPassive_[i][j] * inputSpectrum[j];
-
-                //convert to dB
-                excitationLog = powerToDecibels (excitationLinP);
-
-                //compute gain (Complete Eq. 6 for <= 30)
-                gain = maxGdB_[i] - (maxGdB_[i] / 
-                        (1 + exp (-0.05*(excitationLog - (100 - maxGdB_[i]))))) +
-                        thirdGainTerm_[i];
-
-                //check for higher levels
-                if (excitationLog > 30)
+                for (int i = 0; i < nFilters_; ++i)
                 {
-                    //complete Eq. 6 for > 30
-                    excitationLogMinus30 = excitationLog - 30;
-                    gain = gain - 0.003 * excitationLogMinus30 * excitationLogMinus30;
+                    Real excitationLinP = 0.0;
+                    Real excitationLinA = 0.0;
+
+                    //passive filter output
+                    for (uint j = 0; j < wPassive_[i].size(); ++j)
+                        excitationLinP += wPassive_[i][j] * inputSpectrum[j];
+
+                    //convert to dB
+                    Real excitationLog = powerToDecibels (excitationLinP);
+
+                    //compute gain (Complete Eq. 6 for <= 30)
+                    Real gain = maxGdB_[i] - (maxGdB_[i] / 
+                            (1 + exp (-0.05*(excitationLog - (100 - maxGdB_[i]))))) +
+                            thirdGainTerm_[i];
+
+                    //check for higher levels
+                    if (excitationLog > 30)
+                    {
+                        //complete Eq. 6 for > 30
+                        Real excitationLogMinus30 = excitationLog - 30;
+                        gain = gain - 0.003 * excitationLogMinus30 * excitationLogMinus30;
+                    }
+
+                    //convert to linear gain
+                    gain = decibelsToPower(gain);
+
+                    //active filter output
+                    for (uint j = 0; j < wActive_[i].size(); ++j)
+                        excitationLinA += wActive_[i][j] * inputSpectrum[j];
+                    excitationLinA *= gain;
+
+                    //excitation pattern
+                    Real excitation = scalingFactor_ * (excitationLinP + excitationLinA);
+
+                    if (isExcitationPatternInterpolated_)
+                        logExcitation_[i] = log(excitation + 1e-10);
+                    else
+                        outputExcitationPattern[i] = excitation;
                 }
 
-                //convert to linear gain
-                gain = decibelsToPower(gain);
-
-                //active filter output
-                for (uint j = 0; j < wActive_[i].size(); ++j)
-                    excitationLinA += wActive_[i][j] * inputSpectrum[j];
-                excitationLinA *= gain;
-
-                //excitation pattern
-                Real excitation = scalingFactor_ * (excitationLinP + excitationLinA);
-
+                //Interpolate to estimate 0.1~Cam res excitation pattern
                 if (isExcitationPatternInterpolated_)
-                    logExcitation_[i] = log(excitation + 1e-10);
-                else
-                    outputExcitationPattern[i] = excitation;
-            }
+                {
+                    spline_.set_points (cams_,
+                                        logExcitation_,
+                                        isInterpolationCubic_);
 
-            //Interpolate to estimate 0.1~Cam res excitation pattern
-            if (isExcitationPatternInterpolated_)
-            {
-                spline_.set_points (cams_,
-                                    logExcitation_,
-                                    isInterpolationCubic_);
-
-                for (int i = 0; i < 388; ++i)
-                    outputExcitationPattern[i] = exp (spline_ (camLo_ + i * 0.1));
+                    for (int i = 0; i < 388; ++i)
+                        outputExcitationPattern[i] = exp (spline_ (camLo_ + i * 0.1));
+                }
             }
         }
     }

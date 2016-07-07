@@ -11,7 +11,7 @@ b, a = np.load('../../filterCoefs/44100_IIR_23_freemid.npy')
 y = lfilter(b, a, x)
 
 bank = ln.SignalBank()
-bank.initialize(2, 1, blockSize, 44100)
+bank.initialize(1, 2, 1, blockSize, 44100)
 
 iir = ln.IIR(b, a)
 iir.initialize(bank)
@@ -25,11 +25,11 @@ for i in range(2):
     end = start + blockSize
 
     for ear in range(2):
-        bank.setSignal(ear, 0, x[ear, start:end])
+        bank.setSignal(0, ear, 0, x[ear, start:end])
 
     iir.process(bank)
 
     for ear in range(2):
-        out[ear, start:end] = outBank.getSignal(ear, 0)
+        out[ear, start:end] = outBank.getSignal(0, ear, 0)
 
 print np.allclose(out, y)

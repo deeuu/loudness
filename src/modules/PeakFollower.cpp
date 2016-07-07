@@ -22,9 +22,9 @@
 
 namespace loudness{
 
-    PeakFollower::PeakFollower(Real releaseTime) 
+    PeakFollower::PeakFollower(Real timeConstant) 
         : Module("PeakFollower"),
-          releaseTime_(releaseTime)
+          timeConstant_(timeConstant)
     {
         LOUDNESS_DEBUG(name_ << ": Constructed.");
     }
@@ -35,12 +35,12 @@ namespace loudness{
     bool PeakFollower::initializeInternal(const SignalBank &input)
     {
         //filter coefficients
-        releaseCoef_ = 1 - exp(-1.0 / (input.getFrameRate() * releaseTime_));
+        coef_ = exp(-1.0 / (input.getFrameRate() * timeConstant_));
 
         LOUDNESS_DEBUG(name_ << ": Input frame rate: "
                 << input.getFrameRate()
                 << ". Release coefficient: "
-                << releaseCoef_);
+                << coef_);
 
         //output SignalBank
         output_.initialize(input);
@@ -69,7 +69,7 @@ namespace loudness{
                     if (absX >= yPrev)
                         y[smp] = absX;
                     else
-                        y[smp] = yPrev - releaseCoef_ * yPrev;
+                        y[smp] = absX + coef_ * (yPrev - absX);
                     yPrev = y[smp];
                 }
             }

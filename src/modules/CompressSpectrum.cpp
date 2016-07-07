@@ -161,7 +161,11 @@ namespace loudness{
         #endif
 
         //set output SignalBank
-        output_.initialize(input.getNEars(), cfs.size(), 1, input.getFs());
+        output_.initialize(input.getNSources(),
+                           input.getNEars(),
+                           cfs.size(),
+                           1,
+                           input.getFs());
         output_.setCentreFreqs(cfs);
         output_.setFrameRate(input.getFrameRate());
         LOUDNESS_DEBUG(name_ << ": Number of bins comprising the compressed spectrum: "
@@ -172,23 +176,28 @@ namespace loudness{
 
     void CompressSpectrum::processInternal(const SignalBank &input)
     {
-        for (int ear = 0; ear < input.getNEars(); ear++)
+        for (int src = 0; src < input.getNSources(); ++src)
         {
-            const Real* inputSpectrum = input.getSingleSampleReadPointer(ear, 0);
-            Real* outputSpectrum = output_.getSingleSampleWritePointer(ear, 0);
-
-            Real sum = 0.0;
-            int i = 0, j = 0;
-            while (i < output_.getNChannels()) 
+            for (int ear = 0; ear < input.getNEars(); ++ear)
             {
-                if (j < upperBandIdx_[i])
+                const Real* inputSpectrum = input.getSingleSampleReadPointer
+                                                  (src, ear, 0);
+                Real* outputSpectrum = output_.getSingleSampleWritePointer
+                                               (src, ear, 0);
+
+                Real sum = 0.0;
+                int i = 0, j = 0;
+                while (i < output_.getNChannels()) 
                 {
-                    sum += inputSpectrum[j++];
-                }
-                else
-                {
-                    outputSpectrum[i++] = sum;
-                    sum = 0.0;
+                    if (j < upperBandIdx_[i])
+                    {
+                        sum += inputSpectrum[j++];
+                    }
+                    else
+                    {
+                        outputSpectrum[i++] = sum;
+                        sum = 0.0;
+                    }
                 }
             }
         }

@@ -28,6 +28,7 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/support/Filter.cpp \
 ../src/support/FFT.cpp \
 ../src/support/AudioFileProcessor.cpp \
+../src/modules/UnaryOperator.cpp \
 ../src/modules/AudioFileCutter.cpp \
 ../src/modules/FIR.cpp \
 ../src/modules/IIR.cpp \
@@ -41,21 +42,29 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/modules/HoppingGoertzelDFT.cpp \
 ../src/modules/PowerSpectrum.cpp \
 ../src/modules/WeightSpectrum.cpp \
+../src/modules/HighpassSpectrum.cpp \
 ../src/modules/CompressSpectrum.cpp \
 ../src/modules/RoexBankANSIS342007.cpp \
 ../src/modules/FastRoexBank.cpp \
+../src/modules/MultiSourceRoexBank.cpp \
+../src/modules/FixedRoexBank.cpp \
 ../src/modules/DoubleRoexBank.cpp \
 ../src/modules/OctaveBank.cpp \
+../src/modules/ComplexGammatoneBank.cpp \
 ../src/modules/MainLoudnessDIN456311991.cpp \
 ../src/modules/InstantaneousLoudnessDIN456311991.cpp \
 ../src/modules/SpecificLoudnessANSIS342007.cpp \
+../src/modules/SpecificLoudnessModANSIS342007.cpp \
+../src/modules/SpecificPartialLoudnessMGB1997.cpp \
 ../src/modules/BinauralInhibitionMG2007.cpp \
 ../src/modules/InstantaneousLoudness.cpp \
+../src/modules/SimpleLoudness.cpp \
 ../src/models/StationaryLoudnessANSIS342007.cpp \
 ../src/models/StationaryLoudnessDIN456311991.cpp \
 ../src/models/StationaryLoudnessCHGM2011.cpp \
 ../src/models/DynamicLoudnessGM2002.cpp \
 ../src/models/DynamicLoudnessCH2012.cpp \
+../src/models/DynamicLoudnessSimple.cpp
 
 OBJECTS=$(SOURCES:.cpp=.o)
 

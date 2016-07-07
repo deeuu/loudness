@@ -52,9 +52,9 @@ model.process(pattern)
 
 # loudness side
 specificLoudnessBank = ln.SignalBank()
-specificLoudnessBank.initialize(2, cams.size, 1, 1)
+specificLoudnessBank.initialize(1, 2, cams.size, 1, 1)
 specificLoudnessBank.setChannelSpacingInCams(0.1)
-specificLoudnessBank.setSignals(pattern.T.reshape((2, pattern.shape[0], 1)))
+specificLoudnessBank.setSignals(pattern.T.reshape((1, 2, pattern.shape[0], 1)))
 
 binauralModel = ln.BinauralInhibitionMG2007()
 binauralModel.initialize(specificLoudnessBank)

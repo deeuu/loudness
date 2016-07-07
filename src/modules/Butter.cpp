@@ -72,8 +72,11 @@ namespace loudness{
         //normalise by a[0]
         normaliseCoefs();
 
-        //delay line
-        z_.assign(input.getNEars() * 2 * order_,0.0);
+        delayLine_.initialize(input.getNSources(),
+                              input.getNEars(),
+                              input.getNChannels(),
+                              2 * order_,
+                              input.getFs());
 
         //output SignalBank
         output_.initialize(input);
@@ -86,37 +89,51 @@ namespace loudness{
         switch(order_)
         {
             case 3:
-                for (int ear = 0; ear < input.getNEars(); ear++)
+                for (int src = 0; src < input.getNSources(); ++src)
                 {
-                    const Real* inputSignal = input.getSignalReadPointer(ear, 0, 0);
-                    Real* outputSignal = output_.getSignalWritePointer(ear, 0, 0);
-                    Real* z = &z_[ear * 2 * order_];
-                    Real x,y;
-                    for (int smp = 0; smp < input.getNSamples(); smp++)
+                    for (int ear = 0; ear < input.getNEars(); ++ear)
                     {
-                        //input sample
-                        x = inputSignal[smp] * gain_;
-                        
-                        //filter
-                        y = bCoefs_[0]*(x-z[2]) + bCoefs_[2]*(z[1]-z[0]) - 
-                            aCoefs_[1]*z[3] - aCoefs_[2]*z[4] - aCoefs_[3]*z[5];
+                        for (int chn = 0; chn < input.getNChannels(); ++chn)
+                        {
+                            const Real* inputSignal = input
+                                                      .getSignalReadPointer
+                                                      (src, ear, chn);
+                            Real* outputSignal = output_
+                                                 .getSignalWritePointer
+                                                 (src, ear, chn);
+                            Real* z = delayLine_
+                                      .getSignalWritePointer
+                                      (src, ear, chn);
 
-                        //update delay line
-                        z[5] = z[4];
-                        z[4] = z[3];
-                        z[3] = y;
-                        z[2] = z[1];
-                        z[1] = z[0];
-                        z[0] = x;
+                            for (int smp = 0; smp < input.getNSamples(); smp++)
+                            {
+                                //input sample
+                                Real x = inputSignal[smp] * gain_;
+                                
+                                //filter
+                                Real y = bCoefs_[0]*(x-z[2]) + bCoefs_[2]*
+                                         (z[1]-z[0]) - aCoefs_[1]*z[3] -
+                                         aCoefs_[2]*z[4] - aCoefs_[3]*z[5];
 
-                        //output sample
-                        outputSignal[smp] = y;
+                                //update delay line
+                                z[5] = z[4];
+                                z[4] = z[3];
+                                z[3] = y;
+                                z[2] = z[1];
+                                z[1] = z[0];
+                                z[0] = x;
+
+                                //output sample
+                                outputSignal[smp] = y;
+                            }
+                        }
                     }
                 }
         }
     }
+
     void Butter::resetInternal()
     {
-        resetDelayLine();
+        delayLine_.zeroSignals();
     }
 }

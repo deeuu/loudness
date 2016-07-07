@@ -90,10 +90,10 @@ namespace loudness{
         virtual void processInternal(){};
         virtual void resetInternal();
         void configureDelayLineIndices();
-        void calculateSpectrum(int nEars);
-        void calculatePowerSpectrum(int nEars);
-        void calculateSpectrumAndApplyHannWindow(int nEars);
-        void calculatePowerSpectrumAndApplyHannWindow(int nEars);
+        void calculateSpectrum();
+        void calculatePowerSpectrum();
+        void calculateSpectrumAndApplyHannWindow();
+        void calculatePowerSpectrumAndApplyHannWindow();
 
         RealVec frequencyBandEdges_;
         vector<int> windowSizes_;
@@ -104,8 +104,7 @@ namespace loudness{
         int nWindows_, delayLineSize_, largestWindowSize_;
         vector< vector<int>> binIdxForGoertzels_, readIdx_;
         RealVec sine_, cosineTimes2_, normFactors_;
-        RealVecVec vPrev_, vPrev2_;
-        RealVecVec delayLine_;
+        SignalBank delayLine_, vPrev_, vPrev2_;
     };
 }
 

@@ -55,6 +55,11 @@ namespace loudness{
             AMPLITUDE
         };
 
+        enum METHOD{
+            ONE_CHANNEL_MULTI_WINDOW,
+            MULTI_CHANNEL_ONE_WINDOW
+        };
+
         /** Constructs a Window object for generating a single frame.
          *
          * @param windowType The type of window to apply.
@@ -114,6 +119,7 @@ namespace loudness{
         bool parallelWindows_;
         RealVecVec window_;
         IntVec windowOffset_;
+        METHOD method_;
     };
 }
 

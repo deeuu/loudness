@@ -79,7 +79,7 @@ namespace loudness{
 
         int windowSize_, bufferIdx_;
         bool average_, squareInput_;
-        RealVec audioBuffer_, runningSumBuf_, safeRunningSumBuf_;
+        SignalBank audioBuffer_, runningSumBuf_;
     };
 }
 

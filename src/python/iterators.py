@@ -26,7 +26,7 @@ class DynamicLoudnessIterator():
     def __init__(self,
                  model,
                  fs,
-                 output=None,
+                 outputName=None,
                  loudnessFunction=None,
                  nInputEars=1,
                  tol=0.1,
@@ -35,20 +35,22 @@ class DynamicLoudnessIterator():
                  nSecondsToPadStartBy=0.0,
                  nSecondsToPadEndBy=0.2):
 
-        if type(output) is list:
-            output = output[0]
+        if type(outputName) is list:
+            outputName = outputName[0]
 
         self.extractor = DynamicLoudnessExtractor(model,
                                                   fs,
-                                                  output,
+                                                  outputName,
+                                                  1,
                                                   nInputEars,
                                                   nSecondsToPadStartBy,
                                                   nSecondsToPadEndBy)
-        self.outputName = output
+        self.outputName = outputName
         self.converged = False
         self.tol = tol
         self.nIters = nIters
         self.alpha = alpha
+        self.printResults = False
 
         if loudnessFunction is None:
             self.loudnessFunction = np.mean
@@ -80,9 +82,10 @@ class DynamicLoudnessIterator():
 
             error = targetLoudness - loudness
 
-            print (('Gain: %0.3f, Loudness: %0.3f' +
-                    ' Target: %0.3f, Error: %0.3f')
-                   % (storedGain, loudness, targetLoudness, error))
+            if self.printResults:
+                print (('Gain: %0.3f, Loudness: %0.3f' +
+                        ' Target: %0.3f, Error: %0.3f')
+                       % (storedGain, loudness, targetLoudness, error))
 
             if np.abs(error) < self.tol:
                 self.converged = True
@@ -100,18 +103,19 @@ class StationaryLoudnessIterator():
 
     def __init__(self,
                  model,
-                 output=None,
+                 outputName=None,
                  loudnessFunction=None,
                  tol=0.1,
                  nIters=10,
                  alpha=1.0):
 
-        self.output = output
-        self.extractor = StationaryLoudnessExtractor(model, output)
+        self.outputName = outputName
+        self.extractor = StationaryLoudnessExtractor(model, outputName)
         self.converged = False
         self.tol = tol
         self.nIters = nIters
         self.alpha = alpha
+        self.printResults = False
 
         if loudnessFunction is None:
             self.loudnessFunction = asIs
@@ -130,7 +134,7 @@ class StationaryLoudnessIterator():
                 targetLoudnessFrequencies,
                 targetLoudnessIntensityLevels):
 
-        if type(targetLoudnessIntensityLevels) is np.ndarray:
+        if targetLoudnessFrequencies is not None:
             targetLoudness = self.extractLoudness(
                 targetLoudnessFrequencies,
                 targetLoudnessIntensityLevels
@@ -148,8 +152,9 @@ class StationaryLoudnessIterator():
             )
             error = targetLoudness - loudness
 
-            print (('Gain: %0.3f, Loudness: %0.3f, ' +
-                    'Error: %0.3f') % (storedGain, loudness, error))
+            if self.printResults:
+                print (('Gain: %0.3f, Loudness: %0.3f, ' +
+                        'Error: %0.3f') % (storedGain, loudness, error))
 
             if np.abs(error) < self.tol:
                 self.converged = True

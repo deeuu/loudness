@@ -72,43 +72,52 @@ namespace loudness{
             bCoefs_[2] = (Vl*omegaSqrd - (Vb*omega/Q) + Vh) / denom;
         }
 
-        //delay line
-        z_.assign(2 * order_ * input.getNEars(), 0.0);
+        delayLine_.initialize(input.getNSources(),
+                              input.getNEars(),
+                              input.getNChannels(),
+                              2 * order_,
+                              input.getFs());
 
         //output SignalBank
-        output_.initialize(input.getNEars(), 
-                input.getNChannels(),
-                input.getNSamples(), 
-                input.getFs());
+        output_.initialize(input);
 
         return 1;
     }
 
     void Biquad::processInternal(const SignalBank &input)
     {
-        for (int ear = 0; ear < input.getNEars(); ear++)
+        for (int src = 0; src < input.getNSources(); ++src)
         {
-            const Real* inputSignal = input.getSignalReadPointer(ear, 0, 0);
-            Real* outputSignal = output_.getSignalWritePointer(ear, 0, 0);
-            Real* z = &z_[ear * order_ * 2];
-            Real x, y;
-            for(int smp=0; smp<input.getNSamples(); smp++)
+            for (int ear = 0; ear < input.getNEars(); ++ear)
             {
-                //input sample
-                x = inputSignal[smp] * gain_;
-                
-                //filter
-                y = bCoefs_[0]*x + bCoefs_[1]*z[0] + bCoefs_[2]*z[1] -
-                    aCoefs_[1]*z[2] - aCoefs_[2]*z[3];
+                for (int chn = 0; chn < input.getNChannels(); ++chn)
+                {
+                    const Real* inputSignal = input.getSignalReadPointer
+                                                    (src, ear, chn);
+                    Real* outputSignal = output_.getSignalWritePointer
+                                                 (src, ear, chn);
+                    Real* z = delayLine_.getSignalWritePointer
+                                         (src, ear, chn);
 
-                //update delay line
-                z[3] = z[2];
-                z[2] = y;
-                z[1] = z[0];
-                z[0] = x;
+                    for (int smp = 0; smp < input.getNSamples(); ++smp)
+                    {
+                        //input sample
+                        Real x = inputSignal[smp] * gain_;
+                        
+                        //filter
+                        Real y = bCoefs_[0]*x + bCoefs_[1]*z[0] + bCoefs_[2]*z[1]
+                                 - aCoefs_[1]*z[2] - aCoefs_[2]*z[3];
 
-                //output sample
-                outputSignal[smp] = y;
+                        //update delay line
+                        z[3] = z[2];
+                        z[2] = y;
+                        z[1] = z[0];
+                        z[0] = x;
+
+                        //output sample
+                        outputSignal[smp] = y;
+                    }
+                }
             }
         }
     }
@@ -120,6 +129,6 @@ namespace loudness{
 
     void Biquad::resetInternal()
     {
-        resetDelayLine();
+        delayLine_.zeroSignals();
     }
 }

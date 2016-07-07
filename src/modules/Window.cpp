@@ -21,7 +21,10 @@
 
 namespace loudness{
 
-    Window::Window(const WindowType& windowType, const IntVec &length, bool periodic) 
+    Window::Window(
+            const WindowType& windowType,
+            const IntVec &length,
+            bool periodic) 
         : Module("Window"),
           windowType_(windowType),
           length_(length),
@@ -65,10 +68,10 @@ namespace loudness{
 
         //check if we are using multi windows on one input channel
         int nOutputChannels = input.getNChannels();
-        if((input.getNChannels()==1) && (nWindows_>1))
+        if ((input.getNChannels()==1) && (nWindows_>1))
         {
             LOUDNESS_DEBUG(name_ << ": Using parallel windows");
-            parallelWindows_ = true;
+            method_ = ONE_CHANNEL_MULTI_WINDOW;
             nOutputChannels = nWindows_;
             //if so, calculate the delay
             int alignmentSample = largestWindowSize_ / 2;
@@ -82,6 +85,10 @@ namespace loudness{
                 LOUDNESS_DEBUG(name_ << ": Offset for window " << w << " = " << thisWindowOffset);
             }
         }
+        else if ((input.getNChannels() > 1) & (nWindows_ == 1))
+        {
+            method_ = MULTI_CHANNEL_ONE_WINDOW;
+        }
         else
         {
             LOUDNESS_ASSERT(input.getNChannels() == nWindows_,
@@ -89,7 +96,7 @@ namespace loudness{
         }
         
         //generate the normalised window functions
-        for (int w=0; w<nWindows_; w++)
+        for (int w = 0; w < nWindows_; w++)
         {
             window_[w].assign(length_[w],0.0);
             generateWindow(window_[w], windowType_, periodic_);
@@ -98,7 +105,11 @@ namespace loudness{
         }
 
         //initialise the output signal
-        output_.initialize(input.getNEars(), nOutputChannels, largestWindowSize_, input.getFs());
+        output_.initialize(input.getNSources(),
+                           input.getNEars(),
+                           nOutputChannels,
+                           largestWindowSize_,
+                           input.getFs());
         output_.setFrameRate(input.getFrameRate());
 
         return 1;
@@ -106,17 +117,67 @@ namespace loudness{
 
     void Window::processInternal(const SignalBank &input)
     {
-        Real* outputSignal;
-        const Real* inputSignal;
-        for(int ear=0; ear<input.getNEars(); ear++)
+        switch (method_)
         {
-            for(int w=0; w<nWindows_; w++)
+            case ONE_CHANNEL_MULTI_WINDOW:
             {
-                inputSignal = input.getSignalReadPointer(ear, 0, windowOffset_[w]);
-                outputSignal = output_.getSignalWritePointer(ear, w, 0);
+                for (int src = 0; src < input.getNSources(); ++src)
+                {
+                    for(int ear = 0; ear < input.getNEars(); ++ear)
+                    {
+                        for(int w = 0; w < nWindows_; ++w)
+                        {
+                            const Real* inputSignal = input
+                                                      .getSignalReadPointer(
+                                                          src,
+                                                          ear,
+                                                          0,
+                                                          windowOffset_[w]);
+                            Real* outputSignal = output_
+                                                 .getSignalWritePointer(
+                                                     src,
+                                                     ear,
+                                                     w,
+                                                     0);
 
-                for(int smp=0; smp<length_[w]; smp++)
-                    *outputSignal++ = window_[w][smp] * (*inputSignal++);
+                            for(int smp = 0; smp < length_[w]; ++smp)
+                            {
+                                outputSignal[smp] = window_[w][smp]
+                                                    * inputSignal[smp];
+                            }
+                        }
+                    }
+                }
+            }
+            case MULTI_CHANNEL_ONE_WINDOW:
+            {
+                for (int src = 0; src < input.getNSources(); ++src)
+                {
+                    for (int ear = 0; ear < input.getNEars(); ++ear)
+                    {
+                        for (int chn = 0; chn < input.getNChannels(); ++chn)
+                        {
+                            const Real* inputSignal = input
+                                                      .getSignalReadPointer(
+                                                          src,
+                                                          ear,
+                                                          chn,
+                                                          0);
+                            Real* outputSignal = output_
+                                                 .getSignalWritePointer(
+                                                     src,
+                                                     ear,
+                                                     chn,
+                                                     0);
+
+                            for (int smp = 0; smp < length_[0]; ++smp)
+                            {
+                                outputSignal[smp] = window_[0][smp]
+                                                    * inputSignal[smp];
+                            }
+                        }
+                    }
+                }
             }
         }
     }

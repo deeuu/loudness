@@ -63,13 +63,18 @@ namespace loudness{
 
     void WeightSpectrum::processInternal(const SignalBank &input)
     {
-        for (int ear = 0; ear < input.getNEars(); ear++)
+        for (int src = 0; src < input.getNSources(); ++src)
         {
-            const Real* inputSpectrum = input.getSingleSampleReadPointer(ear, 0);
-            Real* outputSpectrum = output_.getSingleSampleWritePointer(ear, 0);
+            for (int ear = 0; ear < input.getNEars(); ++ear)
+            {
+                const Real* inputSpectrum = input.getSingleSampleReadPointer
+                                            (src, ear, 0);
+                Real* outputSpectrum = output_.getSingleSampleWritePointer
+                                       (src, ear, 0);
 
-            for (int chn = 0; chn < input.getNChannels(); chn++)
-                outputSpectrum[chn] = inputSpectrum[chn] * weights_[chn];
+                for (int chn = 0; chn < input.getNChannels(); ++chn)
+                    outputSpectrum[chn] = inputSpectrum[chn] * weights_[chn];
+            }
         }
     }
 

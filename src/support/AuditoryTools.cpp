@@ -182,6 +182,12 @@ namespace loudness{
             -7, -9.2, -10.2, -12.2, -10.8, -10.1, -12.7, -15, -18.2,
             -23.8, -32.3, -45.5, -50};
 
+        Real midWard[41] = {-36.33, -36.33, -31.7, -27.24, -23.08, -19.61,
+            -16.41, -13.4, -10.88, -8.67, -6.6, -4.88, -3.46, -2.23, -0.41,
+            -0.54, 0.01, 0.37, 0.4, 0.0, -2.55, -3.96, -3.85, -0.72, 1.98,
+            2.78, 2.79, 1.53, -1.77, -5.74, -6.9, -11.32, -11.22, -11.34,
+            -12.96, -4.55, -4.55, -4.55, -4.55, -4.55, -4.55};
+
         //can get away with the same freq spec as ANSI standard
         Real midChenEtAl[41] = {-100, -33, -28.5, -23.6, -19.4, -16.4, -13.4,
             -10.3, -8, -6.3, -4.7, -3.7, -2.7, -2.5, -1.9, -1.8, -2.1, -2.4,
@@ -223,6 +229,9 @@ namespace loudness{
                 break;
             case CHGM2011_MIDDLE_EAR :
                 middleEardB_.assign(midChenEtAl, midChenEtAl + 41);
+                break;
+            case WARD_MIDDLE_EAR:
+                middleEardB_.assign(midWard, midWard + 41);
                 break;
             default:
                 middleEarType_ = NONE;

@@ -46,21 +46,21 @@ class StationaryLoudnessExtractor:
         nEars = intensities.shape[1]
 
         if self.initialize:
-            self.bank.initialize(nEars, nComponents, 1, 1)
+            self.bank.initialize(1, nEars, nComponents, 1, 1)
             self.bank.setCentreFreqs(frequencies)
             self.outputDict['Frequencies'] = frequencies
             self.nEars = nEars
             self.model.initialize(self.bank)
         self.initialize = False
 
-        self.bank.setSignals(intensities.reshape((nEars, nComponents, 1)))
+        self.bank.setSignals(intensities.T.reshape((1, nEars, nComponents, 1)))
 
         self.model.process(self.bank)
 
         for name in self.outputs:
             outputBank = self.model.getOutput(name)
             self.outputDict[name] = (
-                np.squeeze(outputBank.getSignals()).copy()
+                np.squeeze(outputBank.getSignals())
             ).copy()
 
         self.model.reset()
@@ -89,6 +89,7 @@ class DynamicLoudnessExtractor:
                  model,
                  fs=32000,
                  outputs=None,
+                 nInputSources=1,
                  nInputEars=1,
                  numSecondsToPadStartBy=0,
                  numSecondsToPadEndBy=0.2,
@@ -108,12 +109,17 @@ class DynamicLoudnessExtractor:
 
         self.model = model
         self.fs = int(fs)
-        self.nInputEars = nInputEars
+        self.nInputEars = int(nInputEars)
+        self.nInputSources = int(nInputSources)
         self.rate = model.getRate()  # desired rate in Hz
         self.hopSize = int(np.round(fs / self.rate))
         self.timeStep = float(self.hopSize) / fs
         self.inputBuf = ln.SignalBank()
-        self.inputBuf.initialize(self.nInputEars, 1, self.hopSize, self.fs)
+        self.inputBuf.initialize(self.nInputSources,
+                                 self.nInputEars,
+                                 1,
+                                 self.hopSize,
+                                 self.fs)
         self.outputs = outputs
         self.gainInDecibels = gainInDecibels
         if self.outputs is not None:
@@ -140,37 +146,46 @@ class DynamicLoudnessExtractor:
         Process the numpy array `inputSignal' using a dynamic loudness
         model.  For stereo signals, the input signal must have two dimensions
         with shape (nSamples x 2).  For monophonic signals, the input signal
-        can be 2D, i.e. (nSamples x 1), or one dimensional.
+        can be 2D, i.e. (nSamples x 1), or one dimensional. For multiple
+        sources, enter a list of inputSignals (easier than faffing with
+        reshaping).
         '''
         # Input checks
-        self.nSamples = inputSignal.shape[0]
-        if inputSignal.ndim > 1:
-            if self.nInputEars != inputSignal.shape[1]:
-                raise ValueError("Input signal does not have the expected\
-                number of dimensions ( " + str(self.nInputEars) + " )")
-        elif self.nInputEars > 1:
-            raise ValueError(
-                "Input should have " + str(self.nInputEars) + " columns"
-            )
-
-        # Format input for SignalBank
-        self.inputSignal = inputSignal.T.reshape(
-            (self.nInputEars, 1, self.nSamples)
-        )
+        if type(inputSignal) is not list:
+            if inputSignal.ndim == 1:
+                self.inputSignal = inputSignal.reshape(1,
+                                                       1,
+                                                       1,
+                                                       inputSignal.size)
+            elif inputSignal.ndim < 3:
+                self.inputSignal = inputSignal.T.reshape(1,
+                                                         inputSignal.shape[1],
+                                                         1,
+                                                         inputSignal.shape[0])
+        else:
+            maxSamples = np.max([x.shape[0] for x in inputSignal])
+            self.inputSignal = np.zeros((self.nInputSources,
+                                         self.nInputEars,
+                                         1,
+                                         maxSamples))
+            for i, sig in enumerate(inputSignal):
+                self.inputSignal[i, :, 0, 0:sig.shape[0]] = sig.T
 
         '''Pad end so that we can obtain analysis over the last sample,
         No neat way to do this at the moment so assume 0.2ms is enough.'''
         self.inputSignal = np.concatenate((
-            np.zeros((self.nInputEars, 1, self.nSamplesToPadStart)),
+            np.zeros((self.nInputSources, self.nInputEars,
+                      1, self.nSamplesToPadStart)),
             self.inputSignal,
-            np.zeros((self.nInputEars, 1, self.nSamplesToPadEnd))), 2)
+            np.zeros((self.nInputSources, self.nInputEars,
+                      1, self.nSamplesToPadEnd))), 3)
 
         # Apply any gain
         self.inputSignal *= 10 ** (self.gainInDecibels / 20.0)
 
         # configure the number of output frames needed
         nOutputFrames = int(
-            np.ceil(self.inputSignal.shape[2] / float(self.hopSize))
+            np.ceil(self.inputSignal.shape[3] / float(self.hopSize))
         )
         self.outputDict['FrameTimes'] = (
             self.frameTimeOffset + np.arange(nOutputFrames) *
@@ -184,7 +199,9 @@ class DynamicLoudnessExtractor:
             # SignalBank with new blocks
             startIdx = frame * self.hopSize
             endIdx = startIdx + self.hopSize
-            self.inputBuf.setSignals(self.inputSignal[:, :, startIdx:endIdx])
+            self.inputBuf.setSignals(
+                self.inputSignal[:, :, :, startIdx:endIdx]
+            )
 
             # Process the input buffer
             self.model.process(self.inputBuf)
@@ -192,14 +209,18 @@ class DynamicLoudnessExtractor:
         # get outputs
         for name in self.outputs:
             bank = self.model.getOutput(name)
-            self.outputDict[name] = np.squeeze(
-                bank.getAggregatedSignals()).copy()
+            self.outputDict[name] = np.copy(
+                np.squeeze(bank.getAggregatedSignals())
+            )
             if self.outputDict[name].ndim == 1:
                 self.outputDict[name] = self.outputDict[name].reshape((-1, 1))
 
         # Processing complete so clear internal states
         self.model.reset()
         self.processed = True
+
+    def reinitializeModel(self):
+        self.model.initialize(self.inputBuf)
 
     def saveOutputToPickle(self, filename):
         '''

@@ -58,7 +58,11 @@ namespace loudness{
         LOUDNESS_DEBUG(name_ << ": Frame size in samples: " << frameSize_);
     
         //a buffer for storing remaining input samples once frame is full
-        audioBufferBank_.initialize(input.getNEars(), input.getNChannels(), inputBufferSize, input.getFs());
+        audioBufferBank_.initialize (input.getNSources(),
+                                     input.getNEars(),
+                                     input.getNChannels(),
+                                     inputBufferSize,
+                                     input.getFs());
         
         if (startAtCentreOfFrame_)
             writeIdx_ = frameSize_ / 2.0;
@@ -69,7 +73,11 @@ namespace loudness{
         overlap_ = frameSize_ - hopSize_;
 
         //initialise the output signal
-        output_.initialize(input.getNEars(), input.getNChannels(), frameSize_, input.getFs());
+        output_.initialize(input.getNSources(),
+                           input.getNEars(),
+                           input.getNChannels(),
+                           frameSize_,
+                           input.getFs());
         output_.setFrameRate(input.getFs()/(Real)hopSize_);
         output_.setTrig(false);
 
