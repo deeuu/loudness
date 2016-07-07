@@ -42,7 +42,6 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/modules/HoppingGoertzelDFT.cpp \
 ../src/modules/PowerSpectrum.cpp \
 ../src/modules/WeightSpectrum.cpp \
-../src/modules/HighpassSpectrum.cpp \
 ../src/modules/CompressSpectrum.cpp \
 ../src/modules/RoexBankANSIS342007.cpp \
 ../src/modules/FastRoexBank.cpp \
@@ -50,7 +49,6 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/modules/FixedRoexBank.cpp \
 ../src/modules/DoubleRoexBank.cpp \
 ../src/modules/OctaveBank.cpp \
-../src/modules/ComplexGammatoneBank.cpp \
 ../src/modules/MainLoudnessDIN456311991.cpp \
 ../src/modules/InstantaneousLoudnessDIN456311991.cpp \
 ../src/modules/SpecificLoudnessANSIS342007.cpp \
@@ -63,8 +61,7 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/models/StationaryLoudnessDIN456311991.cpp \
 ../src/models/StationaryLoudnessCHGM2011.cpp \
 ../src/models/DynamicLoudnessGM2002.cpp \
-../src/models/DynamicLoudnessCH2012.cpp \
-../src/models/DynamicLoudnessSimple.cpp
+../src/models/DynamicLoudnessCH2012.cpp
 
 OBJECTS=$(SOURCES:.cpp=.o)
 

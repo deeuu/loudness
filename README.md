@@ -31,19 +31,21 @@ import loudness as ln
 
 # All inputs and outputs make use of a SignalBank
 inputBank = ln.SignalBank()
+nSources = 1
 nEars = 1
 nChannels = 1
 nSamples = 1
 fs = 1
-# There are 3 dimensions
-inputBank.initialize(nEars, nChannels, nSamples, fs)
 
-# Set the centre frequency of the first (only) channel
+# There are 4 dimensions
+inputBank.initialize(nSources, nEars, nChannels, nSamples, fs)
+
+# Set the centre frequency of the first channel
 inputBank.setCentreFreq(0, 1000)
 
 # Set the intensity in normalised units
 level = 40
-inputBank.setSample(0, 0, 0, 10 ** (level / 10))
+inputBank.setSample(0, 0, 0, 0, 10.0 ** (level / 10.0))
 
 # The loudness model
 model = ln.StationaryLoudnessANSIS342007()
@@ -56,6 +58,4 @@ model.process(inputBank)
 feature = 'InstantaneousLoudness'
 outputBank = model.getOutput(feature)
 
-# Loudness
-print 'Loudness in sones %0.2f' % outputBank.getSample(0, 0, 0)
-~~~
+print 'Loudness in sones %0.2f' % outputBank.getSample(0, 0, 0, 0)~~~
