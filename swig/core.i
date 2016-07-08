@@ -51,7 +51,6 @@
 #include "../src/modules/DoubleRoexBank.h"
 #include "../src/modules/FixedRoexBank.h"
 #include "../src/modules/OctaveBank.h"
-#include "../src/modules/ComplexGammatoneBank.h"
 #include "../src/modules/SpecificLoudnessANSIS342007.h"
 #include "../src/modules/SpecificLoudnessModANSIS342007.h"
 #include "../src/modules/SpecificPartialLoudnessMGB1997.h"

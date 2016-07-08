@@ -56,7 +56,6 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/modules/SpecificPartialLoudnessMGB1997.cpp \
 ../src/modules/BinauralInhibitionMG2007.cpp \
 ../src/modules/InstantaneousLoudness.cpp \
-../src/modules/SimpleLoudness.cpp \
 ../src/models/StationaryLoudnessANSIS342007.cpp \
 ../src/models/StationaryLoudnessDIN456311991.cpp \
 ../src/models/StationaryLoudnessCHGM2011.cpp \
