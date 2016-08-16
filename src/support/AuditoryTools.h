@@ -213,7 +213,8 @@ namespace loudness{
                 WARD_MIDDLE_EAR,
                 ANSIS342007_FREEFIELD,
                 ANSIS342007_DIFFUSEFIELD,
-                BD_DT990
+                BD_DT990,
+                LML_FREEFIELD
             };
 
             OME(){};

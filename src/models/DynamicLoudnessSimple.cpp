@@ -21,6 +21,7 @@
 #include "../modules/Window.h"
 #include "../modules/PowerSpectrum.h"
 #include "../modules/CompressSpectrum.h"
+#include "../modules/WeightSpectrum.h"
 #include "../modules/HighpassSpectrum.h"
 #include "../modules/FixedRoexBank.h"
 #include "../modules/SimpleLoudness.h"
@@ -56,6 +57,11 @@ namespace loudness{
     void DynamicLoudnessSimple::setCompressionCriterionInCams(Real compressionCriterionInCams)
     {
         compressionCriterionInCams_ = compressionCriterionInCams;
+    }
+
+    void DynamicLoudnessSimple::setOuterEarFilter(const OME::Filter& outerEarFilter)
+    {
+        outerEarFilter_ = outerEarFilter;
     }
 
     void DynamicLoudnessSimple::setAlpha(Real alpha)
@@ -108,11 +114,12 @@ namespace loudness{
         setAlpha (2.0/3.0);
         setFactor (1.0);
         setRoexLevel (70.0);
-        setAttackTime (0.044);
+        setAttackTime (0.050);
         setReleaseTime (0.800);
         setFilterFC (100.0);
         setFilterGain (3.0);
-        setFilterSlope (3.4);
+        setFilterSlope (3.5);
+        setOuterEarFilter(OME::LML_FREEFIELD);
     }
 
     bool DynamicLoudnessSimple::initializeInternal(const SignalBank &input)
@@ -161,8 +168,18 @@ namespace loudness{
                     (new CompressSpectrum(compressionCriterionInCams_))); 
         }
 
+        /*
+         * Spectral weighting
+         */
+        if (outerEarFilter_ != OME::NONE)
+        {
+            modules_.push_back(unique_ptr<Module> 
+                    (new WeightSpectrum(OME::NONE, outerEarFilter_)));
+        }
+
         modules_.push_back(unique_ptr<Module>
                 (new HighpassSpectrum(fc_, gain_, slope_))); 
+
 
         /*
          * Roex filters

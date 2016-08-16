@@ -65,3 +65,5 @@ plotCombined(ln.OME.ANSIS342007_MIDDLE_EAR,
              ln.OME.ANSIS342007_FREEFIELD, (-40, 10))
 plt.figure(7)
 plotCombined(ln.OME.ANSIS342007_MIDDLE_EAR, ln.OME.BD_DT990, (-40, 10))
+plt.figure(8)
+plotOuterEar(ln.OME.LML_FREEFIELD)

@@ -21,6 +21,7 @@
 #define DYNAMICLOUDNESSSIMPLE_H
 
 #include "../support/Model.h"
+#include "../support/AuditoryTools.h"
 
 namespace loudness{
 
@@ -123,6 +124,8 @@ namespace loudness{
 
             void setCompressionCriterionInCams(Real compressionCriterionInCams);
 
+            void setOuterEarFilter(const OME::Filter& outerEarFilter);
+
             void setAlpha(Real alpha);
 
             void setFactor(Real factor);
@@ -148,7 +151,7 @@ namespace loudness{
             bool isInterpolationCubic_, isPresentationDiotic_;
             bool isSpecificLoudnessOutput_, isBinauralInhibitionUsed_;
             bool isFirstSampleAtWindowCentre_, isPeakSTLFollowerUsed_;
-
+            OME::Filter outerEarFilter_;
     }; 
 }
 
