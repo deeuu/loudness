@@ -65,6 +65,16 @@ namespace loudness{
         return (pow (10.0, (cam / 21.366)) - 1.0) / 4368e-6;
     }
 
+    inline Real hertzToNormalisedCam (Real freq)
+    {
+        return (hertzToCam(freq) / hertzToCam(1000.0)) - 1;
+    }
+
+    inline Real normalisedCamToHertz (Real normalisedCam)
+    {
+        return (normalisedCam + 1) * hertzToCam(1000.0);
+    }
+
     /**
      * @brief Returns the ERB in Bark of the auditory filter for normally hearing
      * listeners at @a centreFreq in Hz.

@@ -49,6 +49,7 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/modules/MultiSourceRoexBank.cpp \
 ../src/modules/FixedRoexBank.cpp \
 ../src/modules/DoubleRoexBank.cpp \
+../src/modules/MultiSourceDoubleRoexBank.cpp \
 ../src/modules/OctaveBank.cpp \
 ../src/modules/ComplexGammatoneBank.cpp \
 ../src/modules/MainLoudnessDIN456311991.cpp \
@@ -56,6 +57,7 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/modules/SpecificLoudnessANSIS342007.cpp \
 ../src/modules/SpecificLoudnessModANSIS342007.cpp \
 ../src/modules/SpecificPartialLoudnessMGB1997.cpp \
+../src/modules/SpecificPartialLoudnessCHGM2011.cpp \
 ../src/modules/BinauralInhibitionMG2007.cpp \
 ../src/modules/InstantaneousLoudness.cpp \
 ../src/modules/SimpleLoudness.cpp \

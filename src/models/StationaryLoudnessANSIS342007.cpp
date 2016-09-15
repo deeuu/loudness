@@ -136,13 +136,16 @@ namespace loudness{
             // Excitation transformation based on all sources
             modules_.push_back(unique_ptr<Module>
                     (new MultiSourceRoexBank(filterSpacingInCams_)));
-            outputModules_["MultiSourceExcitation"] = modules_.back().get();
+
+            /*
+            modules_.push_back(unique_ptr<Module>
+                (new RoexBankANSIS342007(1.8, 38.9, filterSpacingInCams_)));
+            */
             int moduleIdx = modules_.size() - 1;
 
             // Push spectrum to second excitation transformation stage
             Module* ptrToWeightedSpectrum = modules_[0].get();
-            ptrToWeightedSpectrum -> addTargetModule
-                                     (*outputModules_["MultiSourceExcitation"]);
+            ptrToWeightedSpectrum -> addTargetModule (*modules_.back().get());
 
             // Partial loudness
             modules_.push_back(unique_ptr<Module>

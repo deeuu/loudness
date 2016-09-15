@@ -111,6 +111,7 @@ namespace loudness{
         setFirstSampleAtWindowCentre (true);
         setFilterSpacingInCams (1.0);
         setCompressionCriterionInCams (0.3);
+        setPresentationDiotic (true);
         setAlpha (2.0/3.0);
         setFactor (1.0);
         setRoexLevel (70.0);
@@ -199,6 +200,8 @@ namespace loudness{
                 (new SimpleLoudness(alpha_,
                                     factor_,
                                     isPresentationDiotic_)));
+        outputModules_["SpecificLoudness"] = modules_.back().get();
+
         /*
          * Short-term loudness
          */
