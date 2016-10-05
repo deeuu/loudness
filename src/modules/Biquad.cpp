@@ -34,10 +34,37 @@ namespace loudness{
         setACoefs(aCoefs);
     }
 
+    Biquad::Biquad(const string &type) :
+        Module("Biquad"),
+        Filter(2),
+        type_ (type)
+    {}
+
     Biquad::~Biquad() {}
 
     bool Biquad::initializeInternal(const SignalBank &input)
     {
+        if (type_ == "RLB")
+        {
+            RealVec bCoefs = {1.0, -2.0, 1.0};
+            RealVec aCoefs = {1.0, -1.99004745483398, 0.99007225036621};
+            setBCoefs (bCoefs);
+            setACoefs (aCoefs);
+            setCoefficientFs (48000);
+        }
+        else if (type_ == "prefilter")
+        {
+            RealVec bCoefs = {1.53512485958697,
+                              -2.69169618940638, 
+                              1.19839281085285};
+            RealVec aCoefs = {1.0,
+                              -1.69065929318241, 
+                              0.73248077421585};
+            setBCoefs (bCoefs);
+            setACoefs (aCoefs);
+            setCoefficientFs (48000);
+        }
+
         LOUDNESS_ASSERT( bCoefs_.size() == 3 &&
                 aCoefs_.size() == 3,
                 "Filter coefficients do not satisfy filter order");
@@ -72,10 +99,19 @@ namespace loudness{
             bCoefs_[2] = (Vl*omegaSqrd - (Vb*omega/Q) + Vh) / denom;
         }
 
+        /*
+        std::cout << "A" << std::endl;
+        for (int i = 0; i < 3; ++i)
+            std::cout << aCoefs_[i] << std::endl;
+        std::cout << "B" << std::endl;
+        for (int i = 0; i < 3; ++i)
+            std::cout << bCoefs_[i] << std::endl;
+        */
+
         delayLine_.initialize(input.getNSources(),
                               input.getNEars(),
                               input.getNChannels(),
-                              2 * order_,
+                              2,
                               input.getFs());
 
         //output SignalBank
@@ -101,22 +137,16 @@ namespace loudness{
 
                     for (int smp = 0; smp < input.getNSamples(); ++smp)
                     {
-                        //input sample
-                        Real x = inputSignal[smp] * gain_;
-                        
                         //filter
-                        Real y = bCoefs_[0]*x + bCoefs_[1]*z[0] + bCoefs_[2]*z[1]
-                                 - aCoefs_[1]*z[2] - aCoefs_[2]*z[3];
-
-                        //update delay line
-                        z[3] = z[2];
-                        z[2] = y;
-                        z[1] = z[0];
-                        z[0] = x;
-
-                        //output sample
+                        Real x = inputSignal[smp];
+                        Real y = bCoefs_[0] * x + z[0];
+                        z[0] = bCoefs_[1] * x - aCoefs_[1] * y + z[1];
+                        z[1] = bCoefs_[2] * x - aCoefs_[2] * y;
                         outputSignal[smp] = y;
                     }
+
+                    killDenormal (z[0]);
+                    killDenormal (z[1]);
                 }
             }
         }

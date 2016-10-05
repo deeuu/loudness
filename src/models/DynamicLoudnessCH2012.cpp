@@ -28,10 +28,12 @@
 #include "../modules/CompressSpectrum.h"
 #include "../modules/WeightSpectrum.h"
 #include "../modules/DoubleRoexBank.h"
+#include "../modules/MultiSourceDoubleRoexBank.h"
+#include "../modules/SpecificPartialLoudnessCHGM2011.h"
 #include "../modules/BinauralInhibitionMG2007.h"
 #include "../modules/InstantaneousLoudness.h"
 #include "../modules/ARAverager.h"
-#include "../modules/PeakFollower.h"
+#include "../modules/ForwardMaskingPO1998.h"
 #include "DynamicLoudnessCH2012.h"
 
 namespace loudness{
@@ -72,11 +74,6 @@ namespace loudness{
     void DynamicLoudnessCH2012::setPresentationDiotic(bool isPresentationDiotic)
     {
         isPresentationDiotic_ = isPresentationDiotic;
-    }
-
-    void DynamicLoudnessCH2012::setPeakSTLFollowerUsed(bool isPeakSTLFollowerUsed)
-    {
-        isPeakSTLFollowerUsed_ = isPeakSTLFollowerUsed;
     }
 
     void DynamicLoudnessCH2012::setBinauralInhibitionUsed(bool isBinauralInhibitionUsed)
@@ -124,24 +121,58 @@ namespace loudness{
         pathToFilterCoefs_ = pathToFilterCoefs;
     }
 
+    void DynamicLoudnessCH2012::setPartialLoudnessUsed (bool isPartialLoudnessUsed)
+    {
+        isPartialLoudnessUsed_ = isPartialLoudnessUsed;
+    }
+
+    void DynamicLoudnessCH2012::setForwardMaskingUsed (bool isForwardMaskingUsed)
+    {
+        isForwardMaskingUsed_ = isForwardMaskingUsed;
+    }
+
+    void DynamicLoudnessCH2012::setWindowSpecGM02 (bool isWindowSpecGM02)
+    {
+        isWindowSpecGM02_ = isWindowSpecGM02;
+    }
+
+    void DynamicLoudnessCH2012::setScalingFactor (Real scalingFactor)
+    {
+        scalingFactor_ = scalingFactor;
+    }
+
+    void DynamicLoudnessCH2012::setAttackTimeSTL (Real attackTimeSTL)
+    {
+        attackTimeSTL_ = attackTimeSTL;
+    }
+
+    void DynamicLoudnessCH2012::setReleaseTimeSTL (Real releaseTimeSTL)
+    {
+        releaseTimeSTL_ = releaseTimeSTL;
+    }
+
     void DynamicLoudnessCH2012::configureModelParameters(const string& setName)
     {
         //common to all
-        setRate(1000);
-        setOuterEarFilter(OME::ANSIS342007_FREEFIELD);
-        setMiddleEarFilter(OME::CHGM2011_MIDDLE_EAR);
-        setSpectrumSampledUniformly(true);
-        setHoppingGoertzelDFTUsed(false);
-        setExcitationPatternInterpolated(false);
-        setInterpolationCubic(true);
-        setSpecificLoudnessOutput(true);
-        setBinauralInhibitionUsed(true);
-        setPresentationDiotic(true);
-        setFirstSampleAtWindowCentre(true);
-        setFilterSpacingInCams(0.1);
-        setCompressionCriterionInCams(0.0);
-        attackTimeSTL_ = 0.016;
-        releaseTimeSTL_ = 0.032;
+        setRate (1000);
+        setOuterEarFilter (OME::ANSIS342007_FREEFIELD);
+        setMiddleEarFilter (OME::CHGM2011_MIDDLE_EAR);
+        setSpectrumSampledUniformly (true);
+        setHoppingGoertzelDFTUsed (false);
+        setExcitationPatternInterpolated (false);
+        setInterpolationCubic (true);
+        setPartialLoudnessUsed (false);
+        setSpecificLoudnessOutput (true);
+        setBinauralInhibitionUsed (true);
+        setPresentationDiotic (true);
+        setFirstSampleAtWindowCentre (true);
+        setFilterSpacingInCams (0.1);
+        setCompressionCriterionInCams (0.0);
+        setForwardMaskingUsed (false);
+        setWindowSpecGM02 (false);
+        setScalingFactor (1.53e-8);
+        setAttackTimeSTL (0.016);
+        setReleaseTimeSTL (0.032);
         attackTimeLTL_ = 0.1;
         releaseTimeLTL_ = 2.0;
 
@@ -205,7 +236,11 @@ namespace loudness{
         RealVec bandFreqsHz {10, 80, 500, 1250, 2540, 4050, 16001};
 
         //window spec
-        RealVec windowSizeSecs {0.128, 0.064, 0.032, 0.016, 0.008, 0.004};
+        RealVec windowSizeSecs;
+        if (isWindowSpecGM02_)
+            windowSizeSecs = {0.064, 0.032, 0.016, 0.008, 0.004, 0.002};
+        else
+            windowSizeSecs = {0.128, 0.064, 0.032, 0.016, 0.008, 0.004};
         vector<int> windowSizeSamples(6,0);
         //round to nearest sample and force to be even such that centre samples
         //are aligned (using periodic Hann window)
@@ -264,6 +299,8 @@ namespace loudness{
                     (new WeightSpectrum(middleEarFilter_, outerEarFilter_))); 
         }
 
+        int lastSpectrumIdx = modules_.size()-1;
+
         /*
          * Roex filters
          */
@@ -272,18 +309,19 @@ namespace loudness{
         Real doubleRoexBankfactor, instantaneousLoudnessFactor;
         if (isSpecificLoudnessOutput_)
         {
-            doubleRoexBankfactor = 1.53e-8;
+            doubleRoexBankfactor = scalingFactor_;
             instantaneousLoudnessFactor = 1.0;
             LOUDNESS_DEBUG(name_ << ": Excitation pattern will be scaled for specific loudness");
         }
         else
         {
             doubleRoexBankfactor = 1.0;
-            instantaneousLoudnessFactor = 1.53e-8;
+            instantaneousLoudnessFactor = scalingFactor_;
         }
 
-        isBinauralInhibitionUsed_ = isBinauralInhibitionUsed_
-            * (input.getNEars() == 2) * isSpecificLoudnessOutput_;
+        isBinauralInhibitionUsed_ = isBinauralInhibitionUsed_ *
+                                    (input.getNEars() == 2) *
+                                    isSpecificLoudnessOutput_;
         if (isBinauralInhibitionUsed_)
             doubleRoexBankfactor /= 0.75;
 
@@ -294,9 +332,12 @@ namespace loudness{
                                     isExcitationPatternInterpolated_,
                                     isInterpolationCubic_)));
 
-        /*
-         * Binaural inhibition
-         */
+        if (isForwardMaskingUsed_)
+        {
+            modules_.push_back (
+                    unique_ptr<Module> (new ForwardMaskingPO1998()));
+        }
+
         if (isBinauralInhibitionUsed_)
         {
             modules_.push_back(unique_ptr<Module> 
@@ -307,25 +348,16 @@ namespace loudness{
             LOUDNESS_DEBUG(name_ << ": No binaural inhibition.");
         }
         outputModules_["SpecificLoudness"] = modules_.back().get();
-        
-        /*
-        * Instantaneous loudness
-        */   
+
         modules_.push_back(unique_ptr<Module>
                 (new InstantaneousLoudness(instantaneousLoudnessFactor, 
                                            isPresentationDiotic_)));
         outputModules_["InstantaneousLoudness"] = modules_.back().get();
 
-        /*
-         * Short-term loudness
-         */
         modules_.push_back(unique_ptr<Module>
                 (new ARAverager(attackTimeSTL_, releaseTimeSTL_)));
         outputModules_["ShortTermLoudness"] = modules_.back().get();
 
-        /*
-         * Long-term loudness
-         */
         modules_.push_back(unique_ptr<Module>
                 (new ARAverager(attackTimeLTL_, releaseTimeLTL_)));
         outputModules_["LongTermLoudness"] = modules_.back().get();
@@ -333,13 +365,56 @@ namespace loudness{
         //configure targets
         configureLinearTargetModuleChain();
 
-        //Option to provide PeakFollower
-        if (isPeakSTLFollowerUsed_)
+        if ((input.getNSources() > 1) && (isPartialLoudnessUsed_))
         {
-            modules_.push_back(unique_ptr<Module> (new PeakFollower(2.0)));
-            outputModules_["PeakShortTermLoudness"] = modules_.back().get();
-            outputModules_["ShortTermLoudness"] -> 
-                addTargetModule (*outputModules_["PeakShortTermLoudness"]);
+            LOUDNESS_DEBUG(name_ 
+                           << ": Setting up modules for partial loudness...");
+
+            modules_.push_back(unique_ptr<Module> 
+                    (new MultiSourceDoubleRoexBank (1.5, 40.2,
+                                    filterSpacingInCams_,
+                                    doubleRoexBankfactor,
+                                    false,
+                                    false)));
+            int moduleIdx = modules_.size() - 1;
+
+            // Push spectrum to second excitation transformation stage
+            Module* ptrToWeightedSpectrum = modules_[lastSpectrumIdx].get();
+            ptrToWeightedSpectrum -> addTargetModule (*modules_.back().get());
+
+            if (isForwardMaskingUsed_)
+            {
+                modules_.push_back (
+                        unique_ptr<Module> (new ForwardMaskingPO1998()));
+            }
+
+            outputModules_["MultiSourceExcitation"] = modules_.back().get();
+
+            modules_.push_back(unique_ptr<Module> 
+                    (new SpecificPartialLoudnessCHGM2011()));
+
+            if (isBinauralInhibitionUsed_)
+            {
+                modules_.push_back(unique_ptr<Module>
+                        (new BinauralInhibitionMG2007));
+            }
+
+            outputModules_["SpecificPartialLoudness"] = modules_.back().get();
+
+            modules_.push_back(unique_ptr<Module> 
+                    (new InstantaneousLoudness(1.0, isPresentationDiotic_)));
+            outputModules_["InstantaneousPartialLoudness"] = modules_.back().get();
+
+            modules_.push_back(unique_ptr<Module>
+                (new ARAverager(attackTimeSTL_, releaseTimeSTL_)));
+            outputModules_["ShortTermPartialLoudness"] = modules_.back().get();
+
+            modules_.push_back(unique_ptr<Module>
+                    (new ARAverager(attackTimeLTL_, releaseTimeLTL_)));
+            outputModules_["LongTermPartialLoudness"] = modules_.back().get();
+
+            // configure targets for second (parallel) chain
+            configureLinearTargetModuleChain(moduleIdx);
         }
 
         return 1;

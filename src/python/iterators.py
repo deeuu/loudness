@@ -107,10 +107,12 @@ class StationaryLoudnessIterator():
                  loudnessFunction=None,
                  tol=0.1,
                  nIters=10,
-                 alpha=1.0):
+                 alpha=1.0,
+                 alwaysReinitialize=False):
 
         self.outputName = outputName
-        self.extractor = StationaryLoudnessExtractor(model, outputName)
+        self.extractor = StationaryLoudnessExtractor(model, outputName,
+                                                     alwaysReinitialize)
         self.converged = False
         self.tol = tol
         self.nIters = nIters

@@ -37,6 +37,7 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/modules/ARAverager.cpp \
 ../src/modules/PeakFollower.cpp \
 ../src/modules/SMA.cpp \
+../src/modules/EMA.cpp \
 ../src/modules/FrameGenerator.cpp \
 ../src/modules/Window.cpp \
 ../src/modules/HoppingGoertzelDFT.cpp \
@@ -47,6 +48,9 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/modules/RoexBankANSIS342007.cpp \
 ../src/modules/FastRoexBank.cpp \
 ../src/modules/MultiSourceRoexBank.cpp \
+../src/modules/MultiSourceMasking.cpp \
+../src/modules/MultiSourceMasking2.cpp \
+../src/modules/MultiSourceMasking3.cpp \
 ../src/modules/FixedRoexBank.cpp \
 ../src/modules/DoubleRoexBank.cpp \
 ../src/modules/MultiSourceDoubleRoexBank.cpp \
@@ -61,9 +65,11 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/modules/BinauralInhibitionMG2007.cpp \
 ../src/modules/InstantaneousLoudness.cpp \
 ../src/modules/SimpleLoudness.cpp \
+../src/modules/ForwardMaskingPO1998.cpp \
 ../src/models/StationaryLoudnessANSIS342007.cpp \
 ../src/models/StationaryLoudnessDIN456311991.cpp \
 ../src/models/StationaryLoudnessCHGM2011.cpp \
+../src/models/StationaryLoudnessSimple.cpp \
 ../src/models/DynamicLoudnessGM2002.cpp \
 ../src/models/DynamicLoudnessCH2012.cpp \
 ../src/models/DynamicLoudnessSimple.cpp

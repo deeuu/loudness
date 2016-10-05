@@ -128,7 +128,7 @@ namespace loudness{
         modules_.push_back(unique_ptr<Module>
                 (new InstantaneousLoudness(instantaneousLoudnessFactor, 
                                            isPresentationDiotic_)));
-        outputModules_["InstantaneousLoudness"] = modules_.back().get();
+        outputModules_["Loudness"] = modules_.back().get();
 
         //configure targets
         configureLinearTargetModuleChain();
@@ -169,7 +169,7 @@ namespace loudness{
 
             modules_.push_back(unique_ptr<Module> 
                     (new InstantaneousLoudness(1.0, isPresentationDiotic_)));
-            outputModules_["InstantaneousPartialLoudness"] = modules_.back().get();
+            outputModules_["PartialLoudness"] = modules_.back().get();
 
             // configure targets for second (parallel) chain
             configureLinearTargetModuleChain(moduleIdx);

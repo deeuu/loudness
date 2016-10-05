@@ -16,8 +16,8 @@ bank = ln.SignalBank()
 
 bank.initialize(2, 1, 1, 1, 32000)
 bank.setCentreFreq(0, 5000.0)
-bank.setSample(0, 0, 0, 0, 10**(2/10.0))
-bank.setSample(1, 0, 0, 0, 10**(2/10.0))
+bank.setSample(0, 0, 0, 0, 10**(58/10.0))
+bank.setSample(1, 0, 0, 0, 10**(60/10.0))
 
 model = ln.StationaryLoudnessANSIS342007()
 model.setOutputsToAggregate(['Excitation',

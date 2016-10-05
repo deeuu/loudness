@@ -17,6 +17,7 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
+#include "../modules/Biquad.h"
 #include "../modules/FrameGenerator.h"
 #include "../modules/Window.h"
 #include "../modules/PowerSpectrum.h"
@@ -26,6 +27,7 @@
 #include "../modules/FixedRoexBank.h"
 #include "../modules/SimpleLoudness.h"
 #include "../modules/ARAverager.h"
+#include "../modules/PeakFollower.h"
 #include "DynamicLoudnessSimple.h"
 
 namespace loudness{
@@ -64,6 +66,16 @@ namespace loudness{
         outerEarFilter_ = outerEarFilter;
     }
 
+    void DynamicLoudnessSimple::setMiddleEarFilter(const OME::Filter& middleEarFilter)
+    {
+        middleEarFilter_ = middleEarFilter;
+    }
+
+    void DynamicLoudnessSimple::setOffsetKDB (Real offsetKDB)
+    {
+        offsetKDB_ = offsetKDB;
+    }
+
     void DynamicLoudnessSimple::setAlpha(Real alpha)
     {
         alpha_ = alpha;
@@ -89,6 +101,11 @@ namespace loudness{
         releaseTime_ = releaseTime;
     }
 
+    void DynamicLoudnessSimple::setMaskingTol (Real maskingTol)
+    {
+        maskingTol_ = maskingTol;
+    }
+
     void DynamicLoudnessSimple::setFilterFC (Real fc)
     {
         fc_ = fc;
@@ -104,6 +121,46 @@ namespace loudness{
         slope_ = slope;
     }
 
+    void DynamicLoudnessSimple::setUseMultiSourceMasking (bool useMultiSourceMasking)
+    {
+        useMultiSourceMasking_ = useMultiSourceMasking;
+    }
+
+    void DynamicLoudnessSimple::setMaskK(Real maskK)
+    {
+        maskK_ = maskK;
+    }
+
+    void DynamicLoudnessSimple::setMaskExponent (Real maskExponent)
+    {
+        maskExponent_ = maskExponent;
+    }
+
+    void DynamicLoudnessSimple::setUseRLB (bool useRLB)
+    {
+        useRLB_ = useRLB;
+    }
+
+    void DynamicLoudnessSimple::setUsePreFilter (bool usePreFilter)
+    {
+        usePreFilter_ = usePreFilter;
+    }
+
+    void DynamicLoudnessSimple::setHighpassSpectrum (bool highpassSpectrum)
+    {
+        highpassSpectrum_ = highpassSpectrum;
+    }
+
+    void DynamicLoudnessSimple::setUseTemporalMasking(bool useTemporalMasking)
+    {
+        useTemporalMasking_ = useTemporalMasking;
+    }
+
+    void DynamicLoudnessSimple::setTemporalMaskingTau(Real temporalMaskingTau)
+    {
+        temporalMaskingTau_ = temporalMaskingTau;
+    }
+
     void DynamicLoudnessSimple::configureModelParameters(const string& setName)
     {
         //common to all
@@ -112,19 +169,38 @@ namespace loudness{
         setFilterSpacingInCams (1.0);
         setCompressionCriterionInCams (0.3);
         setPresentationDiotic (true);
-        setAlpha (2.0/3.0);
-        setFactor (1.0);
         setRoexLevel (70.0);
-        setAttackTime (0.050);
-        setReleaseTime (0.800);
-        setFilterFC (100.0);
-        setFilterGain (3.0);
+        setUseRLB (true);
+        setUsePreFilter (true);
+        setAttackTime (0.1);
+        setReleaseTime (1.6);
+        setAlpha (0.5);
+        setFactor (6.48176074655e-06);
+        setHighpassSpectrum (false);
+        setOuterEarFilter(OME::NONE);
+        setMiddleEarFilter(OME::NONE);
+
+        setUseTemporalMasking (false);
+        setTemporalMaskingTau (0.05);
+
+        setUseMultiSourceMasking (false);
+        setMaskingTol (3.0);
+        setOffsetKDB (0.0);
+        setMaskK (0.0);
+        setMaskExponent (2.0);
+        setFilterFC (450.0);
+        setFilterGain (1.0);
         setFilterSlope (3.5);
-        setOuterEarFilter(OME::LML_FREEFIELD);
     }
 
     bool DynamicLoudnessSimple::initializeInternal(const SignalBank &input)
     {
+        if (useRLB_)
+            modules_.push_back(unique_ptr<Module> (new Biquad("RLB")));
+
+        if (usePreFilter_)
+            modules_.push_back(unique_ptr<Module> (new Biquad("prefilter")));
+
         /*
          * Multi-resolution spectrogram
          */
@@ -175,12 +251,14 @@ namespace loudness{
         if (outerEarFilter_ != OME::NONE)
         {
             modules_.push_back(unique_ptr<Module> 
-                    (new WeightSpectrum(OME::NONE, outerEarFilter_)));
+                    (new WeightSpectrum(middleEarFilter_, outerEarFilter_)));
         }
 
-        modules_.push_back(unique_ptr<Module>
-                (new HighpassSpectrum(fc_, gain_, slope_))); 
-
+        if (highpassSpectrum_)
+        {
+            modules_.push_back(unique_ptr<Module>
+                    (new HighpassSpectrum(fc_, 1.0, slope_)));
+        }
 
         /*
          * Roex filters
@@ -191,6 +269,7 @@ namespace loudness{
                 (new FixedRoexBank(1.5, 39.5,
                                     filterSpacingInCams_,
                                     roexLevel_)));
+
         outputModules_["Excitation"] = modules_.back().get();
 
         /*
@@ -200,8 +279,6 @@ namespace loudness{
                 (new SimpleLoudness(alpha_,
                                     factor_,
                                     isPresentationDiotic_)));
-        outputModules_["SpecificLoudness"] = modules_.back().get();
-
         /*
          * Short-term loudness
          */
@@ -209,8 +286,41 @@ namespace loudness{
                 (new ARAverager(attackTime_, releaseTime_)));
         outputModules_["ShortTermLoudness"] = modules_.back().get();
 
-        //configure targets
+        // configure targets
         configureLinearTargetModuleChain();
+
+        /*
+        if (input.getNSources() > 1)
+        {
+            if (useMultiSourceMasking_)
+            {
+                modules_.push_back(unique_ptr<Module>
+                    (new MultiSourceMasking()));
+            }
+            else
+            {
+                modules_.push_back(unique_ptr<Module>
+                    (new MultiSourceMasking3(offsetKDB_)));
+            }
+
+            outputModules_["Excitation"] -> addTargetModule (
+                    *modules_.back().get());
+            int moduleIdx = modules_.size() - 1;
+
+            outputModules_["MultiSourceExcitation"] = modules_.back().get();
+
+            modules_.push_back(unique_ptr<Module>
+                (new SimpleLoudness(alpha_,
+                                    factor_,
+                                    isPresentationDiotic_)));
+
+            modules_.push_back(unique_ptr<Module>
+                (new ARAverager(attackTime_, releaseTime_)));
+            outputModules_["ShortTermPartialLoudness"] = modules_.back().get();
+
+            configureLinearTargetModuleChain(moduleIdx);
+        }
+        */
 
         return 1;
     }

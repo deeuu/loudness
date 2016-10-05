@@ -21,6 +21,7 @@
 #define SIGNALBANK_H
 
 #include "Common.h"
+#include "UsefulFunctions.h"
 
 namespace loudness{
 

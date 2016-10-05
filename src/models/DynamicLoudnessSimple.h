@@ -126,32 +126,58 @@ namespace loudness{
 
             void setOuterEarFilter(const OME::Filter& outerEarFilter);
 
+            void setMiddleEarFilter(const OME::Filter& middleEarFilter);
+
             void setAlpha(Real alpha);
 
             void setFactor(Real factor);
 
+            void setOffsetKDB(Real offsetKDB);
+
             void setRoexLevel(Real roexLevel);
+
+            void setMaskingTol (Real setMaskingTol);
 
             void setAttackTime(Real attackTime);
 
             void setReleaseTime(Real releaseTime);
-
+            
             void setFilterFC(Real fc);
 
             void setFilterGain(Real gain);
 
             void setFilterSlope(Real slope);
 
+            void setUseMultiSourceMasking (bool useMultiSourceMasking);
+
+            void setMaskExponent (Real maskExponent);
+
+            void setMaskK (Real maskK);
+
+            void setUseRLB (bool useRLB);
+
+            void setUsePreFilter (bool usePreFilter);
+
+            void setHighpassSpectrum (bool highpassSpectrum);
+
+            void setUseTemporalMasking(bool useTemporalMasking);
+
+            void setTemporalMaskingTau(Real temporalMaskingTau);
+
         private:
             virtual bool initializeInternal(const SignalBank &input);
 
             Real filterSpacingInCams_, compressionCriterionInCams_;
-            Real attackTime_, releaseTime_;
+            Real attackTime_, releaseTime_, maskingTol_;
             Real alpha_, factor_, roexLevel_, fc_, gain_, slope_;
             bool isInterpolationCubic_, isPresentationDiotic_;
             bool isSpecificLoudnessOutput_, isBinauralInhibitionUsed_;
             bool isFirstSampleAtWindowCentre_, isPeakSTLFollowerUsed_;
-            OME::Filter outerEarFilter_;
+            OME::Filter outerEarFilter_, middleEarFilter_;
+            bool useMultiSourceMasking_, useRLB_, highpassSpectrum_;
+            bool usePreFilter_, useTemporalMasking_;
+            Real offsetKDB_, temporalMaskingTau_;
+            Real maskK_, maskExponent_;
     }; 
 }
 

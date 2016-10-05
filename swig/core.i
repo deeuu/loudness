@@ -38,6 +38,7 @@
 #include "../src/modules/Butter.h"
 #include "../src/modules/Biquad.h"
 #include "../src/modules/SMA.h"
+#include "../src/modules/EMA.h"
 #include "../src/modules/AudioFileCutter.h"
 #include "../src/modules/FrameGenerator.h"
 #include "../src/modules/Window.h"
@@ -62,6 +63,7 @@
 #include "../src/modules/BinauralInhibitionMG2007.h"
 #include "../src/modules/InstantaneousLoudness.h"
 #include "../src/modules/SimpleLoudness.h"
+#include "../src/modules/ForwardMaskingPO1998.h"
 #include "../src/modules/InstantaneousLoudnessDIN456311991.h"
 #include "../src/modules/ARAverager.h"
 #include "../src/modules/PeakFollower.h"
@@ -71,6 +73,7 @@
 #include "../src/models/DynamicLoudnessGM2002.h"
 #include "../src/models/DynamicLoudnessCH2012.h"
 #include "../src/models/DynamicLoudnessSimple.h"
+#include "../src/models/StationaryLoudnessSimple.h"
 
 typedef loudness::Real Real;
 typedef loudness::uint unint;
@@ -132,6 +135,7 @@ using std::vector;
 %include "../src/modules/Butter.h"
 %include "../src/modules/Biquad.h"
 %include "../src/modules/SMA.h"
+%include "../src/modules/EMA.h"
 %include "../src/modules/AudioFileCutter.h"
 %include "../src/modules/FrameGenerator.h"
 %include "../src/modules/Window.h"
@@ -156,6 +160,7 @@ using std::vector;
 %include "../src/modules/BinauralInhibitionMG2007.h"
 %include "../src/modules/InstantaneousLoudness.h"
 %include "../src/modules/SimpleLoudness.h"
+%include "../src/modules/ForwardMaskingPO1998.h"
 %include "../src/modules/InstantaneousLoudnessDIN456311991.h"
 %include "../src/modules/ARAverager.h"
 %include "../src/modules/PeakFollower.h"
@@ -165,3 +170,4 @@ using std::vector;
 %include "../src/models/DynamicLoudnessGM2002.h"
 %include "../src/models/DynamicLoudnessCH2012.h"
 %include "../src/models/DynamicLoudnessSimple.h"
+%include "../src/models/StationaryLoudnessSimple.h"

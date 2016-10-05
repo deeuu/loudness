@@ -131,7 +131,7 @@ namespace loudness{
 
             void setPresentationDiotic(bool isPresentationDiotic);
 
-            void setPeakSTLFollowerUsed(bool isPeakSTLFollowerUsed);
+            void setPartialLoudnessUsed (bool isPartialLoudnessUsed);
 
             void setBinauralInhibitionUsed(bool isBinauralInhibitionUsed);
 
@@ -149,6 +149,15 @@ namespace loudness{
 
             void setPathToFilterCoefs(string pathToFilterCoefs);
 
+            void setWindowSpecGM02 (bool isWindowSpecGM02);
+
+            void setForwardMaskingUsed (bool isForwardMaskingUsed);
+
+            void setScalingFactor (Real scalingFactor);
+
+            void setAttackTimeSTL (Real attackTimeSTL);
+            void setReleaseTimeSTL (Real releaseTimeSTL);
+
         private:
             virtual bool initializeInternal(const SignalBank &input);
 
@@ -156,11 +165,14 @@ namespace loudness{
             Real filterSpacingInCams_, compressionCriterionInCams_;
             Real attackTimeSTL_, releaseTimeSTL_;
             Real attackTimeLTL_, releaseTimeLTL_;
+            Real scalingFactor_;
             bool isSpectrumSampledUniformly_, isHoppingGoertzelDFTUsed_;
             bool isExcitationPatternInterpolated_;
             bool isInterpolationCubic_, isPresentationDiotic_;
             bool isSpecificLoudnessOutput_, isBinauralInhibitionUsed_;
-            bool isFirstSampleAtWindowCentre_, isPeakSTLFollowerUsed_;
+            bool isFirstSampleAtWindowCentre_;
+            bool isPartialLoudnessUsed_, isWindowSpecGM02_;
+            bool isForwardMaskingUsed_;
             OME::Filter outerEarFilter_, middleEarFilter_;
     }; 
 }

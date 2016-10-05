@@ -245,6 +245,12 @@ namespace loudness{
                                 vPrev[k] = v;
                             }
                         }
+
+                        for (int k = binIdxForGoertzels_[w][0]; k < binIdxForGoertzels_[w][1]; ++k)
+                        {
+                            killDenormal (vPrev[k]);
+                            killDenormal (vPrev2[k]);
+                        }
                     }
                 }
             }

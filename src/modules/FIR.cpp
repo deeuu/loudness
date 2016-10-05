@@ -70,8 +70,7 @@ namespace loudness{
 
                     for (int smp = 0; smp < input.getNSamples(); ++smp)
                     {
-                        //input sample
-                        Real x = inputSignal[smp] * gain_;
+                        Real x = inputSignal[smp];
 
                         //output sample
                         outputSignal[smp] = bCoefs_[0] * x + z[0];
