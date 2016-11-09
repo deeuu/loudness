@@ -141,6 +141,10 @@ namespace loudness{
             void setAttackTime(Real attackTime);
 
             void setReleaseTime(Real releaseTime);
+
+            void setAttackTimeLTL(Real attackTimeLTL);
+
+            void setReleaseTimeLTL(Real releaseTimeLTL);
             
             void setFilterFC(Real fc);
 
@@ -156,6 +160,9 @@ namespace loudness{
 
             void setUseRLB (bool useRLB);
 
+            void setCamLo (Real camLo);
+            void setCamHi (Real camHi);
+
             void setUsePreFilter (bool usePreFilter);
 
             void setHighpassSpectrum (bool highpassSpectrum);
@@ -169,7 +176,9 @@ namespace loudness{
 
             Real filterSpacingInCams_, compressionCriterionInCams_;
             Real attackTime_, releaseTime_, maskingTol_;
+            Real attackTimeLTL_, releaseTimeLTL_;
             Real alpha_, factor_, roexLevel_, fc_, gain_, slope_;
+            Real camLo_, camHi_;
             bool isInterpolationCubic_, isPresentationDiotic_;
             bool isSpecificLoudnessOutput_, isBinauralInhibitionUsed_;
             bool isFirstSampleAtWindowCentre_, isPeakSTLFollowerUsed_;

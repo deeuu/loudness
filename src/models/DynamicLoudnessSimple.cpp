@@ -27,7 +27,7 @@
 #include "../modules/FixedRoexBank.h"
 #include "../modules/SimpleLoudness.h"
 #include "../modules/ARAverager.h"
-#include "../modules/PeakFollower.h"
+#include "../modules/MultiSourceMasking3.h"
 #include "DynamicLoudnessSimple.h"
 
 namespace loudness{
@@ -101,6 +101,16 @@ namespace loudness{
         releaseTime_ = releaseTime;
     }
 
+    void DynamicLoudnessSimple::setAttackTimeLTL(Real attackTimeLTL)
+    {
+        attackTimeLTL_ = attackTimeLTL;
+    }
+
+    void DynamicLoudnessSimple::setReleaseTimeLTL(Real releaseTimeLTL)
+    {
+        releaseTimeLTL_ = releaseTimeLTL;
+    }
+
     void DynamicLoudnessSimple::setMaskingTol (Real maskingTol)
     {
         maskingTol_ = maskingTol;
@@ -161,6 +171,16 @@ namespace loudness{
         temporalMaskingTau_ = temporalMaskingTau;
     }
 
+    void DynamicLoudnessSimple::setCamLo (Real camLo)
+    {
+        camLo_ = camLo;
+    }
+    
+    void DynamicLoudnessSimple::setCamHi (Real camHi)
+    {
+        camHi_ = camHi;
+    }
+
     void DynamicLoudnessSimple::configureModelParameters(const string& setName)
     {
         //common to all
@@ -172,22 +192,21 @@ namespace loudness{
         setRoexLevel (70.0);
         setUseRLB (true);
         setUsePreFilter (true);
-        setAttackTime (0.1);
-        setReleaseTime (1.6);
-        setAlpha (0.5);
-        setFactor (6.48176074655e-06);
+        setAttackTime (0.022);
+        setReleaseTime (0.05);
+        setAttackTimeLTL (0.1);
+        setReleaseTimeLTL (0.2);
+        setAlpha (0.56);
+        setFactor (3.32320447725e-06);
         setHighpassSpectrum (false);
         setOuterEarFilter(OME::NONE);
         setMiddleEarFilter(OME::NONE);
 
-        setUseTemporalMasking (false);
-        setTemporalMaskingTau (0.05);
+        setCamLo (1.5);
+        setCamHi (39.5);
 
         setUseMultiSourceMasking (false);
-        setMaskingTol (3.0);
         setOffsetKDB (0.0);
-        setMaskK (0.0);
-        setMaskExponent (2.0);
         setFilterFC (450.0);
         setFilterGain (1.0);
         setFilterSlope (3.5);
@@ -217,7 +236,7 @@ namespace loudness{
                                               * input.getFs());
             windowSizeSamples[w] += windowSizeSamples[w] % 2;
         }
-        
+
         // hop size to the nearest sample
         int hopSize = round(input.getFs() / rate_);
         
@@ -266,7 +285,7 @@ namespace loudness{
 
         // Set up scaling factors depending on output config
         modules_.push_back(unique_ptr<Module>
-                (new FixedRoexBank(1.5, 39.5,
+                (new FixedRoexBank(camLo_, camHi_,
                                     filterSpacingInCams_,
                                     roexLevel_)));
 
@@ -286,28 +305,22 @@ namespace loudness{
                 (new ARAverager(attackTime_, releaseTime_)));
         outputModules_["ShortTermLoudness"] = modules_.back().get();
 
+        modules_.push_back(unique_ptr<Module>
+                (new ARAverager(attackTimeLTL_, releaseTimeLTL_)));
+        outputModules_["LongTermLoudness"] = modules_.back().get();
+
         // configure targets
         configureLinearTargetModuleChain();
 
-        /*
-        if (input.getNSources() > 1)
+        if ((input.getNSources() > 1) && (useMultiSourceMasking_))
         {
-            if (useMultiSourceMasking_)
-            {
-                modules_.push_back(unique_ptr<Module>
-                    (new MultiSourceMasking()));
-            }
-            else
-            {
-                modules_.push_back(unique_ptr<Module>
-                    (new MultiSourceMasking3(offsetKDB_)));
-            }
+            modules_.push_back(unique_ptr<Module>
+                (new MultiSourceMasking3(offsetKDB_)));
 
             outputModules_["Excitation"] -> addTargetModule (
                     *modules_.back().get());
             int moduleIdx = modules_.size() - 1;
-
-            outputModules_["MultiSourceExcitation"] = modules_.back().get();
+            outputModules_["EffectiveExcitation"] = modules_.back().get();
 
             modules_.push_back(unique_ptr<Module>
                 (new SimpleLoudness(alpha_,
@@ -318,9 +331,12 @@ namespace loudness{
                 (new ARAverager(attackTime_, releaseTime_)));
             outputModules_["ShortTermPartialLoudness"] = modules_.back().get();
 
+            modules_.push_back(unique_ptr<Module>
+                (new ARAverager(attackTimeLTL_, releaseTimeLTL_)));
+            outputModules_["LongTermPartialLoudness"] = modules_.back().get();
+
             configureLinearTargetModuleChain(moduleIdx);
         }
-        */
 
         return 1;
     }

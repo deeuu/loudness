@@ -48,8 +48,6 @@ SOURCES=../src/thirdParty/cnpy/cnpy.cpp \
 ../src/modules/RoexBankANSIS342007.cpp \
 ../src/modules/FastRoexBank.cpp \
 ../src/modules/MultiSourceRoexBank.cpp \
-../src/modules/MultiSourceMasking.cpp \
-../src/modules/MultiSourceMasking2.cpp \
 ../src/modules/MultiSourceMasking3.cpp \
 ../src/modules/FixedRoexBank.cpp \
 ../src/modules/DoubleRoexBank.cpp \

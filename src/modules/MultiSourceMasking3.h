@@ -17,35 +17,29 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#ifndef  COMMON_H
-#define  COMMON_H
+#ifndef MultiSourceMasking3_H
+#define MultiSourceMasking3_H
 
-#include <memory>
-#include <vector>
-#include <cmath>
-#include <string>
-#include <algorithm>
-#include <map>
-#include "Debug.h"
+#include "../support/Module.h"
 
-/*
- * Expose objects
- */
 namespace loudness{
-    using std::vector;
-    using std::string;
-    using std::unique_ptr;
-    using std::map;
 
-/*
- * Types
- */
-typedef double Real;
-typedef unsigned int uint;
-typedef std::vector<Real> RealVec;
-typedef std::vector<std::vector<Real> > RealVecVec;
-typedef std::vector<int> IntVec;
-typedef std::vector<Real>::iterator RealIter;
+    class MultiSourceMasking3 : public Module
+    {
+    public:
+ 
+        MultiSourceMasking3(Real offsetKDB=-3);
 
+        virtual ~MultiSourceMasking3();
+
+    private:
+        virtual bool initializeInternal(const SignalBank &input);
+        virtual bool initializeInternal(){return 0;};
+        virtual void processInternal(const SignalBank &input);
+        virtual void processInternal(){};
+        virtual void resetInternal();
+        Real offsetKDB_;
+        RealVec k_;
+    };
 }
 #endif

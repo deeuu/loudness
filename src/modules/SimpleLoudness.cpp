@@ -92,9 +92,13 @@ namespace loudness{
                                                     .getSingleSampleReadPointer
                                                     (src, ear, 0);
 
+
                 // sum loudness over all auditory filters
                 for (int chn = 0; chn < input.getNChannels(); ++chn)
+                {
+                    //Real expo = std::std(-input.getCentreFreq (chn)/ exponent_) * 0.5 + 0.5;
                     earIL += std::pow (inputSpecificLoudness[chn], exponent_);
+                }
                 
                 earIL *= cParam_;
 

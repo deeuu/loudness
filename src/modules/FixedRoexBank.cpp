@@ -65,10 +65,12 @@ namespace loudness{
         {
             cam = camLo_ + camStep_ * chn;
             fc = camToHertz (cam);
+            output_.setCentreFreq (chn, fc);
+
             erb = centreFreqToCambridgeERB (fc);
             pu = 4.0 * fc / erb;
+
             t2 = 0.35 * (pu / p51_1k);
-            output_.setCentreFreq (chn, fc);
 
             int j = 0;
             while (j < input.getNChannels())

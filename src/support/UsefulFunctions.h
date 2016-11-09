@@ -20,8 +20,6 @@
 #ifndef  USEFULFUNCTIONS_H
 #define  USEFULFUNCTIONS_H
 
-#include <cmath>
-#include <vector>
 #include "Common.h"
 #define PI 3.14159265358979323846264338327
 #define LOWER_LIMIT_DB -100
