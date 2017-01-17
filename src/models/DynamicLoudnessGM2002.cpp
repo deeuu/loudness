@@ -33,6 +33,7 @@
 #include "../modules/MultiSourceRoexBank.h"
 #include "../modules/SpecificPartialLoudnessMGB1997.h"
 #include "../modules/SpecificLoudnessANSIS342007.h"
+#include "../modules/ForwardMaskingPO1998.h"
 #include "../modules/BinauralInhibitionMG2007.h"
 #include "../modules/InstantaneousLoudness.h"
 #include "../modules/ARAverager.h"
@@ -67,6 +68,16 @@ namespace loudness{
     void DynamicLoudnessGM2002::setFirstSampleAtWindowCentre(bool isFirstSampleAtWindowCentre)
     {
         isFirstSampleAtWindowCentre_ = isFirstSampleAtWindowCentre;
+    }
+
+    void DynamicLoudnessGM2002::setForwardMaskingUsed (bool isForwardMaskingUsed)
+    {
+        isForwardMaskingUsed_ = isForwardMaskingUsed;
+    }
+
+    void DynamicLoudnessGM2002::setDecayUsed (bool isDecayUsed)
+    {
+        isDecayUsed_ = isDecayUsed;
     }
     
     void DynamicLoudnessGM2002::setPeakSTLFollowerUsed(bool isPeakSTLFollowerUsed)
@@ -163,6 +174,16 @@ namespace loudness{
         isSpecificLoudnessANSIS342007_ = isSpecificLoudnessANSIS342007;
     }
 
+    void DynamicLoudnessGM2002::setDecayTime(Real decayTime)
+    {
+        decayTime_ = decayTime;
+    }
+
+    void DynamicLoudnessGM2002::setAttackTime(Real attackTime)
+    {
+        attackTime_ = attackTime;
+    }
+
     void DynamicLoudnessGM2002::configureSmoothingTimes(const string& author)
     {
         if (author == "GM2002")
@@ -208,6 +229,9 @@ namespace loudness{
         setBinauralInhibitionUsed(true);
         setPartialLoudnessUsed(true);
         configureSmoothingTimes("GM2002");
+
+        setForwardMaskingUsed (false);
+        setDecayUsed (false);
                 
         if (setName != "GM2002")
         {
@@ -399,8 +423,16 @@ namespace loudness{
             modules_.push_back(unique_ptr<Module> 
                     (new RoexBankANSIS342007(1.8, 38.9, filterSpacingInCams_)));
         }
+
+
         outputModules_["Excitation"] = modules_.back().get();
-        
+
+        if (isForwardMaskingUsed_)
+        {
+            modules_.push_back (
+                    unique_ptr<Module> (new ForwardMaskingPO1998()));
+        }
+               
         /*
          * Specific loudness
          */
@@ -408,6 +440,12 @@ namespace loudness{
         modules_.push_back(unique_ptr<Module>
                 (new SpecificLoudnessANSIS342007(isSpecificLoudnessANSIS342007_,
                                                  isBinauralInhibitionUsed_)));
+
+        if (isDecayUsed_)
+        {
+            //modules_.push_back(unique_ptr<Module> (new PeakFollower(decayTime_)));
+            modules_.push_back(unique_ptr<Module> (new ARAverager(attackTime_, decayTime_)));
+        }
 
         /*
          * Binaural inhibition

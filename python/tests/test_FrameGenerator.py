@@ -2,13 +2,13 @@ import numpy as np
 import loudness as ln
 
 fs = 32000
-N = 10000
+N = 2048 + 32
 x = np.arange(0, N)
 
 # Input SignalBank
 bufSize = 32
 nSources = 1
-nEars = 2
+nEars = 1
 nChannels = 1
 inputBank = ln.SignalBank()
 inputBank.initialize(nSources, nEars, nChannels, bufSize, int(fs))
@@ -33,7 +33,6 @@ for block in range(nBlocks):
     # Update input bank
     idx = block * bufSize
     inputBank.setSignal(0, 0, 0, x[idx:idx + bufSize])
-    inputBank.setSignal(0, 1, 0, x[idx:idx + bufSize])
 
     # process it
     frameGen.process(inputBank)
@@ -41,7 +40,7 @@ for block in range(nBlocks):
     # get output
     if(outputBank.getTrig()):
         sig = np.squeeze(outputBank.getSignals())
-        frames[:, frameIndex, :] = sig.reshape(2, frameSize)
+        frames[:, frameIndex, :] = np.copy(sig)
         frameIndex += 1
 
 # Check frames are correct
@@ -49,9 +48,7 @@ if startAtWindowCentre:
     x = np.hstack((np.zeros(np.ceil((frameSize - 1) / 2.0)), x))
 
 for ear in range(nEars):
-    for i, frame in enumerate(frames[0, ear]):
+    for i, frame in enumerate(frames[ear]):
         start = i * hopSize
-        if all(frame == x[start:start + frameSize]):
-            print("Frame number %d correct" % i)
-        else:
+        if all(frame != x[start:start + frameSize]):
             print("Frame number %d incorrect" % i)

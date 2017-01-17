@@ -182,6 +182,13 @@ namespace loudness{
 
             void setFirstSampleAtWindowCentre(bool isFirstSampleAtWindowCentre);
 
+            void setForwardMaskingUsed(bool isForwardMaskingUsed);
+
+            void setDecayUsed(bool isDecayUsed);
+
+            void setDecayTime(Real decayTime_);
+            void setAttackTime(Real attackTime_);
+
             void setFilterSpacingInCams(Real filterSpacingInCams);
 
             void setCompressionCriterionInCams(Real compressionCriterionInCams);
@@ -204,6 +211,8 @@ namespace loudness{
             bool isSpectralResolutionDoubled_, isBinauralInhibitionUsed_;
             bool isSpecificLoudnessANSIS342007_, isFirstSampleAtWindowCentre_;
             bool isPeakSTLFollowerUsed_, isPartialLoudnessUsed_;
+            bool isForwardMaskingUsed_, isDecayUsed_;
+            Real decayTime_, attackTime_;
             string pathToFilterCoefs_;
             OME::Filter outerEarFilter_, middleEarFilter_;
     }; 
