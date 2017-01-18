@@ -1,2 +1,2 @@
-from core import *
-import tools
+from .core import *
+from . import tools

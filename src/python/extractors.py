@@ -360,7 +360,7 @@ class BatchWavFileProcessor:
 
         model.setOutputsToAggregate(self.outputs)
 
-        print "Output will be saved to ", self.filename
+        print ("Output will be saved to ", self.filename)
         h5File = h5py.File(self.filename, 'w')
 
         processor = ln.AudioFileProcessor(
@@ -372,7 +372,7 @@ class BatchWavFileProcessor:
 
         for wavFile in self.wavFiles:
 
-            print("Processing file %s ..." % wavFile)
+            print ("Processing file %s ..." % wavFile)
 
             # Create new group
             wavFileGroup = h5File.create_group(wavFile)

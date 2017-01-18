@@ -188,7 +188,7 @@ class Sound:
         theta = np.pi * 0.5 * np.arange(d) / float(d)
         nSamplesmiddle = self.nSamples - 2 * d
         if nSamplesmiddle < 0:
-            print "Duration too large"
+            print ("Duration too large")
         else:
             self.data *= np.concatenate((
                 np.cos(theta + np.pi * 1.5),

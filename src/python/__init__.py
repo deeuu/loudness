@@ -1,5 +1,5 @@
-import sound
-import extractors
-import iterators
-import predictors
-import spectra
+from . import sound
+from . import extractors
+from . import iterators
+from . import predictors
+from . import spectra

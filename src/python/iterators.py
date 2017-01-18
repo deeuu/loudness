@@ -1,8 +1,8 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from sound import Sound
-from extractors import DynamicLoudnessExtractor, StationaryLoudnessExtractor
+from .sound import Sound
+from .extractors import DynamicLoudnessExtractor, StationaryLoudnessExtractor
 
 
 def asIs(x):
