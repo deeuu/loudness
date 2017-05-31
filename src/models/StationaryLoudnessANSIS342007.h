@@ -106,8 +106,6 @@ namespace loudness{
 
             void setSpecificLoudnessANSIS342007(bool isSpecificLoudnessANSIS342007_);
 
-            void setAlpha(const RealVec& alpha);
-            
         private:
             virtual bool initializeInternal(const SignalBank &input);
 
@@ -115,7 +113,6 @@ namespace loudness{
             bool isPresentationDiotic_, isPartialLoudnessUsed_, isBinauralInhibitionUsed_;
             bool isSpecificLoudnessANSIS342007_;
             OME::Filter outerEarFilter_, middleEarFilter_;
-            RealVec alpha_;
     }; 
 }
 

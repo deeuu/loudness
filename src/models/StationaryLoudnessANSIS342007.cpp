@@ -22,7 +22,6 @@
 #include "../modules/MultiSourceRoexBank.h"
 #include "../modules/SpecificPartialLoudnessMGB1997.h"
 #include "../modules/SpecificLoudnessANSIS342007.h"
-#include "../modules/SpecificLoudnessModANSIS342007.h"
 #include "../modules/BinauralInhibitionMG2007.h"
 #include "../modules/InstantaneousLoudness.h"
 #include "StationaryLoudnessANSIS342007.h"
@@ -80,11 +79,6 @@ namespace loudness{
         isSpecificLoudnessANSIS342007_ = isSpecificLoudnessANSIS342007;
     }
 
-    void StationaryLoudnessANSIS342007::setAlpha (const RealVec& alpha)
-    {
-        alpha_ = alpha;
-    }
-
     bool StationaryLoudnessANSIS342007::initializeInternal(const SignalBank &input)
     {
         /*
@@ -102,20 +96,10 @@ namespace loudness{
                 (new RoexBankANSIS342007(1.8, 38.9, filterSpacingInCams_)));
         outputModules_["Excitation"] = modules_.back().get();
 
-        if (!alpha_.empty())
-        {
-            modules_.push_back(unique_ptr<Module>
-                    (new SpecificLoudnessModANSIS342007(
-                        alpha_,
-                        isBinauralInhibitionUsed_)));
-        }
-        else
-        {
-            modules_.push_back(unique_ptr<Module>
-                    (new SpecificLoudnessANSIS342007(
-                        isSpecificLoudnessANSIS342007_,
-                        isBinauralInhibitionUsed_)));
-        }
+        modules_.push_back(unique_ptr<Module>
+                (new SpecificLoudnessANSIS342007(
+                    isSpecificLoudnessANSIS342007_,
+                    isBinauralInhibitionUsed_)));
 
         /*
          * Binaural inhibition

@@ -147,7 +147,6 @@ using std::vector;
 %include "../src/modules/OctaveBank.h"
 %include "../src/modules/ComplexGammatoneBank.h"
 %include "../src/modules/SpecificLoudnessANSIS342007.h"
-%include "../src/modules/SpecificLoudnessModANSIS342007.h"
 %include "../src/modules/SpecificPartialLoudnessMGB1997.h"
 %include "../src/modules/SpecificPartialLoudnessCHGM2011.h"
 %include "../src/modules/MainLoudnessDIN456311991.h"
