@@ -72,15 +72,11 @@ namespace loudness{
      * If you want this setExcitationPatternInterpolated(true); In mode `faster'
      * this is true;
      *
-     * A peak follower can be applied to the short-term loudness using 
-     * setPeakSTLFollowerUsed(true) (default is false).
-     *
      * OUTPUTS:
      *  - "SpecificLoudness"
      *  - "InstantaneousLoudness"
      *  - "ShortTermLoudness"
      *  - "LongTermLoudness"
-     *  - "PeakShortTermLoudness" (optional)
      *
      * REFERENCES:
      *
@@ -151,8 +147,6 @@ namespace loudness{
 
             void setWindowSpecGM02 (bool isWindowSpecGM02);
 
-            void setForwardMaskingUsed (bool isForwardMaskingUsed);
-
             void setScalingFactor (Real scalingFactor);
 
             void setAttackTimeSTL (Real attackTimeSTL);
@@ -172,7 +166,6 @@ namespace loudness{
             bool isSpecificLoudnessOutput_, isBinauralInhibitionUsed_;
             bool isFirstSampleAtWindowCentre_;
             bool isPartialLoudnessUsed_, isWindowSpecGM02_;
-            bool isForwardMaskingUsed_;
             OME::Filter outerEarFilter_, middleEarFilter_;
     }; 
 }

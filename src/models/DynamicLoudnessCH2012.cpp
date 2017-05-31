@@ -33,7 +33,6 @@
 #include "../modules/BinauralInhibitionMG2007.h"
 #include "../modules/InstantaneousLoudness.h"
 #include "../modules/ARAverager.h"
-#include "../modules/ForwardMaskingPO1998.h"
 #include "DynamicLoudnessCH2012.h"
 
 namespace loudness{
@@ -126,11 +125,6 @@ namespace loudness{
         isPartialLoudnessUsed_ = isPartialLoudnessUsed;
     }
 
-    void DynamicLoudnessCH2012::setForwardMaskingUsed (bool isForwardMaskingUsed)
-    {
-        isForwardMaskingUsed_ = isForwardMaskingUsed;
-    }
-
     void DynamicLoudnessCH2012::setWindowSpecGM02 (bool isWindowSpecGM02)
     {
         isWindowSpecGM02_ = isWindowSpecGM02;
@@ -168,7 +162,6 @@ namespace loudness{
         setFirstSampleAtWindowCentre (true);
         setFilterSpacingInCams (0.1);
         setCompressionCriterionInCams (0.0);
-        setForwardMaskingUsed (false);
         setWindowSpecGM02 (false);
         setScalingFactor (1.53e-8);
         setAttackTimeSTL (0.016);
@@ -332,12 +325,6 @@ namespace loudness{
                                     isExcitationPatternInterpolated_,
                                     isInterpolationCubic_)));
 
-        if (isForwardMaskingUsed_)
-        {
-            modules_.push_back (
-                    unique_ptr<Module> (new ForwardMaskingPO1998()));
-        }
-
         if (isBinauralInhibitionUsed_)
         {
             modules_.push_back(unique_ptr<Module> 
@@ -382,12 +369,6 @@ namespace loudness{
             // Push spectrum to second excitation transformation stage
             Module* ptrToWeightedSpectrum = modules_[lastSpectrumIdx].get();
             ptrToWeightedSpectrum -> addTargetModule (*modules_.back().get());
-
-            if (isForwardMaskingUsed_)
-            {
-                modules_.push_back (
-                        unique_ptr<Module> (new ForwardMaskingPO1998()));
-            }
 
             outputModules_["MultiSourceExcitation"] = modules_.back().get();
 

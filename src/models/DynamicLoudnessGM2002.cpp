@@ -33,11 +33,9 @@
 #include "../modules/MultiSourceRoexBank.h"
 #include "../modules/SpecificPartialLoudnessMGB1997.h"
 #include "../modules/SpecificLoudnessANSIS342007.h"
-#include "../modules/ForwardMaskingPO1998.h"
 #include "../modules/BinauralInhibitionMG2007.h"
 #include "../modules/InstantaneousLoudness.h"
 #include "../modules/ARAverager.h"
-#include "../modules/PeakFollower.h"
 #include "DynamicLoudnessGM2002.h"
 
 namespace loudness{
@@ -68,21 +66,6 @@ namespace loudness{
     void DynamicLoudnessGM2002::setFirstSampleAtWindowCentre(bool isFirstSampleAtWindowCentre)
     {
         isFirstSampleAtWindowCentre_ = isFirstSampleAtWindowCentre;
-    }
-
-    void DynamicLoudnessGM2002::setForwardMaskingUsed (bool isForwardMaskingUsed)
-    {
-        isForwardMaskingUsed_ = isForwardMaskingUsed;
-    }
-
-    void DynamicLoudnessGM2002::setDecayUsed (bool isDecayUsed)
-    {
-        isDecayUsed_ = isDecayUsed;
-    }
-    
-    void DynamicLoudnessGM2002::setPeakSTLFollowerUsed(bool isPeakSTLFollowerUsed)
-    {
-        isPeakSTLFollowerUsed_ = isPeakSTLFollowerUsed;
     }
 
     void DynamicLoudnessGM2002::setAttackTimeSTL(Real attackTimeSTL)
@@ -174,16 +157,6 @@ namespace loudness{
         isSpecificLoudnessANSIS342007_ = isSpecificLoudnessANSIS342007;
     }
 
-    void DynamicLoudnessGM2002::setDecayTime(Real decayTime)
-    {
-        decayTime_ = decayTime;
-    }
-
-    void DynamicLoudnessGM2002::setAttackTime(Real attackTime)
-    {
-        attackTime_ = attackTime;
-    }
-
     void DynamicLoudnessGM2002::configureSmoothingTimes(const string& author)
     {
         if (author == "GM2002")
@@ -212,7 +185,6 @@ namespace loudness{
     {
         //common to all
         setRate(1000);
-        setPeakSTLFollowerUsed(false);
         setOuterEarFilter(OME::ANSIS342007_FREEFIELD);
         setMiddleEarFilter(OME::ANSIS342007_MIDDLE_EAR_HPF);
         setSpectrumSampledUniformly(true);
@@ -230,9 +202,6 @@ namespace loudness{
         setPartialLoudnessUsed(true);
         configureSmoothingTimes("GM2002");
 
-        setForwardMaskingUsed (false);
-        setDecayUsed (false);
-                
         if (setName != "GM2002")
         {
             if (setName == "Faster")
@@ -427,12 +396,6 @@ namespace loudness{
 
         outputModules_["Excitation"] = modules_.back().get();
 
-        if (isForwardMaskingUsed_)
-        {
-            modules_.push_back (
-                    unique_ptr<Module> (new ForwardMaskingPO1998()));
-        }
-               
         /*
          * Specific loudness
          */
@@ -440,12 +403,6 @@ namespace loudness{
         modules_.push_back(unique_ptr<Module>
                 (new SpecificLoudnessANSIS342007(isSpecificLoudnessANSIS342007_,
                                                  isBinauralInhibitionUsed_)));
-
-        if (isDecayUsed_)
-        {
-            //modules_.push_back(unique_ptr<Module> (new PeakFollower(decayTime_)));
-            modules_.push_back(unique_ptr<Module> (new ARAverager(attackTime_, decayTime_)));
-        }
 
         /*
          * Binaural inhibition
@@ -479,15 +436,6 @@ namespace loudness{
 
         //configure targets
         configureLinearTargetModuleChain();
-
-        //Option to provide PeakFollower
-        if (isPeakSTLFollowerUsed_)
-        {
-            modules_.push_back(unique_ptr<Module> (new PeakFollower(2.0)));
-            outputModules_["PeakShortTermLoudness"] = modules_.back().get();
-            outputModules_["ShortTermLoudness"] -> 
-                addTargetModule (*outputModules_["PeakShortTermLoudness"]);
-        }
 
         // Masking conditions
         if ((input.getNSources() > 1) && (isPartialLoudnessUsed_))
