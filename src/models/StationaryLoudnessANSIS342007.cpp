@@ -34,6 +34,7 @@ namespace loudness{
     {
         //Default parameters
         setOuterEarFilter (OME::Filter::ANSIS342007_FREEFIELD);
+        setMiddleEarFilter (OME::Filter::ANSIS342007_MIDDLE_EAR);
         setFilterSpacingInCams (0.1);
         setPresentationDiotic (true);
         setBinauralInhibitionUsed (true);
@@ -64,6 +65,11 @@ namespace loudness{
         outerEarFilter_ = outerEarFilter;
     }
 
+    void StationaryLoudnessANSIS342007::setMiddleEarFilter(const OME::Filter middleEarFilter)
+    {
+        middleEarFilter_ = middleEarFilter;
+    }
+
     void StationaryLoudnessANSIS342007::setFilterSpacingInCams(Real filterSpacingInCams)
     {
         filterSpacingInCams_ = filterSpacingInCams;
@@ -85,7 +91,7 @@ namespace loudness{
          * Weighting filter
          */
         modules_.push_back(unique_ptr<Module>
-                (new WeightSpectrum(OME::Filter::ANSIS342007_MIDDLE_EAR, outerEarFilter_))); 
+                (new WeightSpectrum(middleEarFilter_, outerEarFilter_))); 
 
         /*
          * Roex filters -> Specific loudness

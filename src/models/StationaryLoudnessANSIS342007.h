@@ -100,6 +100,8 @@ namespace loudness{
 
             void setOuterEarFilter(const OME::Filter outerEarFilter);
 
+            void setMiddleEarFilter(const OME::Filter middleEarFilter);
+
             void setFilterSpacingInCams(Real filterSpacingInCams);
 
             void setSpecificLoudnessANSIS342007(bool isSpecificLoudnessANSIS342007_);
@@ -112,7 +114,7 @@ namespace loudness{
             Real filterSpacingInCams_;
             bool isPresentationDiotic_, isPartialLoudnessUsed_, isBinauralInhibitionUsed_;
             bool isSpecificLoudnessANSIS342007_;
-            OME::Filter outerEarFilter_;
+            OME::Filter outerEarFilter_, middleEarFilter_;
             RealVec alpha_;
     }; 
 }

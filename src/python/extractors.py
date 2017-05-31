@@ -123,7 +123,6 @@ class DynamicLoudnessExtractor:
                                  self.hopSize,
                                  self.fs)
         self.outputs = outputs
-        self.gainInDecibels = gainInDecibels
         if self.outputs is not None:
             if isinstance(self.outputs, str):
                 self.outputs = [self.outputs]
@@ -139,8 +138,10 @@ class DynamicLoudnessExtractor:
             raise ValueError("Problem initialising the model!")
 
         self.outputDict = {}
-        self.nSamplesToPadStart = np.round(numSecondsToPadStartBy * self.fs)
-        self.nSamplesToPadEnd = np.round(numSecondsToPadEndBy * self.fs)
+        self.nSamplesToPadStart = int(
+                np.round(numSecondsToPadStartBy * self.fs))
+        self.nSamplesToPadEnd = int(
+                np.round(numSecondsToPadEndBy * self.fs))
         self.frameTimeOffset = frameTimeOffset
         self.x = None
         self.processed = False
@@ -217,7 +218,7 @@ class DynamicLoudnessExtractor:
 
             # Process the input buffer
             self.model.process(self.inputBuf)
-            
+
             # Store
             for bank, dataset in zip(outputBanks, datasets):
                 dataset[frame] = bank.getSignals()
@@ -228,7 +229,7 @@ class DynamicLoudnessExtractor:
 
     def outputToDictionary(self, inputSignal, nOutputFrames):
 
-        dic = {'FrameTime': 
+        dic = {'FrameTime':
                self.frameTimeOffset + np.arange(nOutputFrames) *
                self.hopSize / float(self.fs),
         }

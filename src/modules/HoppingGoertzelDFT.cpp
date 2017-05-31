@@ -305,7 +305,6 @@ namespace loudness{
             nSamplesUntilTrigger_ = largestWindowSize_ / 2;
         else
             nSamplesUntilTrigger_ = largestWindowSize_;
-        nSamplesUntilTrigger_ = hopSize_;
 
         for (int w = 0; w < nWindows_; ++w)
         {

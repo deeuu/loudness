@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 if __name__ == '__main__':
 
     model = StationaryLoudnessANSIS342007()
-    feature = 'InstantaneousLoudness'
+    feature = 'Loudness'
     extractor = StationaryLoudnessExtractor(model, feature)
 
     '''
@@ -40,14 +40,14 @@ if __name__ == '__main__':
     writeTo3ColumnCSVFile(levels, expected, measured,
             './data/StationaryLoudnessANSIS342007_PureTonesEX2.csv')
 
-    #Example 4 
+    #Example 4
     levels = np.array([50])
     expected = np.array([0.345])
     measured = np.zeros(expected.size)
     for i, level in enumerate(levels):
         extractor.process(np.array([100.0]), np.array([level]))
         measured[i] = extractor.outputDict[feature]
-    writeTo3ColumnCSVFile(levels, expected, measured, 
+    writeTo3ColumnCSVFile(levels, expected, measured,
             './data/StationaryLoudnessANSIS342007_PureTonesEX4.csv')
 
     '''
@@ -98,7 +98,7 @@ if __name__ == '__main__':
 
     for i, level in enumerate(levels):
         bandLevels = np.ones(26) * level
-        freqs, spectrum = generateSpectrumFromThirdOctaveBandLevels(bandLevels) 
+        freqs, spectrum = generateSpectrumFromThirdOctaveBandLevels(bandLevels)
         extractor.process(freqs, 10 * np.log10(spectrum))
         measured[i] = extractor.outputDict[feature]
     writeTo3ColumnCSVFile(levels, expected, measured,
@@ -113,7 +113,7 @@ if __name__ == '__main__':
     measured = np.zeros(expected.size)
     extractor.process(np.array([1500, 1600, 1700]), np.array([level, level, level]))
     measured[0] = extractor.outputDict[feature]
-    writeTo3ColumnCSVFile(np.array([level]), expected, measured, 
+    writeTo3ColumnCSVFile(np.array([level]), expected, measured,
             './data/StationaryLoudnessANSIS342007_MultipleTonesEX1.csv')
 
     #Example 2
@@ -122,7 +122,7 @@ if __name__ == '__main__':
     measured = np.zeros(expected.size)
     extractor.process(np.array([1000, 1600, 2400]), np.array([level, level, level]))
     measured[0] = extractor.outputDict[feature]
-    writeTo3ColumnCSVFile(np.array([level]), expected, measured, 
+    writeTo3ColumnCSVFile(np.array([level]), expected, measured,
             './data/StationaryLoudnessANSIS342007_MultipleTonesEX2.csv')
 
     #Example 3
@@ -140,7 +140,7 @@ if __name__ == '__main__':
     #Example 1
     expected = np.array([5.14])
     measured = np.zeros(expected.size)
-    
+
     freqs, spectrum = generateWhiteNoiseBandFromFc(1000, 100, 40, False)
     freqs = np.sort(np.append(freqs, 1000))
     idx = np.where(freqs == 1000)[0]
@@ -149,7 +149,7 @@ if __name__ == '__main__':
     measured[0] = extractor.outputDict[feature]
     writeTo3ColumnCSVFile(np.array([40]), expected, measured,
             './data/StationaryLoudnessANSIS342007_TonePlusNoiseEX1.csv')
-    
+
     '''
     ISO Absolute thresholds
     '''

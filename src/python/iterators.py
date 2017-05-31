@@ -33,7 +33,8 @@ class DynamicLoudnessIterator():
                  nIters=10,
                  alpha=1.0,
                  nSecondsToPadStartBy=0.0,
-                 nSecondsToPadEndBy=0.2):
+                 nSecondsToPadEndBy=0.2,
+                 printResults=False):
 
         if type(outputName) is list:
             outputName = outputName[0]
@@ -50,7 +51,7 @@ class DynamicLoudnessIterator():
         self.tol = tol
         self.nIters = nIters
         self.alpha = alpha
-        self.printResults = False
+        self.printResults = printResults
 
         if loudnessFunction is None:
             self.loudnessFunction = np.mean
@@ -59,9 +60,9 @@ class DynamicLoudnessIterator():
 
     def extractLoudness(self, signal, gainInDecibels=0.0):
 
-        self.extractor.gainInDecibels = gainInDecibels
-        self.extractor.process(signal)
-        timeSeries = self.extractor.outputDict[self.outputName]
+        gain = 10 ** (gainInDecibels / 20.0)
+        out = self.extractor.process(signal * gain)
+        timeSeries = out[self.outputName]
         loudness = self.loudnessFunction(timeSeries)
         return loudness
 
@@ -186,7 +187,8 @@ class BatchDynamicLoudnessIterator:
                  nIters=10,
                  alpha=1.0,
                  nSecondsToPadStartBy=0.0,
-                 nSecondsToPadEndBy=0.2):
+                 nSecondsToPadEndBy=0.2,
+                 printResults=False):
 
         self.nSecondsToPadStartBy = nSecondsToPadStartBy
         self.nSecondsToPadEndBy = nSecondsToPadEndBy
@@ -194,21 +196,25 @@ class BatchDynamicLoudnessIterator:
         self.tol = tol
         self.nIters = nIters
         self.alpha = alpha
+        self.model = model
+        self.fs = fs
+        self.printResults = printResults
 
         self.output = output
         if self.output is None or type(self.output) is list:
             raise ValueError("Only one model output allowed.")
 
-    def process(self, listOfInputSignals, targetLoudness):
+    def process(self, listOfInputSignals, targetLoudness=None):
+        print(self.printResults)
 
         hasMultipleTargets = False
-        if type(self.targetLoudness) in [np.ndarray, list]:
-            if len(self.targetLoudness) == len(listOfInputSignals):
+        if type(targetLoudness) in [np.ndarray, list]:
+            if len(targetLoudness) == len(listOfInputSignals):
                 hasMultipleTargets = True
 
-        self.gains = np.zeros(len(self.listOfInputSignals))
+        gains = np.zeros(len(listOfInputSignals))
 
-        for i, signal in enumerate(self.listOfInputSignals):
+        for i, signal in enumerate(listOfInputSignals):
 
             if signal.ndim == 1:
                 signal = signal.reshape((-1, 1))
@@ -224,22 +230,23 @@ class BatchDynamicLoudnessIterator:
                     self.nIters,
                     self.alpha,
                     self.nSecondsToPadStartBy,
-                    self.nSecondsToPadEndBy)
+                    self.nSecondsToPadEndBy,
+                    self.printResults)
 
             # Process the audio file
             print("Processing signal %d ..." % i)
 
             if hasMultipleTargets:
-                target = self.targetLoudness[i]
+                target = targetLoudness[i]
             else:
-                target = self.targetLoudness
+                target = targetLoudness
 
             gain = processor.process(signal, target)
 
             # Get gain required for target loudness
-            self.gains[i] = gain
+            gains[i] = gain
 
-        return self.gains
+        return gains
 
 
 class EqualDynamicLoudnessIterator():

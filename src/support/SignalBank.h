@@ -244,7 +244,7 @@ namespace loudness{
         /** Get the value of a single sample in a given ear and channel. 
          * watch your bounds.
          */
-        inline Real getSample(int source, int ear, int channel, int sample) const
+        inline Real getSample(int source=0, int ear=0, int channel=0, int sample=0) const
         {
             LOUDNESS_ASSERT(
                     isPositiveAndLessThanUpper(source, nSources_) &&

@@ -145,6 +145,7 @@ namespace loudness{
                                     doubleRoexBankfactor,
                                     false,
                                     false)));
+
             int moduleIdx = modules_.size() - 1;
             // Push spectrum to second excitation transformation stage
             Module* ptrToWeightedSpectrum = modules_[0].get();

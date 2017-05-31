@@ -39,6 +39,7 @@ namespace loudness{
             Real ef = hertzToNormalisedCam (fc);
             // Table 1 of Chen et al., 2011
             Real kDB = 6.51 * ef*ef - 1.93;
+            LOUDNESS_DEBUG(fc << ": " << kDB);
             k_.push_back (std::pow (10, kDB / 10.0));
         }
 
