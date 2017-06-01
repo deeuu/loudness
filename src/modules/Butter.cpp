@@ -108,7 +108,7 @@ namespace loudness{
                             for (int smp = 0; smp < input.getNSamples(); smp++)
                             {
                                 //input sample
-                                Real x = inputSignal[smp] * gain_;
+                                Real x = inputSignal[smp];
                                 
                                 //filter
                                 Real y = bCoefs_[0]*(x-z[2]) + bCoefs_[2]*
@@ -126,6 +126,9 @@ namespace loudness{
                                 //output sample
                                 outputSignal[smp] = y;
                             }
+
+                            for (int i = 3; i < 6; ++i)
+                                killDenormal (z[i]);
                         }
                     }
                 }

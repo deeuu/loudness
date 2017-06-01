@@ -80,16 +80,6 @@ namespace loudness{
         const RealVec& getACoefs() const;
          
         /**
-         * @brief Sets the linear gain of the digital filter.
-         */
-        void setGain(Real gain);
-
-        /**
-         * @brief Returns the linear gain of the digital filter.
-         */
-        Real getGain() const;
-
-        /**
          * @brief Returns the order of the digital filter.
          *
          * This is equal to the maximum number of feedforward

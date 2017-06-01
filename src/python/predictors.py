@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from sound import Sound
-from iterators import StationaryLoudnessIterator, DynamicLoudnessIterator
-from extractors import StationaryLoudnessExtractor, DynamicLoudnessExtractor
-from scipy.interpolate import interp1d
+from .sound import Sound
+from .iterators import StationaryLoudnessIterator, DynamicLoudnessIterator
+from .extractors import StationaryLoudnessExtractor, DynamicLoudnessExtractor
+from  scipy.interpolate import interp1d
 
 # ISO 389-7 - free-field values
 freqsISO389 = np.array([20.0, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200,
@@ -101,7 +101,7 @@ class StationaryLoudnessContourPredictor():
             maxE = np.max(np.abs(error))
             return (error, rMSE, maxE)
         else:
-            print 'Iterative process did not converge.'
+            print ('Iterative process did not converge.')
             return (None, None, None)
 
     def getResults(self):
@@ -219,7 +219,7 @@ class DynamicLoudnessContourPredictor():
             maxE = np.max(np.abs(error))
             return (error, rMSE, maxE)
         else:
-            print 'Iterative process did not converge.'
+            print ('Iterative process did not converge.')
             return (None, None, None)
 
     def getResults(self):

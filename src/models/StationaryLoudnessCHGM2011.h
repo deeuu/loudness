@@ -73,22 +73,24 @@ namespace loudness{
             StationaryLoudnessCHGM2011();
             virtual ~StationaryLoudnessCHGM2011();
 
-            void setPresentationDiotic(bool isPresentationDiotic);
+            void setPresentationDiotic (bool isPresentationDiotic);
 
-            void setBinauralInhibitionUsed(bool isBinauralInhibitionUsed);
+            void setBinauralInhibitionUsed (bool isBinauralInhibitionUsed);
 
-            void setOuterEarFilter(const OME::Filter outerEarFilter);
+            void setOuterEarFilter (const OME::Filter outerEarFilter);
 
-            void setFilterSpacingInCams(Real filterSpacingInCams);
+            void setFilterSpacingInCams (Real filterSpacingInCams);
 
-            void setSpecificLoudnessOutput(bool isSpecificLoudnessOutput);
+            void setSpecificLoudnessOutput (bool isSpecificLoudnessOutput);
+
+            void setPartialLoudnessUsed (bool setPartialLoudnessUsed);
 
         private:
             virtual bool initializeInternal(const SignalBank &input);
 
             Real filterSpacingInCams_;
             bool isPresentationDiotic_, isBinauralInhibitionUsed_;
-            bool isSpecificLoudnessOutput_;
+            bool isSpecificLoudnessOutput_, isPartialLoudnessUsed_;
             OME::Filter outerEarFilter_;
     }; 
 }

@@ -19,6 +19,8 @@
 
 #include "../modules/WeightSpectrum.h"
 #include "../modules/DoubleRoexBank.h"
+#include "../modules/MultiSourceDoubleRoexBank.h"
+#include "../modules/SpecificPartialLoudnessCHGM2011.h"
 #include "../modules/BinauralInhibitionMG2007.h"
 #include "../modules/InstantaneousLoudness.h"
 #include "StationaryLoudnessCHGM2011.h"
@@ -29,11 +31,12 @@ namespace loudness{
         Model("StationaryLoudnessCHGM2011", false)
     {
         //Default parameters
-        setOuterEarFilter(OME::Filter::ANSIS342007_FREEFIELD);
-        setFilterSpacingInCams(0.1);
-        setPresentationDiotic(true);
-        setBinauralInhibitionUsed(true);
-        setSpecificLoudnessOutput(true);
+        setOuterEarFilter (OME::Filter::ANSIS342007_FREEFIELD);
+        setFilterSpacingInCams (0.1);
+        setPresentationDiotic (true);
+        setBinauralInhibitionUsed (true);
+        setSpecificLoudnessOutput (true);
+        setPartialLoudnessUsed (true);
     }
 
     StationaryLoudnessCHGM2011::~StationaryLoudnessCHGM2011()
@@ -42,6 +45,11 @@ namespace loudness{
     void StationaryLoudnessCHGM2011::setPresentationDiotic(bool isPresentationDiotic)
     {
         isPresentationDiotic_ = isPresentationDiotic;
+    }
+
+    void StationaryLoudnessCHGM2011::setPartialLoudnessUsed(bool isPartialLoudnessUsed)
+    {
+        isPartialLoudnessUsed_ = isPartialLoudnessUsed;
     }
 
     void StationaryLoudnessCHGM2011::setBinauralInhibitionUsed(bool isBinauralInhibitionUsed)
@@ -70,7 +78,8 @@ namespace loudness{
          * Weighting filter
          */
         modules_.push_back(unique_ptr<Module>
-                (new WeightSpectrum(OME::CHGM2011_MIDDLE_EAR, outerEarFilter_))); 
+                (new WeightSpectrum (OME::CHGM2011_MIDDLE_EAR,
+                                     outerEarFilter_))); 
 
         // Set up scaling factors depending on output config
         Real doubleRoexBankfactor, instantaneousLoudnessFactor;
@@ -86,7 +95,10 @@ namespace loudness{
             instantaneousLoudnessFactor = 1.53e-8;
         }
 
-        isBinauralInhibitionUsed_ = isBinauralInhibitionUsed_ * (input.getNEars() == 2) * isSpecificLoudnessOutput_;
+        isBinauralInhibitionUsed_ = isBinauralInhibitionUsed_ *
+                                    (input.getNEars() == 2) *
+                                    isSpecificLoudnessOutput_;
+
         if (isBinauralInhibitionUsed_)
             doubleRoexBankfactor /= 0.75;
 
@@ -116,10 +128,53 @@ namespace loudness{
         modules_.push_back(unique_ptr<Module>
                 (new InstantaneousLoudness(instantaneousLoudnessFactor, 
                                            isPresentationDiotic_)));
-        outputModules_["InstantaneousLoudness"] = modules_.back().get();
+        outputModules_["Loudness"] = modules_.back().get();
 
         //configure targets
         configureLinearTargetModuleChain();
+
+        // Masking conditions
+        if ((input.getNSources() > 1) && (isPartialLoudnessUsed_))
+        {
+            LOUDNESS_DEBUG(name_ 
+                           << ": Setting up modules for partial loudness...");
+
+            modules_.push_back(unique_ptr<Module>
+                    (new MultiSourceDoubleRoexBank (1.5, 40.2,
+                                    filterSpacingInCams_,
+                                    doubleRoexBankfactor,
+                                    false,
+                                    false)));
+
+            int moduleIdx = modules_.size() - 1;
+            // Push spectrum to second excitation transformation stage
+            Module* ptrToWeightedSpectrum = modules_[0].get();
+            ptrToWeightedSpectrum -> addTargetModule (*modules_.back().get());
+
+            modules_.push_back(unique_ptr<Module> 
+                    (new SpecificPartialLoudnessCHGM2011()));
+
+            /*
+            int moduleIdx = modules_.size() - 1;
+            Module* ptrToExcitation = modules_[1].get();
+            ptrToExcitation -> addTargetModule (*modules_.back().get());
+            */
+
+            if (isBinauralInhibitionUsed_)
+            {
+                modules_.push_back(unique_ptr<Module>
+                        (new BinauralInhibitionMG2007));
+            }
+
+            outputModules_["SpecificPartialLoudness"] = modules_.back().get();
+
+            modules_.push_back(unique_ptr<Module> 
+                    (new InstantaneousLoudness(1.0, isPresentationDiotic_)));
+            outputModules_["PartialLoudness"] = modules_.back().get();
+
+            // configure targets for second (parallel) chain
+            configureLinearTargetModuleChain(moduleIdx);
+        }
 
         return 1;
     }

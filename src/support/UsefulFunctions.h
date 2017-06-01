@@ -20,12 +20,18 @@
 #ifndef  USEFULFUNCTIONS_H
 #define  USEFULFUNCTIONS_H
 
-#include <cmath>
-#include <vector>
+#include "Common.h"
 #define PI 3.14159265358979323846264338327
 #define LOWER_LIMIT_DB -100
 
 namespace loudness{
+
+    inline void killDenormal (Real& value)
+    {
+        static const Real antiDenormal = 1e-18;
+        value += antiDenormal;
+        value -= antiDenormal;
+    }
 
     /** Factorial of a number. */
     template <typename Type>

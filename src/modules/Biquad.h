@@ -36,6 +36,7 @@ namespace loudness{
 
             /** Constructs a Biquad filter with no filter coefficients */
             Biquad();
+            Biquad(const string &type_);
             /** Constructs a Biquad filter using the feedforward and feedback
              * coefficients bCoefs and aCoefs.
              * Both coefficient vectors should each be of size three.
@@ -60,6 +61,7 @@ namespace loudness{
             virtual void processInternal(){};
             virtual void resetInternal();
 
+            std::string type_;
             Real coefficientFs_ = 0;
     };
 }

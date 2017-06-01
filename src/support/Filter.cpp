@@ -22,12 +22,10 @@
 
 namespace loudness{
 
-    Filter::Filter() : gain_(1.0)
-    {}
+    Filter::Filter() {}
 
     //Is this needed?
     Filter::Filter(int order) :
-        gain_(1.0),
         order_(order)
     {}
 
@@ -118,18 +116,9 @@ namespace loudness{
         return aCoefs_;
     }
 
-    Real Filter::getGain() const
-    {
-        return gain_;
-    }
-
     int Filter::getOrder() const
     {
         return order_;
     }
 
-    void Filter::setGain(Real gain)
-    {
-        gain_ = gain;
-    }
 }

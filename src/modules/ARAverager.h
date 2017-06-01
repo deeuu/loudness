@@ -1,6 +1,4 @@
 /*
- * Copyright (C) 2014 Dominic Ward <contactdominicward@gmail.com>
- *
  * This file is part of Loudness
  *
  * Loudness is free software: you can redistribute it and/or modify
@@ -52,7 +50,7 @@ namespace loudness{
  
         /** Constructs an ARAverager with attackTime and releaseTime in
          * seconds */
-        ARAverager(Real attackTime, Real releaseTime);
+        ARAverager(Real attackTime=0.1, Real releaseTime=0.1);
 
         virtual ~ARAverager();
 

@@ -245,6 +245,12 @@ namespace loudness{
                                 vPrev[k] = v;
                             }
                         }
+
+                        for (int k = binIdxForGoertzels_[w][0]; k < binIdxForGoertzels_[w][1]; ++k)
+                        {
+                            killDenormal (vPrev[k]);
+                            killDenormal (vPrev2[k]);
+                        }
                     }
                 }
             }
@@ -299,7 +305,6 @@ namespace loudness{
             nSamplesUntilTrigger_ = largestWindowSize_ / 2;
         else
             nSamplesUntilTrigger_ = largestWindowSize_;
-        nSamplesUntilTrigger_ = hopSize_;
 
         for (int w = 0; w < nWindows_; ++w)
         {

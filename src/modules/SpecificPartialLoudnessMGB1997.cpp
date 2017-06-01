@@ -183,7 +183,7 @@ namespace loudness{
                 for (int chn = 0; chn < input.getNChannels(); ++chn)
                 {
                     Real eNoise = eTot[chn] - eSig[chn];
-                    Real eThrn = eNoise * kParam_[chn];
+                    Real eThrn = kParam_[chn] * eNoise + eThrqParam_[chn];
                     Real nSig = 0.0;
 
                     if (eSig[chn] > 1e-10)
@@ -192,29 +192,32 @@ namespace loudness{
                         {
                             if (eSig[chn] >= eThrn) // Equation 19
                             {
-                                nSig = parameterC2_ * std::pow (eTot[chn],
-                                       yearExp_) - parameterC2_
-                                       * (std::pow (eNoise + eThrn 
-                                       + eThrqParam_[chn], yearExp_)
-                                       - std::pow (eThrqParam_[chn] * gParam_[chn]
-                                       + aParam_[chn], alphaParam_[chn])
-                                       + std::pow (aParam_[chn],
-                                       alphaParam_[chn])) * std::pow (eThrn
-                                       / eSig[chn], 0.3);
+                                nSig = parameterC2_ *
+                                       std::pow (eTot[chn], yearExp_);
+
+                                nSig -= parameterC2_ * 
+                                        (std::pow (eNoise + eThrn, yearExp_) -
+                                        std::pow (eThrqParam_[chn] *
+                                        gParam_[chn] + aParam_[chn],
+                                        alphaParam_[chn]) +
+                                        std::pow (aParam_[chn],
+                                        alphaParam_[chn])) *
+                                        std::pow (eThrn / eSig[chn], 0.3);
                             }
                             else // Equation 20
                             {
                                 nSig = parameterC_ * std::pow (2.0 * eSig[chn]
-                                       / (eSig[chn] + eThrn), 1.5)
-                                       * ((std::pow (eThrqParam_[chn]
-                                       * gParam_[chn] + aParam_[chn],
-                                       alphaParam_[chn])
-                                       - std::pow (aParam_[chn], alphaParam_[chn]))
-                                       / (std::pow (eNoise + eThrn
-                                       + eThrqParam_[chn], yearExp_)
-                                       - std::pow(eNoise, yearExp_)))
-                                       * (std::pow (eTot[chn], yearExp_)
-                                       - std::pow (eNoise, yearExp_));
+                                       / (eSig[chn] + eThrn), 1.5);
+
+                                nSig *= (std::pow (eThrqParam_[chn] *
+                                        gParam_[chn] + aParam_[chn],
+                                        alphaParam_[chn]) - 
+                                        std::pow (aParam_[chn],
+                                        alphaParam_[chn])) /
+                                        (std::pow (eNoise + eThrn, yearExp_) -
+                                        std::pow(eNoise, yearExp_));
+                                nSig *= std::pow (eTot[chn], yearExp_)
+                                        - std::pow (eNoise, yearExp_);
                             }
                         }
                         else // eTot <= 100 dB
@@ -224,33 +227,34 @@ namespace loudness{
                                 nSig = parameterC_ * (std::pow (eTot[chn]
                                        * gParam_[chn] + aParam_[chn],
                                        alphaParam_[chn]) - std::pow (
-                                       aParam_[chn], alphaParam_[chn]))
-                                       - parameterC_ * (std::pow (
-                                       gParam_[chn] * (eNoise + eThrn
-                                       + eThrqParam_[chn]) + aParam_[chn],
-                                       alphaParam_[chn]) - std::pow (
-                                       eThrqParam_[chn] * gParam_[chn]
+                                       aParam_[chn], alphaParam_[chn]));
+
+                                nSig -= parameterC_ * (std::pow (
+                                       gParam_[chn] * (eNoise + eThrn) +
+                                       aParam_[chn], alphaParam_[chn]) -
+                                       std::pow (eThrqParam_[chn] * gParam_[chn]
                                        + aParam_[chn], alphaParam_[chn]))
                                        * std::pow (eThrn / eSig[chn], 0.3);
                             }
                             else // Equation 18
                             {
                                 nSig = parameterC_ * std::pow (2.0 * eSig[chn]
-                                       / (eSig[chn] + eThrn), 1.5)
-                                       * ((std::pow (eThrqParam_[chn]
-                                       * gParam_[chn] + aParam_[chn],
-                                       alphaParam_[chn]) - std::pow (
-                                       aParam_[chn], alphaParam_[chn]))
-                                       / (std::pow ((eNoise + eThrn
-                                       + eThrqParam_[chn]) * gParam_[chn]
-                                       + aParam_[chn], alphaParam_[chn])
-                                       - std::pow (eNoise * gParam_[chn]
-                                       + aParam_[chn], alphaParam_[chn])))
-                                       * ( std::pow (eTot[chn]
-                                       * gParam_[chn] + aParam_[chn],
-                                       alphaParam_[chn]) - std::pow (eNoise
-                                       * gParam_[chn] + aParam_[chn],
-                                       alphaParam_[chn]));
+                                       / (eSig[chn] + eThrn), 1.5);
+                                
+                                nSig *= (std::pow (eThrqParam_[chn] *
+                                        gParam_[chn] + aParam_[chn],
+                                        alphaParam_[chn]) - std::pow (
+                                        aParam_[chn], alphaParam_[chn])) /
+                                        (std::pow ((eNoise + eThrn) *
+                                        gParam_[chn] + aParam_[chn],
+                                        alphaParam_[chn]) - std::pow (
+                                        eNoise * gParam_[chn] + aParam_[chn],
+                                        alphaParam_[chn]));
+
+                                nSig *= std::pow (eTot[chn] * gParam_[chn] +
+                                        aParam_[chn], alphaParam_[chn]) -
+                                        std::pow (eNoise * gParam_[chn] +
+                                        aParam_[chn], alphaParam_[chn]);
                             }
                         }
                     }

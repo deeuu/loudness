@@ -36,7 +36,6 @@
 #include "../modules/BinauralInhibitionMG2007.h"
 #include "../modules/InstantaneousLoudness.h"
 #include "../modules/ARAverager.h"
-#include "../modules/PeakFollower.h"
 #include "DynamicLoudnessGM2002.h"
 
 namespace loudness{
@@ -67,11 +66,6 @@ namespace loudness{
     void DynamicLoudnessGM2002::setFirstSampleAtWindowCentre(bool isFirstSampleAtWindowCentre)
     {
         isFirstSampleAtWindowCentre_ = isFirstSampleAtWindowCentre;
-    }
-    
-    void DynamicLoudnessGM2002::setPeakSTLFollowerUsed(bool isPeakSTLFollowerUsed)
-    {
-        isPeakSTLFollowerUsed_ = isPeakSTLFollowerUsed;
     }
 
     void DynamicLoudnessGM2002::setAttackTimeSTL(Real attackTimeSTL)
@@ -191,7 +185,6 @@ namespace loudness{
     {
         //common to all
         setRate(1000);
-        setPeakSTLFollowerUsed(false);
         setOuterEarFilter(OME::ANSIS342007_FREEFIELD);
         setMiddleEarFilter(OME::ANSIS342007_MIDDLE_EAR_HPF);
         setSpectrumSampledUniformly(true);
@@ -208,7 +201,7 @@ namespace loudness{
         setBinauralInhibitionUsed(true);
         setPartialLoudnessUsed(true);
         configureSmoothingTimes("GM2002");
-                
+
         if (setName != "GM2002")
         {
             if (setName == "Faster")
@@ -399,8 +392,10 @@ namespace loudness{
             modules_.push_back(unique_ptr<Module> 
                     (new RoexBankANSIS342007(1.8, 38.9, filterSpacingInCams_)));
         }
+
+
         outputModules_["Excitation"] = modules_.back().get();
-        
+
         /*
          * Specific loudness
          */
@@ -441,15 +436,6 @@ namespace loudness{
 
         //configure targets
         configureLinearTargetModuleChain();
-
-        //Option to provide PeakFollower
-        if (isPeakSTLFollowerUsed_)
-        {
-            modules_.push_back(unique_ptr<Module> (new PeakFollower(2.0)));
-            outputModules_["PeakShortTermLoudness"] = modules_.back().get();
-            outputModules_["ShortTermLoudness"] -> 
-                addTargetModule (*outputModules_["PeakShortTermLoudness"]);
-        }
 
         // Masking conditions
         if ((input.getNSources() > 1) && (isPartialLoudnessUsed_))

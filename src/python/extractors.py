@@ -7,7 +7,7 @@ import h5py
 
 class StationaryLoudnessExtractor:
 
-    def __init__(self, model, outputs):
+    def __init__(self, model, outputs, alwaysReinitialize=True):
 
         if model.isDynamic():
             raise ValueError("Model cannot be dynamic")
@@ -23,6 +23,7 @@ class StationaryLoudnessExtractor:
         self.nEars = 0
         self.bank = ln.SignalBank()
         self.initialize = True
+        self.alwaysReinitialize = alwaysReinitialize
 
     def process(self, frequencies, intensityLevels):
 
@@ -51,7 +52,8 @@ class StationaryLoudnessExtractor:
             self.outputDict['Frequencies'] = frequencies
             self.nEars = nEars
             self.model.initialize(self.bank)
-        self.initialize = False
+        if not self.alwaysReinitialize:
+            self.initialize = False
 
         self.bank.setSignals(intensities.T.reshape((1, nEars, nComponents, 1)))
 
@@ -121,27 +123,150 @@ class DynamicLoudnessExtractor:
                                  self.hopSize,
                                  self.fs)
         self.outputs = outputs
-        self.gainInDecibels = gainInDecibels
         if self.outputs is not None:
-            if type(self.outputs) is not list:
+            if isinstance(self.outputs, str):
                 self.outputs = [self.outputs]
-            self.model.setOutputsToAggregate(self.outputs)
         else:
             raise ValueError("Must specify outputs")
+
+        '''
+        if aggregate:
+            self.model.setOutputsToAggregate(self.outputs)
+        '''
 
         if not self.model.initialize(self.inputBuf):
             raise ValueError("Problem initialising the model!")
 
         self.outputDict = {}
-        self.nSamplesToPadStart = np.round(numSecondsToPadStartBy * self.fs)
-        self.nSamplesToPadEnd = np.round(numSecondsToPadEndBy * self.fs)
+        self.nSamplesToPadStart = int(
+                np.round(numSecondsToPadStartBy * self.fs))
+        self.nSamplesToPadEnd = int(
+                np.round(numSecondsToPadEndBy * self.fs))
         self.frameTimeOffset = frameTimeOffset
         self.x = None
         self.processed = False
         self.loudness = None
         self.globalLoudness = None
 
-    def process(self, inputSignal):
+    def configureInput(self, inputSignal):
+
+        if not isinstance(inputSignal, list):
+            if inputSignal.ndim == 1:
+                sig = inputSignal.reshape(1,
+                                          1,
+                                          1,
+                                          inputSignal.size)
+            elif inputSignal.ndim < 3:
+                sig = inputSignal.T.reshape(1,
+                                            inputSignal.shape[1],
+                                            1,
+                                            inputSignal.shape[0])
+        else:
+            maxSamples = np.max([x.shape[0] for x in inputSignal])
+            sig = np.zeros((self.nInputSources,
+                            self.nInputEars,
+                            1,
+                            maxSamples))
+            for i, isig in enumerate(inputSignal):
+                sig[i, :, 0, :isig.shape[0]] = isig.T
+
+        sig = np.concatenate((
+            np.zeros((self.nInputSources, self.nInputEars,
+                      1, self.nSamplesToPadStart)),
+            sig,
+            np.zeros((self.nInputSources, self.nInputEars,
+                      1, self.nSamplesToPadEnd))), 3)
+
+        # configure the number of output frames needed
+        nOutputFrames = int(
+            np.ceil(sig.shape[3] / float(self.hopSize))
+        )
+        return sig, nOutputFrames
+
+    def outputToHDF5(self, inputSignal, nOutputFrames, hdf5Group):
+
+        hdf5Group.clear()
+        hdf5Group.create_dataset(
+            'FrameTime',
+            data = self.frameTimeOffset + np.arange(nOutputFrames) *
+            self.hopSize / float(self.fs),
+        )
+
+        outputBanks = []
+        datasets = []
+        for name in self.outputs:
+            bank = self.model.getOutput(name)
+            outputBanks.append(bank)
+            shape = (
+                nOutputFrames,
+                bank.getNSources(),
+                bank.getNEars(),
+                bank.getNChannels(),
+                bank.getNSamples(),
+            )
+
+            datasets.append(hdf5Group.create_dataset(name, shape, chunks=True))
+
+        # One process call every hop samples
+        for frame in range(nOutputFrames):
+
+            startIdx = frame * self.hopSize
+            endIdx = startIdx + self.hopSize
+            self.inputBuf.setSignals(
+                inputSignal[:, :, :, startIdx:endIdx]
+            )
+
+            # Process the input buffer
+            self.model.process(self.inputBuf)
+
+            # Store
+            for bank, dataset in zip(outputBanks, datasets):
+                dataset[frame] = bank.getSignals()
+
+        # Processing complete so clear internal states
+        self.model.reset()
+        self.processed = True
+
+    def outputToDictionary(self, inputSignal, nOutputFrames):
+
+        dic = {'FrameTime':
+               self.frameTimeOffset + np.arange(nOutputFrames) *
+               self.hopSize / float(self.fs),
+        }
+
+        outputBanks = []
+        for name in self.outputs:
+            bank = self.model.getOutput(name)
+            outputBanks.append(bank)
+            shape = (
+                nOutputFrames,
+                bank.getNSources(),
+                bank.getNEars(),
+                bank.getNChannels(),
+                bank.getNSamples(),
+            )
+            dic[name] = np.squeeze(np.zeros(shape=shape))
+
+        # One process call every hop samples
+        for frame in range(nOutputFrames):
+
+            startIdx = frame * self.hopSize
+            endIdx = startIdx + self.hopSize
+            self.inputBuf.setSignals(
+                inputSignal[:, :, :, startIdx:endIdx]
+            )
+
+            # Process the input buffer
+            self.model.process(self.inputBuf)
+
+            # Store
+            for bank, name in zip(outputBanks, self.outputs):
+                dic[name][frame] = np.squeeze(bank.getSignals())
+
+        return dic
+
+
+    def process(self, inputSignal, hdf5Group=None):
         '''
         Process the numpy array `inputSignal' using a dynamic loudness
         model.  For stereo signals, the input signal must have two dimensions
@@ -150,90 +275,23 @@ class DynamicLoudnessExtractor:
         sources, enter a list of inputSignals (easier than faffing with
         reshaping).
         '''
-        # Input checks
-        if type(inputSignal) is not list:
-            if inputSignal.ndim == 1:
-                self.inputSignal = inputSignal.reshape(1,
-                                                       1,
-                                                       1,
-                                                       inputSignal.size)
-            elif inputSignal.ndim < 3:
-                self.inputSignal = inputSignal.T.reshape(1,
-                                                         inputSignal.shape[1],
-                                                         1,
-                                                         inputSignal.shape[0])
-        else:
-            maxSamples = np.max([x.shape[0] for x in inputSignal])
-            self.inputSignal = np.zeros((self.nInputSources,
-                                         self.nInputEars,
-                                         1,
-                                         maxSamples))
-            for i, sig in enumerate(inputSignal):
-                self.inputSignal[i, :, 0, 0:sig.shape[0]] = sig.T
 
-        '''Pad end so that we can obtain analysis over the last sample,
-        No neat way to do this at the moment so assume 0.2ms is enough.'''
-        self.inputSignal = np.concatenate((
-            np.zeros((self.nInputSources, self.nInputEars,
-                      1, self.nSamplesToPadStart)),
-            self.inputSignal,
-            np.zeros((self.nInputSources, self.nInputEars,
-                      1, self.nSamplesToPadEnd))), 3)
-
-        # Apply any gain
-        self.inputSignal *= 10 ** (self.gainInDecibels / 20.0)
-
-        # configure the number of output frames needed
-        nOutputFrames = int(
-            np.ceil(self.inputSignal.shape[3] / float(self.hopSize))
-        )
-        self.outputDict['FrameTimes'] = (
-            self.frameTimeOffset + np.arange(nOutputFrames) *
-            self.hopSize / float(self.fs)
-        )
-
-        # One process call every hop samples
-        for frame in range(nOutputFrames):
-
-            # Any overlap is generated c++ side, so just fill the input
-            # SignalBank with new blocks
-            startIdx = frame * self.hopSize
-            endIdx = startIdx + self.hopSize
-            self.inputBuf.setSignals(
-                self.inputSignal[:, :, :, startIdx:endIdx]
-            )
-
-            # Process the input buffer
-            self.model.process(self.inputBuf)
-
-        # get outputs
-        for name in self.outputs:
-            bank = self.model.getOutput(name)
-            self.outputDict[name] = np.copy(
-                np.squeeze(bank.getAggregatedSignals())
-            )
-            if self.outputDict[name].ndim == 1:
-                self.outputDict[name] = self.outputDict[name].reshape((-1, 1))
+        if hdf5Group is None:
+            sig, nOutputFrames = self.configureInput(inputSignal)
+            dic = self.outputToDictionary(sig, nOutputFrames)
+        elif isinstance(hdf5Group, h5py.Group):
+            sig, nOutputFrames = self.configureInput(inputSignal)
+            self.outputToHDF5(sig, nOutputFrames, hdf5Group)
 
         # Processing complete so clear internal states
         self.model.reset()
         self.processed = True
 
+        if hdf5Group is None:
+            return dic
+
     def reinitializeModel(self):
         self.model.initialize(self.inputBuf)
-
-    def saveOutputToPickle(self, filename):
-        '''
-        Saves the complete output dictionary to a pickle file.
-        '''
-        if self.processed:
-            print 'Saving to pickle file'
-            filename, ext = os.path.splitext(filename)
-            with open(filename + '.pickle', 'wb') as outfile:
-                pickle.dump(
-                    self.outputDict,
-                    outfile,
-                    protocol=pickle.HIGHEST_PROTOCOL)
 
 
 class BatchWavFileProcessor:
@@ -303,7 +361,7 @@ class BatchWavFileProcessor:
 
         model.setOutputsToAggregate(self.outputs)
 
-        print "Output will be saved to ", self.filename
+        print ("Output will be saved to ", self.filename)
         h5File = h5py.File(self.filename, 'w')
 
         processor = ln.AudioFileProcessor(
@@ -315,7 +373,7 @@ class BatchWavFileProcessor:
 
         for wavFile in self.wavFiles:
 
-            print("Processing file %s ..." % wavFile)
+            print ("Processing file %s ..." % wavFile)
 
             # Create new group
             wavFileGroup = h5File.create_group(wavFile)

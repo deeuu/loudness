@@ -22,7 +22,6 @@
 #include "../modules/MultiSourceRoexBank.h"
 #include "../modules/SpecificPartialLoudnessMGB1997.h"
 #include "../modules/SpecificLoudnessANSIS342007.h"
-#include "../modules/SpecificLoudnessModANSIS342007.h"
 #include "../modules/BinauralInhibitionMG2007.h"
 #include "../modules/InstantaneousLoudness.h"
 #include "StationaryLoudnessANSIS342007.h"
@@ -34,6 +33,7 @@ namespace loudness{
     {
         //Default parameters
         setOuterEarFilter (OME::Filter::ANSIS342007_FREEFIELD);
+        setMiddleEarFilter (OME::Filter::ANSIS342007_MIDDLE_EAR);
         setFilterSpacingInCams (0.1);
         setPresentationDiotic (true);
         setBinauralInhibitionUsed (true);
@@ -64,6 +64,11 @@ namespace loudness{
         outerEarFilter_ = outerEarFilter;
     }
 
+    void StationaryLoudnessANSIS342007::setMiddleEarFilter(const OME::Filter middleEarFilter)
+    {
+        middleEarFilter_ = middleEarFilter;
+    }
+
     void StationaryLoudnessANSIS342007::setFilterSpacingInCams(Real filterSpacingInCams)
     {
         filterSpacingInCams_ = filterSpacingInCams;
@@ -74,18 +79,13 @@ namespace loudness{
         isSpecificLoudnessANSIS342007_ = isSpecificLoudnessANSIS342007;
     }
 
-    void StationaryLoudnessANSIS342007::setAlpha (const RealVec& alpha)
-    {
-        alpha_ = alpha;
-    }
-
     bool StationaryLoudnessANSIS342007::initializeInternal(const SignalBank &input)
     {
         /*
          * Weighting filter
          */
         modules_.push_back(unique_ptr<Module>
-                (new WeightSpectrum(OME::Filter::ANSIS342007_MIDDLE_EAR, outerEarFilter_))); 
+                (new WeightSpectrum(middleEarFilter_, outerEarFilter_))); 
 
         /*
          * Roex filters -> Specific loudness
@@ -96,20 +96,10 @@ namespace loudness{
                 (new RoexBankANSIS342007(1.8, 38.9, filterSpacingInCams_)));
         outputModules_["Excitation"] = modules_.back().get();
 
-        if (!alpha_.empty())
-        {
-            modules_.push_back(unique_ptr<Module>
-                    (new SpecificLoudnessModANSIS342007(
-                        alpha_,
-                        isBinauralInhibitionUsed_)));
-        }
-        else
-        {
-            modules_.push_back(unique_ptr<Module>
-                    (new SpecificLoudnessANSIS342007(
-                        isSpecificLoudnessANSIS342007_,
-                        isBinauralInhibitionUsed_)));
-        }
+        modules_.push_back(unique_ptr<Module>
+                (new SpecificLoudnessANSIS342007(
+                    isSpecificLoudnessANSIS342007_,
+                    isBinauralInhibitionUsed_)));
 
         /*
          * Binaural inhibition
@@ -123,7 +113,7 @@ namespace loudness{
          */   
         modules_.push_back(unique_ptr<Module> 
                 (new InstantaneousLoudness(1.0, isPresentationDiotic_)));
-        outputModules_["InstantaneousLoudness"] = modules_.back().get();
+        outputModules_["Loudness"] = modules_.back().get();
 
         //configure targets
         configureLinearTargetModuleChain();
@@ -136,13 +126,16 @@ namespace loudness{
             // Excitation transformation based on all sources
             modules_.push_back(unique_ptr<Module>
                     (new MultiSourceRoexBank(filterSpacingInCams_)));
-            outputModules_["MultiSourceExcitation"] = modules_.back().get();
+
+            /*
+            modules_.push_back(unique_ptr<Module>
+                (new RoexBankANSIS342007(1.8, 38.9, filterSpacingInCams_)));
+            */
             int moduleIdx = modules_.size() - 1;
 
             // Push spectrum to second excitation transformation stage
             Module* ptrToWeightedSpectrum = modules_[0].get();
-            ptrToWeightedSpectrum -> addTargetModule
-                                     (*outputModules_["MultiSourceExcitation"]);
+            ptrToWeightedSpectrum -> addTargetModule (*modules_.back().get());
 
             // Partial loudness
             modules_.push_back(unique_ptr<Module>
@@ -156,7 +149,7 @@ namespace loudness{
 
             modules_.push_back(unique_ptr<Module> 
                     (new InstantaneousLoudness(1.0, isPresentationDiotic_)));
-            outputModules_["InstantaneousPartialLoudness"] = modules_.back().get();
+            outputModules_["PartialLoudness"] = modules_.back().get();
 
             // configure targets for second (parallel) chain
             configureLinearTargetModuleChain(moduleIdx);

@@ -17,30 +17,29 @@
  * along with Loudness.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#include "PeakFollower.h"
+#include "EMA.h"
 #include "../support/AuditoryTools.h"
 
 namespace loudness{
 
-    PeakFollower::PeakFollower(Real timeConstant) 
-        : Module("PeakFollower"),
-          timeConstant_(timeConstant)
+    EMA::EMA (Real timeConstant, bool asEffectiveAverageTime) :
+        Module("EMA"),
+        timeConstant_ (timeConstant),
+        asEffectiveAverageTime_ (asEffectiveAverageTime)
     {
         LOUDNESS_DEBUG(name_ << ": Constructed.");
-    }
+    };
 
-    PeakFollower::~PeakFollower()
+    EMA::~EMA()
     {};
 
-    bool PeakFollower::initializeInternal(const SignalBank &input)
+    bool EMA::initializeInternal(const SignalBank &input)
     {
-        //filter coefficients
-        coef_ = exp(-1.0 / (input.getFrameRate() * timeConstant_));
-
-        LOUDNESS_DEBUG(name_ << ": Input frame rate: "
-                << input.getFrameRate()
-                << ". Release coefficient: "
-                << coef_);
+        //filter coefficient
+        if (asEffectiveAverageTime_)
+            coef_ = 2.0 / (round (timeConstant_ * input.getFrameRate()) + 1);
+        else
+            coef_ = 1 - exp(-1.0 / (input.getFrameRate() * timeConstant_));
 
         //output SignalBank
         output_.initialize(input);
@@ -48,30 +47,26 @@ namespace loudness{
         return 1;
     }
 
-    void PeakFollower::processInternal(const SignalBank &input)
+    void EMA::processInternal(const SignalBank &input)
     {       
         int lastSampleIdx = input.getNSamples() - 1;
 
-        for (int src = 0; src < input.getNSources(); ++src)
+        for (int src = 0; src < input.getNSources(); src++)
         {
             for (int ear = 0; ear < input.getNEars(); ++ear)
             {
                 for (int chn = 0; chn < input.getNChannels(); ++chn)
                 {
-                    const Real* x = input.getSignalReadPointer(src, ear, chn, 0);
-
-                    Real* y = output_.getSignalWritePointer(src, ear, chn, 0);
-
+                    const Real* x = input.getSignalReadPointer(src,
+                            ear, chn, 0);
+                    Real* y = output_.getSignalWritePointer(src,
+                            ear, chn, 0);
+                    killDenormal (y[lastSampleIdx]);
                     Real yPrev = y[lastSampleIdx];
 
                     for (int smp = 0; smp < input.getNSamples(); ++smp)
                     {
-                        Real absX = abs (x[smp]);
-
-                        if (absX >= yPrev)
-                            y[smp] = absX;
-                        else
-                            y[smp] = absX + coef_ * (yPrev - absX);
+                        y[smp] = coef_ * (x[smp] - yPrev) + yPrev;
                         yPrev = y[smp];
                     }
                 }
@@ -80,6 +75,6 @@ namespace loudness{
     }
 
     //output SignalBanks are cleared so not to worry about filter state
-    void PeakFollower::resetInternal()
+    void EMA::resetInternal()
     {}
 }

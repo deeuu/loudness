@@ -81,9 +81,6 @@ namespace loudness{
      * If you want this setExcitationPatternInterpolated(true). In `Faster'
      * modes, this is true.
      *
-     * A peak follower can be applied to the short-term loudness using 
-     * setPeakSTLFollowerUsed(true) (default is false).
-     *
      * OUTPUTS:
      *  - "Excitation"
      *  - "SpecificLoudness"
@@ -172,8 +169,6 @@ namespace loudness{
 
             void setReleaseTimeLTL(Real releaseTimeLTL);
 
-            void setPeakSTLFollowerUsed(bool isPeakSTLFollowerUsed);
-
             void setOuterEarFilter(const OME::Filter& outerEarFilter);
 
             void setMiddleEarFilter(const OME::Filter& MiddleEarFilter);
@@ -203,7 +198,7 @@ namespace loudness{
             bool isSpectrumSampledUniformly_, isHoppingGoertzelDFTUsed_;
             bool isSpectralResolutionDoubled_, isBinauralInhibitionUsed_;
             bool isSpecificLoudnessANSIS342007_, isFirstSampleAtWindowCentre_;
-            bool isPeakSTLFollowerUsed_, isPartialLoudnessUsed_;
+            bool isPartialLoudnessUsed_;
             string pathToFilterCoefs_;
             OME::Filter outerEarFilter_, middleEarFilter_;
     }; 

@@ -58,7 +58,7 @@ namespace loudness{
          */   
         modules_.push_back(unique_ptr<Module> 
                 (new InstantaneousLoudnessDIN456311991));
-        outputModules_["InstantaneousLoudness"] = modules_.back().get();
+        outputModules_["Loudness"] = modules_.back().get();
 
         //configure targets
         configureLinearTargetModuleChain();

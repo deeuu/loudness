@@ -72,15 +72,11 @@ namespace loudness{
      * If you want this setExcitationPatternInterpolated(true); In mode `faster'
      * this is true;
      *
-     * A peak follower can be applied to the short-term loudness using 
-     * setPeakSTLFollowerUsed(true) (default is false).
-     *
      * OUTPUTS:
      *  - "SpecificLoudness"
      *  - "InstantaneousLoudness"
      *  - "ShortTermLoudness"
      *  - "LongTermLoudness"
-     *  - "PeakShortTermLoudness" (optional)
      *
      * REFERENCES:
      *
@@ -131,7 +127,7 @@ namespace loudness{
 
             void setPresentationDiotic(bool isPresentationDiotic);
 
-            void setPeakSTLFollowerUsed(bool isPeakSTLFollowerUsed);
+            void setPartialLoudnessUsed (bool isPartialLoudnessUsed);
 
             void setBinauralInhibitionUsed(bool isBinauralInhibitionUsed);
 
@@ -149,6 +145,13 @@ namespace loudness{
 
             void setPathToFilterCoefs(string pathToFilterCoefs);
 
+            void setWindowSpecGM02 (bool isWindowSpecGM02);
+
+            void setScalingFactor (Real scalingFactor);
+
+            void setAttackTimeSTL (Real attackTimeSTL);
+            void setReleaseTimeSTL (Real releaseTimeSTL);
+
         private:
             virtual bool initializeInternal(const SignalBank &input);
 
@@ -156,11 +159,13 @@ namespace loudness{
             Real filterSpacingInCams_, compressionCriterionInCams_;
             Real attackTimeSTL_, releaseTimeSTL_;
             Real attackTimeLTL_, releaseTimeLTL_;
+            Real scalingFactor_;
             bool isSpectrumSampledUniformly_, isHoppingGoertzelDFTUsed_;
             bool isExcitationPatternInterpolated_;
             bool isInterpolationCubic_, isPresentationDiotic_;
             bool isSpecificLoudnessOutput_, isBinauralInhibitionUsed_;
-            bool isFirstSampleAtWindowCentre_, isPeakSTLFollowerUsed_;
+            bool isFirstSampleAtWindowCentre_;
+            bool isPartialLoudnessUsed_, isWindowSpecGM02_;
             OME::Filter outerEarFilter_, middleEarFilter_;
     }; 
 }
