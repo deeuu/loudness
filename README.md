@@ -14,6 +14,12 @@ To build the Python bindings you will need:
   - swig >= 3.0.0
   - python-numpy-dev
 
+## Note
+
+This project is still in heavy development so is not stable. I am also now only
+supporting Python 3.5+. Please register an issue at:
+[https://github.com/deeuu/loudness/issues](https://github.com/deeuu/loudness/issues)
+
 ## Acknowledgments 
 
 The library interface is based on the fantastic AIM-C:
