@@ -61,7 +61,8 @@ model.initialize(inputBank)
 model.process(inputBank)
 
 # Get the output of this loudness model
-feature = 'InstantaneousLoudness'
+feature = 'Loudness'
 outputBank = model.getOutput(feature)
 
-print 'Loudness in sones %0.2f' % outputBank.getSample(0, 0, 0, 0)~~~
+print 'Loudness in sones %0.2f' % outputBank.getSample(0, 0, 0, 0)
+~~~
